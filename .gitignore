@@ -1,0 +1,4 @@
+.Rproj.user
+src/*.o
+*.Rproj
+.Rhistory
