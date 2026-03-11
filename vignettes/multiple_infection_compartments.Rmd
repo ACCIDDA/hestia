@@ -1,0 +1,231 @@
+---
+title: "Multiple Infection Compartments"
+author: "Claire P. Smith"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+source("../R/hestia_functions.R")
+source("../R/simulation.R")
+
+library(rstan)
+library(tidyverse)
+library(posterior)
+library(cowplot)
+
+set.seed(6842)
+
+```
+
+# SIR model
+
+## Simulate data
+
+First we will simulate some data from a basic SIR model for 100 households. We will assume that all individuals start susceptible. The per day intra-household infection probability is 5% and the daily extra-household infection probability is 1%.
+
+```{r}
+
+# Simulate data from a basic SIR model for 100 households
+# Everyone starts susceptible
+# Two observations, first informative about infection (e.g. culture or PCR, 
+# second informative about recovery (e.g. IgG))
+dat_sim <- sim_sir(eh_prob = 0.01, ih_prob = 0.05, n_hh = 100,
+                   hh_size = 1:5, tmax = 100, gamma = 1/5,
+                   obs_prob = list(c(0.05, 0.95, 0.05),
+                                   c(0.01, 0.01, 0.8)),
+                   start_prob = c(1, 0, 0),
+                   complete_enroll = TRUE)
+saveRDS(dat_sim, "dat_SIR.rds")
+
+# Name courcome columns
+dat <- dat_sim$obs %>%
+  rename(pcr = y1, igg = y2)
+
+```
+
+## Model specification
+
+In addition to the data, the user needs to specify the underlying model structure, which involves two components:
+
+1.  **The infection process model** which specifies the underlying compartmental model structure.
+
+2.  **The observation process model** which specifies the probability of observing a positive outcome given an individual is in each compartment of the infection process model.
+
+### Infection process model
+
+The infection process model is built up from a series of user-defined transitions. There are two types of transitions: `transmit()` defines a transition that occurs as a result of infection (e.g. S\>I) and `progress()` which defines a non-infection transition that occurs at a constant rate (e.g. I-\>R). For both functions, the user specifies a destination (e.g `from = S`) and source (e.g `to = I`) compartment. Additionally for `progress()` transitions, the user must enter a parameter for the transition rate. The name of this parameter is at the discretion of the user (e.g. `gamma` for recovery rate) and can be set to a specific numeric value of to NA if model should fit that parameter.
+
+```{r}
+
+# Basic SIR, fit recovery rate
+inf_process <- make_infection_model(transmit(from = "S", to = "I"),
+                                    progress(from = "I", to = "R", gamma = NA))
+
+
+```
+
+### Observation process model
+
+The observation model is composed of a series of named vectors. Each vector corresponds to an observation type. Each entry in the vector is named for the corresponding compartment in the infection process model. The value is the probability of observing a positive observation given the individual is in the compartment.
+
+In this example we have two observation types, one which is likely to be positive when a person is actively infectious (e.g. PCR test results) and the other which is more likely to be positive when the person is recovered and immune to infection (e.g. IgG antibody).
+
+```{r}
+obs_process <- make_observation_model(pcr = c("S" = 0.05, "I" = 0.95, "R" = 0.05),
+                                      igg = c("S" = 0.01, "I" = 0.01, "R" = 0.8))
+
+```
+
+Now we are ready to run the model!
+
+```{r, message=FALSE, warning=FALSE}
+## Inputs
+# 1. Infection process model
+# 2. Observation process model
+# 3. Raw data
+# 4. Covariates (optional)
+# 5. Starting state probabilities
+
+res_stan <- run_model(inf_model = inf_process, obs_model = obs_process,
+                      data = dat, init_probs = c(1-2*1e-10, 1e-10, 1e-10),
+                      iter = 1000, cores = 4, save_chains = TRUE,
+                      file = "../inst/stan/hmm.stan",
+                      save_states = FALSE) # setting to FALSE to increase speed
+
+saveRDS(res_stan, "SIR_stanfit.rds")
+
+```
+
+Now let's look at the model results using the `posterior` package.
+
+```{r}
+# Convert to draws array
+draws_full <- as_draws_array(res_stan)
+
+# Transform variables and subset to variables of interest
+draws <- subset_draws(draws_full,
+                      variable = c("beta_ih[1]", "beta_eh", "logit_params[1]"))
+draws <- mutate_variables(draws,
+                          ih_prob = inv_logit(`beta_ih[1]`),
+                          eh_prob = inv_logit(beta_eh),
+                          gamma = inv_logit(`logit_params[1]`))
+draws <- subset_draws(draws,
+                      variable = c("ih_prob", "eh_prob", "gamma"))
+
+# Get summary statistics
+draws_sum <- summarise_draws(draws, "mean", "median",
+                             ~quantile2(.x, probs = c(0.025, 0.975))) %>%
+  mutate(var_type = c(rep("Infection probability", 2), "Recovery rate"))
+draws_sum
+
+# Plot versus true values
+true_vals <- data.frame(var_type = c(rep("Infection probability", 2), "Recovery rate"),
+                        variable = c("ih_prob", "eh_prob", "gamma"),
+                        true_val = c(0.05, 0.01, 0.2))
+
+ggplot(draws_sum, aes(x = variable)) +
+  geom_point(aes(y = median)) +
+  geom_errorbar(aes(ymin = q2.5, ymax = q97.5)) +
+  geom_hline(data = true_vals, aes(yintercept = true_val),
+             color = "red", lty = "dashed") +
+  facet_wrap(~var_type, scales = "free") +
+  theme_bw()
+
+```
+
+## Add in covariates
+
+We can add covariates on the intra- and extra-household infection risk by including the optional `ih_cov` and `eh_cov` arguments, respectively, in `run_model()`.
+
+```{r, message=FALSE, warning=FALSE}
+# Simulate data from a basic SIR model for 100 households
+# Everyone starts susceptible
+# Two observations, first informative about infection (e.g. culture or PCR, 
+# second informative about recovery (e.g. IgG))
+dat_sim <- sim_sir(eh_prob = 0.01, ih_prob = 0.05, n_hh = 100,
+                   hh_size = 1:5, tmax = 100, gamma = 1/5,
+                   covs_eh = c(-0.4, 0.7), covs_ih = c(0.8, 0.1),
+                   obs_prob = list(c(0.05, 0.95, 0.05),
+                                   c(0.01, 0.01, 0.8)),
+                   start_prob = c(1, 0, 0),
+                   complete_enroll = TRUE)
+saveRDS(dat_sim, "dat_SIR_cov.rds")
+
+# Name courcome columns
+dat <- dat_sim$obs %>%
+  rename(pcr = y1, igg = y2)
+
+# Run model with x1 and x2 as covariates
+res_stan <- run_model(inf_model = inf_process, obs_model = obs_process,
+                      data = dat, ih_cov = dat_sim$x, eh_cov = dat_sim$x,
+                      init_probs = c(1-2*1e-10, 1e-10, 1e-10),
+                      iter = 1000, cores = 4, save_chains = TRUE,
+                      file = "../inst/stan/hmm_cov.stan",
+                      save_states = FALSE) # setting to FALSE to increase speed
+
+saveRDS(res_stan, "SIR_cov_stanfit.rds")
+
+```
+
+Let's take a look at the results once more.
+
+```{r}
+# Convert to draws array
+draws_full <- as_draws_array(res_stan)
+
+# Transform variables and subset to variables of interest
+draws <- subset_draws(draws_full,
+                      variable = c("beta0_ih[1]", "beta0_eh", "logit_params[1]",
+                                   "beta_ih[1]", "beta_ih[2]", "beta_eh[1]", "beta_eh[2]"))
+draws <- mutate_variables(draws,
+                          ih_prob = inv_logit(`beta0_ih[1]`),
+                          eh_prob = inv_logit(beta0_eh),
+                          x1_ih = exp(`beta_ih[1]`),
+                          x2_ih = exp(`beta_ih[2]`),
+                          x1_eh = exp(`beta_eh[1]`),
+                          x2_eh = exp(`beta_eh[2]`),
+                          gamma = inv_logit(`logit_params[1]`))
+draws <- subset_draws(draws,
+                      variable = c("ih_prob", "eh_prob", "gamma",
+                                   "x1_ih", "x2_ih", "x1_eh", "x2_eh"))
+
+# Get summary statistics
+draws_sum <- summarise_draws(draws, "mean", "median",
+                             ~quantile2(.x, probs = c(0.025, 0.975))) %>%
+  mutate(var_type = c(rep("Infection probability", 2), "Recovery rate", rep("Covariates", 4)))
+draws_sum
+
+# Plot versus true values
+true_vals <- data.frame(var_type = c(rep("Infection probability", 2),
+                                     "Recovery rate", rep("Covariates", 4)),
+                        variable = c("ih_prob", "eh_prob", "gamma",
+                                     "x1_ih", "x2_ih", "x1_eh", "x2_eh"),
+                        true_val = c(0.05, 0.01, 0.2,
+                                     exp(0.8), exp(0.1), exp(-0.4), exp(0.7)))
+
+non_cov <- 
+  ggplot(draws_sum %>% filter(var_type != "Covariates"), aes(x = variable)) +
+  geom_point(aes(y = median)) +
+  geom_errorbar(aes(ymin = q2.5, ymax = q97.5)) +
+  geom_hline(data = true_vals %>% filter(var_type != "Covariates"),
+             aes(yintercept = true_val),
+             color = "red", lty = "dashed") +
+  facet_wrap(~var_type, scales = "free") +
+  theme_bw()
+
+cov <- 
+  ggplot(draws_sum %>% filter(var_type == "Covariates"), aes(x = variable)) +
+  geom_point(aes(y = median)) +
+  geom_errorbar(aes(ymin = q2.5, ymax = q97.5)) +
+  geom_hline(data = true_vals %>% filter(var_type == "Covariates"),
+             aes(yintercept = true_val),
+             color = "red", lty = "dashed") +
+  facet_wrap(~variable, scales = "free_x", nrow = 1) +
+  theme_bw() +
+  scale_y_log10()
+
+plot_grid(non_cov, cov, nrow = 2)
+
+```
+
