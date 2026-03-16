@@ -29,19 +29,19 @@ using namespace stan::math;
 stan::math::profile_map profiles__;
 static constexpr std::array<const char*, 303> locations_array__ =
   {" (found before start of program)",
-  " (in 'string', line 100, column 2 to column 30)",
-  " (in 'string', line 101, column 2 to column 40)",
+  " (in 'string', line 100, column 2 to column 36)",
+  " (in 'string', line 101, column 2 to column 46)",
   " (in 'string', line 102, column 2 to column 23)",
   " (in 'string', line 103, column 2 to column 23)",
   " (in 'string', line 104, column 2 to column 16)",
-  " (in 'string', line 105, column 2 to column 28)",
+  " (in 'string', line 105, column 2 to column 34)",
   " (in 'string', line 108, column 2 to column 26)",
   " (in 'string', line 109, column 2 to column 43)",
   " (in 'string', line 110, column 2 to column 31)",
   " (in 'string', line 111, column 2 to column 72)",
   " (in 'string', line 112, column 2 to column 40)",
-  " (in 'string', line 113, column 2 to column 24)",
-  " (in 'string', line 114, column 2 to column 34)",
+  " (in 'string', line 113, column 2 to column 30)",
+  " (in 'string', line 114, column 2 to column 40)",
   " (in 'string', line 115, column 2 to column 35)",
   " (in 'string', line 116, column 2 to column 45)",
   " (in 'string', line 118, column 4 to column 54)",
@@ -55,17 +55,17 @@ static constexpr std::array<const char*, 303> locations_array__ =
   " (in 'string', line 124, column 11 to column 21)",
   " (in 'string', line 124, column 23 to column 52)",
   " (in 'string', line 124, column 4 to column 59)",
-  " (in 'string', line 125, column 13 to column 26)",
-  " (in 'string', line 125, column 28 to column 38)",
-  " (in 'string', line 125, column 4 to column 40)",
-  " (in 'string', line 126, column 19 to column 32)",
-  " (in 'string', line 126, column 4 to column 34)",
-  " (in 'string', line 127, column 17 to column 30)",
-  " (in 'string', line 127, column 4 to column 32)",
+  " (in 'string', line 125, column 10 to column 23)",
+  " (in 'string', line 125, column 25 to column 35)",
+  " (in 'string', line 125, column 4 to column 46)",
+  " (in 'string', line 126, column 10 to column 23)",
+  " (in 'string', line 126, column 4 to column 40)",
+  " (in 'string', line 127, column 10 to column 23)",
+  " (in 'string', line 127, column 4 to column 38)",
   " (in 'string', line 128, column 4 to column 14)",
-  " (in 'string', line 129, column 15 to column 25)",
-  " (in 'string', line 129, column 27 to column 35)",
-  " (in 'string', line 129, column 4 to column 37)",
+  " (in 'string', line 129, column 10 to column 20)",
+  " (in 'string', line 129, column 22 to column 30)",
+  " (in 'string', line 129, column 4 to column 43)",
   " (in 'string', line 130, column 4 to column 17)",
   " (in 'string', line 131, column 4 to column 19)",
   " (in 'string', line 132, column 4 to column 68)",
@@ -78,8 +78,8 @@ static constexpr std::array<const char*, 303> locations_array__ =
   " (in 'string', line 140, column 4 to column 56)",
   " (in 'string', line 141, column 4 to column 60)",
   " (in 'string', line 142, column 4 to column 14)",
-  " (in 'string', line 146, column 14 to column 22)",
-  " (in 'string', line 146, column 6 to column 24)",
+  " (in 'string', line 146, column 12 to column 20)",
+  " (in 'string', line 146, column 6 to column 30)",
   " (in 'string', line 147, column 13 to column 23)",
   " (in 'string', line 147, column 25 to column 33)",
   " (in 'string', line 147, column 6 to column 39)",
@@ -114,13 +114,13 @@ static constexpr std::array<const char*, 303> locations_array__ =
   " (in 'string', line 179, column 6 to column 88)",
   " (in 'string', line 145, column 27 to line 180, column 5)",
   " (in 'string', line 145, column 4 to line 180, column 5)",
-  " (in 'string', line 183, column 25 to column 33)",
-  " (in 'string', line 183, column 8 to column 35)",
+  " (in 'string', line 183, column 14 to column 22)",
+  " (in 'string', line 183, column 8 to column 41)",
   " (in 'string', line 184, column 15 to column 25)",
   " (in 'string', line 184, column 27 to column 35)",
   " (in 'string', line 184, column 8 to column 52)",
-  " (in 'string', line 185, column 16 to column 24)",
-  " (in 'string', line 185, column 8 to column 26)",
+  " (in 'string', line 185, column 14 to column 22)",
+  " (in 'string', line 185, column 8 to column 32)",
   " (in 'string', line 186, column 15 to column 23)",
   " (in 'string', line 186, column 8 to column 39)",
   " (in 'string', line 187, column 15 to column 25)",
@@ -175,7 +175,7 @@ static constexpr std::array<const char*, 303> locations_array__ =
   " (in 'string', line 224, column 10 to line 234, column 11)",
   " (in 'string', line 223, column 32 to line 235, column 9)",
   " (in 'string', line 223, column 8 to line 235, column 9)",
-  " (in 'string', line 237, column 8 to column 31)",
+  " (in 'string', line 237, column 8 to column 42)",
   " (in 'string', line 242, column 12 to column 98)",
   " (in 'string', line 241, column 17 to line 243, column 11)",
   " (in 'string', line 240, column 12 to column 92)",
@@ -213,49 +213,49 @@ static constexpr std::array<const char*, 303> locations_array__ =
   " (in 'string', line 59, column 19 to column 27)",
   " (in 'string', line 59, column 2 to column 35)",
   " (in 'string', line 60, column 2 to column 19)",
-  " (in 'string', line 61, column 17 to column 29)",
-  " (in 'string', line 61, column 2 to column 31)",
+  " (in 'string', line 61, column 8 to column 20)",
+  " (in 'string', line 61, column 2 to column 37)",
   " (in 'string', line 62, column 2 to column 18)",
-  " (in 'string', line 63, column 18 to column 29)",
-  " (in 'string', line 63, column 2 to column 31)",
-  " (in 'string', line 64, column 18 to column 29)",
-  " (in 'string', line 64, column 2 to column 34)",
-  " (in 'string', line 65, column 20 to column 31)",
-  " (in 'string', line 65, column 33 to column 41)",
-  " (in 'string', line 65, column 2 to column 43)",
+  " (in 'string', line 63, column 8 to column 19)",
+  " (in 'string', line 63, column 2 to column 37)",
+  " (in 'string', line 64, column 8 to column 19)",
+  " (in 'string', line 64, column 2 to column 40)",
+  " (in 'string', line 65, column 8 to column 19)",
+  " (in 'string', line 65, column 21 to column 29)",
+  " (in 'string', line 65, column 2 to column 49)",
   " (in 'string', line 66, column 2 to column 15)",
   " (in 'string', line 68, column 9 to column 17)",
   " (in 'string', line 68, column 19 to column 27)",
-  " (in 'string', line 68, column 2 to column 40)",
+  " (in 'string', line 68, column 2 to column 51)",
   " (in 'string', line 69, column 2 to column 17)",
   " (in 'string', line 70, column 2 to column 20)",
-  " (in 'string', line 71, column 23 to column 33)",
-  " (in 'string', line 71, column 2 to column 35)",
-  " (in 'string', line 72, column 17 to column 27)",
-  " (in 'string', line 72, column 2 to column 32)",
+  " (in 'string', line 71, column 8 to column 18)",
+  " (in 'string', line 71, column 2 to column 41)",
+  " (in 'string', line 72, column 8 to column 18)",
+  " (in 'string', line 72, column 2 to column 38)",
   " (in 'string', line 74, column 2 to column 11)",
-  " (in 'string', line 75, column 14 to column 18)",
-  " (in 'string', line 75, column 2 to column 20)",
+  " (in 'string', line 75, column 8 to column 12)",
+  " (in 'string', line 75, column 2 to column 26)",
   " (in 'string', line 77, column 2 to column 12)",
   " (in 'string', line 78, column 2 to column 17)",
   " (in 'string', line 79, column 2 to column 19)",
   " (in 'string', line 80, column 8 to column 13)",
   " (in 'string', line 80, column 15 to column 25)",
-  " (in 'string', line 80, column 2 to column 27)",
-  " (in 'string', line 81, column 14 to column 19)",
-  " (in 'string', line 81, column 2 to column 21)",
-  " (in 'string', line 82, column 12 to column 17)",
-  " (in 'string', line 82, column 2 to column 19)",
-  " (in 'string', line 83, column 17 to column 21)",
-  " (in 'string', line 83, column 2 to column 23)",
-  " (in 'string', line 84, column 19 to column 23)",
-  " (in 'string', line 84, column 2 to column 25)",
-  " (in 'string', line 85, column 17 to column 21)",
-  " (in 'string', line 85, column 2 to column 23)",
-  " (in 'string', line 86, column 14 to column 18)",
-  " (in 'string', line 86, column 2 to column 20)",
-  " (in 'string', line 87, column 14 to column 18)",
-  " (in 'string', line 87, column 2 to column 20)",
+  " (in 'string', line 80, column 2 to column 33)",
+  " (in 'string', line 81, column 8 to column 13)",
+  " (in 'string', line 81, column 2 to column 27)",
+  " (in 'string', line 82, column 8 to column 13)",
+  " (in 'string', line 82, column 2 to column 25)",
+  " (in 'string', line 83, column 8 to column 12)",
+  " (in 'string', line 83, column 2 to column 29)",
+  " (in 'string', line 84, column 8 to column 12)",
+  " (in 'string', line 84, column 2 to column 31)",
+  " (in 'string', line 85, column 8 to column 12)",
+  " (in 'string', line 85, column 2 to column 29)",
+  " (in 'string', line 86, column 8 to column 12)",
+  " (in 'string', line 86, column 2 to column 26)",
+  " (in 'string', line 87, column 8 to column 12)",
+  " (in 'string', line 87, column 2 to column 26)",
   " (in 'string', line 89, column 2 to column 11)",
   " (in 'string', line 90, column 9 to column 21)",
   " (in 'string', line 90, column 23 to column 27)",
@@ -264,19 +264,19 @@ static constexpr std::array<const char*, 303> locations_array__ =
   " (in 'string', line 92, column 9 to column 21)",
   " (in 'string', line 92, column 23 to column 27)",
   " (in 'string', line 92, column 2 to column 34)",
-  " (in 'string', line 94, column 42 to column 52)",
-  " (in 'string', line 94, column 9 to column 21)",
-  " (in 'string', line 94, column 23 to column 31)",
-  " (in 'string', line 94, column 2 to column 54)",
+  " (in 'string', line 94, column 8 to column 18)",
+  " (in 'string', line 94, column 27 to column 39)",
+  " (in 'string', line 94, column 41 to column 49)",
+  " (in 'string', line 94, column 2 to column 60)",
   " (in 'string', line 95, column 9 to column 17)",
   " (in 'string', line 95, column 2 to column 30)",
   " (in 'string', line 96, column 2 to column 15)",
   " (in 'string', line 97, column 2 to column 17)",
-  " (in 'string', line 100, column 20 to column 28)",
-  " (in 'string', line 101, column 25 to column 38)",
+  " (in 'string', line 100, column 8 to column 16)",
+  " (in 'string', line 101, column 8 to column 21)",
   " (in 'string', line 102, column 9 to column 13)",
   " (in 'string', line 103, column 9 to column 13)",
-  " (in 'string', line 105, column 16 to column 26)",
+  " (in 'string', line 105, column 8 to column 18)",
   " (in 'string', line 108, column 9 to column 13)",
   " (in 'string', line 109, column 9 to column 21)",
   " (in 'string', line 109, column 23 to column 33)",
@@ -285,8 +285,8 @@ static constexpr std::array<const char*, 303> locations_array__ =
   " (in 'string', line 111, column 32 to column 61)",
   " (in 'string', line 112, column 9 to column 17)",
   " (in 'string', line 112, column 19 to column 27)",
-  " (in 'string', line 113, column 14 to column 22)",
-  " (in 'string', line 114, column 19 to column 32)",
+  " (in 'string', line 113, column 8 to column 16)",
+  " (in 'string', line 114, column 8 to column 21)",
   " (in 'string', line 5, column 4 to column 13)",
   " (in 'string', line 6, column 4 to column 12)",
   " (in 'string', line 9, column 8 to column 28)",
@@ -297,8 +297,8 @@ static constexpr std::array<const char*, 303> locations_array__ =
   " (in 'string', line 12, column 4 to column 15)",
   " (in 'string', line 4, column 44 to line 13, column 3)",
   " (in 'string', line 22, column 4 to column 18)",
-  " (in 'string', line 23, column 20 to column 33)",
-  " (in 'string', line 23, column 4 to column 35)",
+  " (in 'string', line 23, column 10 to column 23)",
+  " (in 'string', line 23, column 4 to column 41)",
   " (in 'string', line 25, column 6 to column 41)",
   " (in 'string', line 24, column 33 to line 26, column 5)",
   " (in 'string', line 24, column 4 to line 26, column 5)",
@@ -309,7 +309,7 @@ static constexpr std::array<const char*, 303> locations_array__ =
   " (in 'string', line 29, column 6 to column 23)",
   " (in 'string', line 27, column 27 to line 30, column 5)",
   " (in 'string', line 27, column 4 to line 33, column 5)",
-  " (in 'string', line 21, column 35 to line 34, column 3)",
+  " (in 'string', line 21, column 42 to line 34, column 3)",
   " (in 'string', line 37, column 11 to column 18)",
   " (in 'string', line 37, column 20 to column 27)",
   " (in 'string', line 37, column 4 to column 33)",
@@ -463,7 +463,7 @@ normalize_cols(const T0__& m_arg__, std::ostream* pstream__) {
             stan::model::index_uni(i)),
           stan::math::sum(
             stan::model::rvalue(m, "m", stan::model::index_omni(),
-              stan::model::index_uni(1)))), "assigning variable out",
+              stan::model::index_uni(i)))), "assigning variable out",
         stan::model::index_omni(), stan::model::index_uni(i));
     }
     current_statement__ = 288;
@@ -533,7 +533,7 @@ private:
   std::vector<std::vector<int>> trans_index;
   std::vector<std::vector<int>> source_states;
   int n_params;
-  Eigen::Matrix<double,-1,-1> multiplier_data__;
+  Eigen::Matrix<double,-1,-1> transition_multiplier_data__;
   int n_mult_fit;
   int n_mult_params;
   std::vector<int> mult_param_index;
@@ -564,7 +564,8 @@ private:
   int logalpha_1dim__;
   int logalpha_2dim__;
   Eigen::Map<Eigen::Matrix<double,-1,-1>> trans{nullptr, 0, 0};
-  Eigen::Map<Eigen::Matrix<double,-1,-1>> multiplier{nullptr, 0, 0};
+  Eigen::Map<Eigen::Matrix<double,-1,-1>>
+    transition_multiplier{nullptr, 0, 0};
   Eigen::Map<Eigen::Matrix<double,-1,-1>> x_ih{nullptr, 0, 0};
   Eigen::Map<Eigen::Matrix<double,-1,-1>> x_eh{nullptr, 0, 0};
   Eigen::Map<Eigen::Matrix<double,-1,1>> init_probs{nullptr, 0};
@@ -726,25 +727,26 @@ public:
       current_statement__ = 195;
       n_params = context__.vals_i("n_params")[(1 - 1)];
       current_statement__ = 196;
-      stan::math::validate_non_negative_index("multiplier", "n_states",
-        n_states);
+      stan::math::validate_non_negative_index("transition_multiplier",
+        "n_states", n_states);
       current_statement__ = 197;
-      stan::math::validate_non_negative_index("multiplier", "n_states",
-        n_states);
+      stan::math::validate_non_negative_index("transition_multiplier",
+        "n_states", n_states);
       current_statement__ = 198;
-      context__.validate_dims("data initialization", "multiplier", "double",
+      context__.validate_dims("data initialization", "transition_multiplier",
+        "double",
         std::vector<size_t>{static_cast<size_t>(n_states),
           static_cast<size_t>(n_states)});
-      multiplier_data__ = Eigen::Matrix<double,-1,-1>::Constant(n_states,
-                            n_states,
-                            std::numeric_limits<double>::quiet_NaN());
-      new (&multiplier)
-        Eigen::Map<Eigen::Matrix<double,-1,-1>>(multiplier_data__.data(),
+      transition_multiplier_data__ = Eigen::Matrix<double,-1,-1>::Constant(n_states,
+                                       n_states,
+                                       std::numeric_limits<double>::quiet_NaN());
+      new (&transition_multiplier)
+        Eigen::Map<Eigen::Matrix<double,-1,-1>>(transition_multiplier_data__.data(),
         n_states, n_states);
       {
-        std::vector<local_scalar_t__> multiplier_flat__;
+        std::vector<local_scalar_t__> transition_multiplier_flat__;
         current_statement__ = 198;
-        multiplier_flat__ = context__.vals_r("multiplier");
+        transition_multiplier_flat__ = context__.vals_r("transition_multiplier");
         current_statement__ = 198;
         pos__ = 1;
         current_statement__ = 198;
@@ -752,8 +754,9 @@ public:
           current_statement__ = 198;
           for (int sym2__ = 1; sym2__ <= n_states; ++sym2__) {
             current_statement__ = 198;
-            stan::model::assign(multiplier, multiplier_flat__[(pos__ - 1)],
-              "assigning variable multiplier",
+            stan::model::assign(transition_multiplier,
+              transition_multiplier_flat__[(pos__ - 1)],
+              "assigning variable transition_multiplier",
               stan::model::index_uni(sym2__), stan::model::index_uni(sym1__));
             current_statement__ = 198;
             pos__ = (pos__ + 1);
@@ -1415,8 +1418,9 @@ public:
                         stan::model::index_uni(k)), -1)) {
                   current_statement__ = 66;
                   stan::model::assign(obs,
-                    stan::model::rvalue(obs_prob, "obs_prob",
-                      stan::model::index_uni(k),
+                    stan::model::rvalue(
+                      stan::model::rvalue(obs_prob, "obs_prob",
+                        stan::model::index_uni(k)), "obs_prob[k]",
                       stan::model::index_uni(
                         stan::model::rvalue(y_hh, "y_hh",
                           stan::model::index_uni(index),
@@ -1589,8 +1593,9 @@ public:
                           stan::model::index_uni(k)), -1)) {
                     current_statement__ = 113;
                     stan::model::assign(obs,
-                      stan::model::rvalue(obs_prob, "obs_prob",
-                        stan::model::index_uni(k),
+                      stan::model::rvalue(
+                        stan::model::rvalue(obs_prob, "obs_prob",
+                          stan::model::index_uni(k)), "obs_prob[k]",
                         stan::model::index_uni(
                           stan::model::rvalue(y_hh, "y_hh",
                             stan::model::index_uni(index),
@@ -1725,7 +1730,7 @@ public:
                 }
               }
               current_statement__ = 147;
-              stan::model::assign(mult_temp, multiplier,
+              stan::model::assign(mult_temp, transition_multiplier,
                 "assigning variable mult_temp");
               current_statement__ = 154;
               for (int m = 1; m <= n_mult_fit; ++m) {
@@ -2151,8 +2156,9 @@ public:
                         stan::model::index_uni(k)), -1)) {
                   current_statement__ = 66;
                   stan::model::assign(obs,
-                    stan::model::rvalue(obs_prob, "obs_prob",
-                      stan::model::index_uni(k),
+                    stan::model::rvalue(
+                      stan::model::rvalue(obs_prob, "obs_prob",
+                        stan::model::index_uni(k)), "obs_prob[k]",
                       stan::model::index_uni(
                         stan::model::rvalue(y_hh, "y_hh",
                           stan::model::index_uni(index),
@@ -2325,8 +2331,9 @@ public:
                           stan::model::index_uni(k)), -1)) {
                     current_statement__ = 113;
                     stan::model::assign(obs,
-                      stan::model::rvalue(obs_prob, "obs_prob",
-                        stan::model::index_uni(k),
+                      stan::model::rvalue(
+                        stan::model::rvalue(obs_prob, "obs_prob",
+                          stan::model::index_uni(k)), "obs_prob[k]",
                         stan::model::index_uni(
                           stan::model::rvalue(y_hh, "y_hh",
                             stan::model::index_uni(index),
@@ -2461,7 +2468,7 @@ public:
                 }
               }
               current_statement__ = 147;
-              stan::model::assign(mult_temp, multiplier,
+              stan::model::assign(mult_temp, transition_multiplier,
                 "assigning variable mult_temp");
               current_statement__ = 154;
               for (int m = 1; m <= n_mult_fit; ++m) {

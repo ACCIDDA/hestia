@@ -2,14 +2,16 @@
 % Please edit documentation in R/hestia-package.R
 \docType{package}
 \name{hestia-package}
-\alias{hestia}
 \alias{hestia-package}
-\title{hestia: What the Package Does (One Line, Title Case)}
+\alias{hestia}
+\title{The 'hestia' package.}
 \description{
-What the package does (one paragraph).
+A DESCRIPTION OF THE PACKAGE
+}
+\references{
+Stan Development Team (NA). RStan: the R interface to Stan. R package version 2.32.7. https://mc-stan.org
 }
 \author{
 \strong{Maintainer}: First Last \email{first.last@example.com}
 
 }
-\keyword{internal}

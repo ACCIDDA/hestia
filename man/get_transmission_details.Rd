@@ -2,7 +2,7 @@
 % Please edit documentation in R/hestia_functions.R
 \name{get_transmission_details}
 \alias{get_transmission_details}
-\title{Creates transmission probability matrix,}
+\title{Create Transmission Probability Matrix}
 \usage{
 get_transmission_details(inf_model)
 }
@@ -10,5 +10,5 @@ get_transmission_details(inf_model)
 \item{inf_model}{infection process model object yielded by make_infection_model()}
 }
 \description{
-Creates transmission probability matrix,
+Create Transmission Probability Matrix
 }

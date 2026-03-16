@@ -2,17 +2,16 @@
 % Please edit documentation in R/hestia_functions.R
 \name{make_infection_model}
 \alias{make_infection_model}
-\title{Builds infection process model.}
+\title{Build Infection Process Model}
 \usage{
 make_infection_model(..., mult_inf_probs = FALSE)
 }
 \arguments{
-\item{...}{a series of transit or transmit function calls}
+\item{...}{a series of \link{progress} or \link{transmit} function calls}
 
-\item{ih_cov}{indicator for whether intra-household infection risk is a function of covariates}
-
-\item{eh_cov}{indicator for whether extra-household infection risk is a function of covariates}
+\item{mult_inf_probs}{If FALSE then all infection probabilities are shared
+across infectious compartments}
 }
 \description{
-Builds infection process model.
+Build Infection Process Model
 }

@@ -2,7 +2,7 @@
 % Please edit documentation in R/hestia_functions.R
 \name{split_check}
 \alias{split_check}
-\title{Utility function for checking whether split parameter is properly defined}
+\title{Checking split parameter specification}
 \usage{
 split_check(to, split)
 }

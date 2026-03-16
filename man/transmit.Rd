@@ -2,8 +2,7 @@
 % Please edit documentation in R/hestia_functions.R
 \name{transmit}
 \alias{transmit}
-\title{Defines a state transition in the infection process model which is
-the result of a transmission (infection) event}
+\title{Define a infection transition}
 \usage{
 transmit(from, to, source = NA, split = NA)
 }
@@ -12,7 +11,11 @@ transmit(from, to, source = NA, split = NA)
 
 \item{to}{string giving the name of the destination compartment}
 
-\item{source}{string (or vector of strings) designating which compartments are infectious. If NULL, the destination compartment is presumed to be the infectious compartment.}
+\item{source}{string (or vector of strings) designating which compartments are infectious.
+If NULL, the destination compartment is presumed to be the infectious compartment.}
+
+\item{split}{an optional character or numeric vector indicating what proportion of individuals
+transition into each of the \code{to} compartments}
 }
 \description{
 Defines a state transition in the infection process model which is

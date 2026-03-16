@@ -444,16 +444,15 @@ make_stan_data <- function(inf_model, obs_model, data, init_probs, epsilon = 1e-
 #' @param iter number of MCMC iterations
 #' @param chains number of MCMC chains
 #' @param cores number of cores for parallelization
-#' @param init initial conditionas for MCMC chains
-#' @param save_chains indicator for whether to save MCMC chains
+#' @param init initial conditions for MCMC chains
 #' @param save_states indicator for whether to save state probabilities
 #' 
 #' @export
 run_model <- function(inf_model, obs_model, data, init_probs, epsilon = 1e-10,
                       ih_cov = NULL, eh_cov = NULL,
                       file = "stan/hmm.stan", iter = 2000, chains = 4,
-                      cores = getOption("mc.cores", 1L), init = NULL,
-                      save_chains = TRUE, save_states = TRUE) {
+                      cores = getOption("mc.cores", 1L), init = NULL, 
+                      save_states = FALSE) {
 
   dat_stan <- make_stan_data(inf_model, obs_model, data, init_probs, epsilon, ih_cov, eh_cov)
 
