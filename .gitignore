@@ -2,3 +2,6 @@
 .Rhistory
 .RData
 .Ruserdata
+src/RcppExports*
+src/stanExports*
+src/*.dll

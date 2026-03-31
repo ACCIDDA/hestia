@@ -1,39 +1,56 @@
-
 #' @title Logit Transformation
 #' @param x numeric value between 0 and 1
-#' @export
-logit <- function(x) qlogis(x)
+#'
+#' @keywords internal
+logit <- function(x) {
+  qlogis(x)
+}
 
 #' @title Inverse Logit Transformation
 #' @param x numeric value
-#' @export
-inv_logit <- function(x) plogis(x)
-
+#'
+#' @keywords internal
+inv_logit <- function(x) {
+  plogis(x)
+}
 
 #' @title Checking split parameter specification
-#' @description Utility function for checking whether split parameter is properly defined
+#' @description Utility function for checking whether split parameter is
+#'   properly defined
 #'
 #' @param to character vector giving the name(s) of the destination compartment
-#' @param split numeric or character vector indicating how people moving out of the starting compartment are split between the destination compartments
+#' @param split numeric or character vector indicating how people moving out of
+#'   the starting compartment are split between the destination compartments
 #'
+#' @keywords internal
 split_check <- function(to, split) {
   # Make sure splits are valid
-  if(!(length(split == 1) & sum(is.na(split)) == 1)) { # single NA OK
-    if(sum(is.na(split)) >= 1) { # otherwise NA not OK
+  if (!(length(split == 1) && sum(is.na(split)) == 1)) {
+    # single NA OK
+    if (sum(is.na(split)) >= 1) {
+      # otherwise NA not OK
       stop("Improper specification for split - cannot contain NA")
-    } else if(is.numeric(split)) { # numeric
-      if(length(to) == 1) { # single destination compartment
-        if(length(split != 1)) {
+    } else if (is.numeric(split)) {
+      # numeric
+      if (length(to) == 1) {
+        # single destination compartment
+        if (length(split != 1)) {
           stop("Must have length(split) == 1 if length(to) == 1.")
         }
-      } else { # multiple destination compartments
-        if(length(split) == length(to)) {
-          if(sum(split) != 1) {
-            stop("Values for split must sum to 1 if providing for all destination compartments.")
+      } else {
+        # multiple destination compartments
+        if (length(split) == length(to)) {
+          if (sum(split) != 1) {
+            stop(
+              strwrap(
+                "Values for split must sum to 1 if providing for all
+                      destination compartments."
+              )
+            )
           }
-        } else { # length(split) != length(to)
-          if(length(split) == length(to) - 1) {
-            if(sum(split) > 1) {
+        } else {
+          if (length(split) == length(to) - 1) {
+            if (sum(split) > 1) {
               stop("split cannot sum to greater than 1")
             }
           } else {
@@ -41,14 +58,21 @@ split_check <- function(to, split) {
           }
         }
       }
-    } else { # not numeric
-      if(length(to) == 1) {
-        if(length(split) != 1) {
+    } else {
+      # not numeric
+      if (length(to) == 1) {
+        if (length(split) != 1) {
           stop("Must have length(split) == 1 if length(to) == 1.")
         }
-      } else { # multiple destination compartments
-        if(length(split) != length(to)-1) {
-          stop("Number of parameter names for split must be one less than the number of destination compartments.")
+      } else {
+        # multiple destination compartments
+        if (length(split) != length(to) - 1) {
+          stop(
+            strwrap(
+              "Number of parameter names for split must be one less than
+                    the number of destination compartments."
+            )
+          )
         }
       }
     }
@@ -58,120 +82,124 @@ split_check <- function(to, split) {
 
 #' @title Define a non-infection transition
 #'
-#' @description
-#' Defines a state transition in the infection process model which does not
-#' represent an transmission (infection) event
+#' @description Defines a state transition in the infection process model which
+#' does not represent an transmission (infection) event
 #'
 #' @param from string giving name of origin compartment
-#' @param to string or vector of strings giving the name of the destination compartment
-#' @param split an optional character or numeric vector indicating what proportion of individuals
-#' transition into each of the `to` compartments
+#' @param to string or vector of strings giving the name of the destination
+#'   compartment
+#' @param split an optional character or numeric vector indicating what
+#'   proportion of individuals transition into each of the `to` compartments
 #'
 #' @export
 progress <- function(from, to, split = NA, ...) {
-
   .dots <- unlist(list(...))
 
   split_check(to, split)
 
   out <- list()
-  for(i in 1:length(to)) {
-    out[[i]] <- data.frame(from = from,
-                           to = to[i],
-                           source = NA,
-                           rate_name = NA,
-                           rate_value = NA,
-                           split_name = NA,
-                           split_value = NA)
+  for (i in seq_along(to)) {
+    out[[i]] <- data.frame(
+      from = from,
+      to = to[i],
+      source = NA,
+      rate_name = NA,
+      rate_value = NA,
+      split_name = NA,
+      split_value = NA
+    )
 
     out[[i]]$rate_name <- names(.dots)
     out[[i]]$rate_value <- .dots
 
-    if(i == 1) {
-      if(is.numeric(split[i])) {
+    if (i == 1) {
+      if (is.numeric(split[i])) {
         out[[i]]$split_value <- split[i]
       } else {
         out[[i]]$split_name <- split[i]
       }
     } else {
-      if(is.numeric(split)) {
-        if(length(split) >= i) {
+      if (is.numeric(split)) {
+        if (length(split) >= i) {
           out[[i]]$split_value <- split[i]
         } else {
-          out[[i]]$split_value <- 1-sum(split[1:(i-1)])
+          out[[i]]$split_value <- 1 - sum(split[1:(i - 1)])
         }
       } else {
-        if(length(split) >= i) {
+        if (length(split) >= i) {
           out[[i]]$split_name <- split[i]
         } else {
-          out[[i]]$split_name <- paste0("1-", paste(split[1:(i-1)], sep = "-", collapse = "-"))
+          out[[i]]$split_name <- paste0(
+            "1-",
+            paste(split[1:(i - 1)], sep = "-", collapse = "-")
+          )
         }
       }
     }
-
   }
 
-  return(bind_rows(out))
-
+  dplyr::bind_rows(out)
 }
 
 #' @title Define a infection transition
 #'
-#' @description
-#' Defines a state transition in the infection process model which is
-#' the result of a transmission (infection) event
+#' @description Defines a state transition in the infection process model which
+#' is the result of a transmission (infection) event
 #'
 #' @param from string giving name of origin compartment
 #' @param to string giving the name of the destination compartment
-#' @param source string (or vector of strings) designating which compartments are infectious.
-#' If NULL, the destination compartment is presumed to be the infectious compartment.
-#' @param split an optional character or numeric vector indicating what proportion of individuals
-#' transition into each of the `to` compartments
+#' @param source string (or vector of strings) designating which compartments
+#'   are infectious. If NULL, the destination compartment is presumed to be the
+#'   infectious compartment.
+#' @param split an optional character or numeric vector indicating what
+#'   proportion of individuals transition into each of the `to` compartments
 #'
 #' @export
 transmit <- function(from, to, source = NA, split = NA) {
-
   split_check(to, split)
 
   out <- list()
 
-  for(i in 1:length(to)) {
+  for (i in seq_along(to)) {
+    out[[i]] <- data.frame(
+      from = from,
+      to = to[i],
+      rate_name = NA,
+      rate_value = NA,
+      split_name = NA,
+      split_value = NA,
+      mult_inf_prob = NA
+    )
 
-    out[[i]] <- data.frame(from = from,
-                           to = to[i],
-                           rate_name = NA,
-                           rate_value = NA,
-                           split_name = NA,
-                           split_value = NA,
-                           mult_inf_prob = NA)
+    out[[i]]$source <- ifelse(sum(is.na(source)) > 0, to, list(source))
 
-    out[[i]]$source <- ifelse(sum(is.na(source))>0, to, list(source))
-
-    if(i == 1) {
-      if(is.numeric(split[i])) {
+    if (i == 1) {
+      if (is.numeric(split[i])) {
         out[[i]]$split_value <- split[i]
       } else {
         out[[i]]$split_name <- split[i]
       }
     } else {
-      if(is.numeric(split)) {
-        if(length(split) >= i) {
+      if (is.numeric(split)) {
+        if (length(split) >= i) {
           out[[i]]$split_value <- split[i]
         } else {
-          out[[i]]$split_value <- 1-sum(split[1:(i-1)])
+          out[[i]]$split_value <- 1 - sum(split[1:(i - 1)])
         }
       } else {
-        if(length(split) >= i) {
+        if (length(split) >= i) {
           out[[i]]$split_name <- split[i]
         } else {
-          out[[i]]$split_name <- paste0("1-", paste(split[1:(i-1)], sep = "-", collapse = "-"))
+          out[[i]]$split_name <- paste0(
+            "1-",
+            paste(split[1:(i - 1)], sep = "-", collapse = "-")
+          )
         }
       }
     }
   }
 
-  return(bind_rows(out))
-
+  dplyr::bind_rows(out)
 }
 
 
@@ -185,16 +213,18 @@ transmit <- function(from, to, source = NA, split = NA) {
 make_infection_model <- function(..., mult_inf_probs = FALSE) {
   .dots <- list(...)
 
-  out  <- dplyr::bind_rows(.dots)
+  out <- dplyr::bind_rows(.dots)
   out$mult_inf_probs <- mult_inf_probs
 
-  return(out)
-
+  out
 }
 
 #' @title Create Transmission Probability Matrix
 #'
-#' @param inf_model infection process model object yielded by make_infection_model()
+#' @param inf_model infection process model object yielded by
+#'   make_infection_model()
+#'
+#' @global param
 #'
 #' @export
 get_transmission_details <- function(inf_model) {
@@ -206,165 +236,224 @@ get_transmission_details <- function(inf_model) {
   rownames(mult) <- paste("to", states, sep = "_")
   colnames(mult) <- paste("from", states, sep = "_")
 
-  trans_to_fit <- data.frame(from = character(),
-                             to = character(),
-                             trans_row = numeric(),
-                             trans_col = numeric(),
-                             source = list(),
-                             rate_name = character(),
-                             param = numeric())
+  trans_to_fit <- data.frame(
+    from = character(),
+    to = character(),
+    trans_row = numeric(),
+    trans_col = numeric(),
+    source = list(),
+    rate_name = character(),
+    param = numeric()
+  )
 
-  mult_to_fit <- data.frame(from = character(),
-                            to = character(),
-                            mult_row = numeric(),
-                            mult_col = numeric(),
-                            mult_name = character(),
-                            param = numeric())
+  mult_to_fit <- data.frame(
+    from = character(),
+    to = character(),
+    mult_row = numeric(),
+    mult_col = numeric(),
+    mult_name = character(),
+    param = numeric()
+  )
 
-  for(i in 1:nrow(inf_model)) {
-
+  for (i in seq_len(nrow(inf_model))) {
     # Transition probabilities
-    if(!is.na(inf_model$rate_value[i])) {
-      trans[states == inf_model$to[i],states == inf_model$from[i]] <- inf_model$rate_value[i]
+    if (!is.na(inf_model$rate_value[i])) {
+      trans[
+        states == inf_model$to[i],
+        states == inf_model$from[i]
+      ] <- inf_model$rate_value[i]
     } else {
-      temp <- data.frame(from = inf_model$from[i],
-                         to = inf_model$to[i],
-                         trans_row = which(states == inf_model$to[i]),
-                         trans_col = which(states == inf_model$from[i]),
-                         rate_name = inf_model$rate_name[i],
-                         param = NA)
-      temp$source <- ifelse(is.null(inf_model$source[i][[1]]), list(0) , list(which(states %in% inf_model$source[i][[1]])))
-      trans_to_fit <- bind_rows(trans_to_fit, temp)
+      temp <- data.frame(
+        from = inf_model$from[i],
+        to = inf_model$to[i],
+        trans_row = which(states == inf_model$to[i]),
+        trans_col = which(states == inf_model$from[i]),
+        rate_name = inf_model$rate_name[i],
+        param = NA
+      )
+      temp$source <- ifelse(
+        is.null(inf_model$source[i][[1]]),
+        list(0),
+        list(which(states %in% inf_model$source[i][[1]]))
+      )
+      trans_to_fit <- dplyr::bind_rows(trans_to_fit, temp)
     }
 
     # Multipliers
-    if(!is.na(inf_model$split_value[i])) {
-      mult[states == inf_model$to[i],states == inf_model$from[i]] <- inf_model$split_value[i]
-    } else if(!is.na(inf_model$split_name[i])) {
-      temp <- data.frame(from = inf_model$from[i],
-                         to = inf_model$to[i],
-                         mult_row = which(states == inf_model$to[i]),
-                         mult_col = which(states == inf_model$from[i]),
-                         mult_name = inf_model$split_name[i],
-                         param = NA)
-      mult_to_fit <- bind_rows(mult_to_fit, temp)
+    if (!is.na(inf_model$split_value[i])) {
+      mult[
+        states == inf_model$to[i],
+        states == inf_model$from[i]
+      ] <- inf_model$split_value[i]
+    } else if (!is.na(inf_model$split_name[i])) {
+      temp <- data.frame(
+        from = inf_model$from[i],
+        to = inf_model$to[i],
+        mult_row = which(states == inf_model$to[i]),
+        mult_col = which(states == inf_model$from[i]),
+        mult_name = inf_model$split_name[i],
+        param = NA
+      )
+      mult_to_fit <- dplyr::bind_rows(mult_to_fit, temp)
     }
   }
 
   # Identify unique parameters to fit - transitions
-  if(sum(!is.na(trans_to_fit$rate_name)) > 0) {
+  if (sum(!is.na(trans_to_fit$rate_name)) > 0) {
     fac_levels <- unique(trans_to_fit$rate_name[!is.na(trans_to_fit$rate_name)])
-    trans_to_fit$param <- as.numeric(factor(trans_to_fit$rate_name, levels = fac_levels))
+    trans_to_fit$param <- as.numeric(factor(
+      trans_to_fit$rate_name,
+      levels = fac_levels
+    ))
   }
-  trans_to_fit <- trans_to_fit %>%
-    mutate(param = replace_na(param, 0))
+  trans_to_fit <- trans_to_fit |>
+    dplyr::mutate(param = tidyr::replace_na(param, 0))
 
   # Identify unique parameters to fit - multipliers
-  if(sum(!is.na(mult_to_fit$mult_name)) > 0) {
-    fac_levels <- unique(mult_to_fit$mult_name[!is.na(mult_to_fit$mult_name) & !str_detect(mult_to_fit$mult_name, "1-")])
-    mult_to_fit$param <- as.numeric(factor(mult_to_fit$mult_name, levels = fac_levels))
+  if (sum(!is.na(mult_to_fit$mult_name)) > 0) {
+    fac_levels <- unique(
+      mult_to_fit$mult_name[
+        !is.na(mult_to_fit$mult_name) &&
+          !stringr::str_detect(mult_to_fit$mult_name, "1-")
+      ]
+    )
+    mult_to_fit$param <- as.numeric(factor(
+      mult_to_fit$mult_name,
+      levels = fac_levels
+    ))
   }
-  mult_to_fit <- mult_to_fit %>%
-    mutate(param = replace_na(param, 0))
+  mult_to_fit <- mult_to_fit |>
+    dplyr::mutate(param = tidyr::replace_na(param, 0))
 
-  if(nrow(mult_to_fit) > 0) {
-    for(i in 1:nrow(mult_to_fit)) {
-      if(grepl("1-", mult_to_fit$mult_name[i])) {
+  if (nrow(mult_to_fit) > 0) {
+    for (i in seq_len(nrow(mult_to_fit))) {
+      if (grepl("1-", mult_to_fit$mult_name[i])) {
         to_match <- strsplit(mult_to_fit$mult_name[i], "-")[[1]]
         to_match <- to_match[to_match != "1"]
         matches <- mult_to_fit$param[mult_to_fit$mult_name %in% to_match]
-        mult_to_fit$param[i] <- list(-1*matches)
+        mult_to_fit$param[i] <- list(-1 * matches)
       }
     }
   }
 
-  return(list(states = states,
-              trans_matrix = trans,
-              mult_matrix = mult,
-              trans_to_fit = trans_to_fit,
-              mult_to_fit = mult_to_fit,
-              inf_states = unique(unlist(trans_to_fit$source[is.na(trans_to_fit$rate_name)])),
-              mult_inf_probs = inf_model$mult_inf_probs[1]))
+  list(
+    states = states,
+    trans_matrix = trans,
+    mult_matrix = mult,
+    trans_to_fit = trans_to_fit,
+    mult_to_fit = mult_to_fit,
+    inf_states = unique(
+      unlist(trans_to_fit$source[is.na(trans_to_fit$rate_name)])
+    ),
+    mult_inf_probs = inf_model$mult_inf_probs[1]
+  )
 }
 
 #' @title Make Observation Process Model
-#' 
-#' @param ... A series of named vectors. Each vector corresponds to an observation
-#' type. Each entry in the vector is named for the corresponding compartment in
-#' the infection process model. The value is the proability of observing a positive
-#' observation given the individual is in the compartment.
-#' 
+#'
+#' @param ... A series of named vectors. Each vector corresponds to an
+#'   observation type. Each entry in the vector is named for the corresponding
+#'   compartment in the infection process model. The value is the probability of
+#'   observing a positive observation given the individual is in the
+#'   compartment.
+#'
 #' @export
 make_observation_model <- function(...) {
   .dots <- list(...)
 
   ops <- list()
-  for(i in 1:length(.dots)) {
+  for (i in seq_along(.dots)) {
     op <- matrix(nrow = 2, ncol = length(.dots[[i]]))
-    op[1,] <- 1-.dots[[i]]
-    op[2,] <- .dots[[i]]
+    op[1, ] <- 1 - .dots[[i]]
+    op[2, ] <- .dots[[i]]
     rownames(op) <- c("neg_obs", "pos_obs")
     colnames(op) <- names(.dots[[i]])
     ops[[i]] <- op
   }
   names(ops) <- names(.dots)
-  return(ops)
+  ops
 }
 
 
 #' @title Create Data for Stan Model
 #'
-#' @param inf_model Infection process model object generated by \link{make_infection_model}
-#' @param obs_model Observation process model object generated by \link{make_observation_model}
+#' @param inf_model Infection process model object generated by
+#'   \link{make_infection_model}
+#' @param obs_model Observation process model object generated by
+#'   \link{make_observation_model}
 #' @param data data frame with columns....
-#' @param init_probs vector of initial probabilities for each infection process model state
+#' @param init_probs vector of initial probabilities for each infection process
+#'   model state
 #' @param epsilon very small number to use for zero probability transitions
-#' @param ih_cov NULL for run without covariates, otherwise data frame with intra-household covariates for each participant
-#' @param eh_cov NULL for run without covariates, otherwise data frame with extra-household covariates for each participant
-#' 
-make_stan_data <- function(inf_model, obs_model, data, init_probs, epsilon = 1e-10,
-                           ih_cov = NULL, eh_cov = NULL) {
-
-
+#' @param ih_cov NULL for run without covariates, otherwise data frame with
+#'   intra-household covariates for each participant
+#' @param eh_cov NULL for run without covariates, otherwise data frame with
+#'   extra-household covariates for each participant
+#'
+#' @global hh_id
+#' @global part_id
+#' @global hh_size
+#' @global row_id
+#' @global trans_row
+#' @global trans_col
+#' @global mult_row
+#' @global mult_col
+#'
+#' @keywords internal
+make_stan_data <- function(
+  inf_model,
+  obs_model,
+  data,
+  init_probs,
+  epsilon = 1e-10,
+  ih_cov = NULL,
+  eh_cov = NULL
+) {
   inf_details <- get_transmission_details(inf_model)
-  dat <- data %>%
-    arrange(hh_id, t, part_id)
+  dat <- data |>
+    dplyr::arrange(hh_id, t, part_id)
 
-  dat$row_id <- 1:nrow(dat)
-  hh_sum <- dat %>%
-    group_by(hh_id, hh_size) %>%
-    summarize(hh_start_ind = min(row_id),
-              hh_end_ind = max(row_id),
-              hh_tmin = min(t),
-              hh_tmax = max(t),
-              obs_per_hh = n()) %>%
-    ungroup()
+  dat$row_id <- seq_len(nrow(dat))
+  hh_sum <- dat |>
+    dplyr::group_by(hh_id, hh_size) |>
+    dplyr::summarize(
+      hh_start_ind = min(row_id),
+      hh_end_ind = max(row_id),
+      hh_tmin = min(t),
+      hh_tmax = max(t),
+      obs_per_hh = dplyr::n()
+    ) |>
+    dplyr::ungroup()
 
-  source_state_matrix <- matrix(0, nrow = nrow(inf_details$trans_to_fit), ncol = length(inf_details$states))
-  for(i in 1:nrow(inf_details$trans_to_fit)) {
-    if(any(inf_details$trans_to_fit$source[[i]] == 0)) {
+  source_state_matrix <- matrix(
+    0,
+    nrow = nrow(inf_details$trans_to_fit),
+    ncol = length(inf_details$states)
+  )
+  for (i in seq_len(nrow(inf_details$trans_to_fit))) {
+    if (any(inf_details$trans_to_fit$source[[i]] == 0)) {
       next
     } else {
-      source_state_matrix[i,inf_details$trans_to_fit$source[[i]]] <- 1
+      source_state_matrix[i, inf_details$trans_to_fit$source[[i]]] <- 1
     }
   }
 
-  obs_array <- array(dim = c(length(obs_model),2, length(inf_details$states)))
-  for(i in 1:length(obs_model)) {
-    obs_array[i,,] <- obs_process[[i]]
+  obs_array <- array(dim = c(length(obs_model), 2, length(inf_details$states)))
+  for (i in seq_along(obs_model)) {
+    obs_array[i, , ] <- obs_model[[i]]
   }
 
   # Expand multipliers if needed
-  if(is.list(inf_details$mult_to_fit$param)) {
+  if (is.list(inf_details$mult_to_fit$param)) {
     mult_info <- data.frame()
-    for(i in 1:nrow(inf_details$mult_to_fit)) {
-      if(length(inf_details$mult_to_fit$param[i][[1]]) == 1) {
-        mult_info <- bind_rows(mult_info, inf_details$mult_to_fit[i,])
+    for (i in seq_len(nrow(inf_details$mult_to_fit))) {
+      if (length(inf_details$mult_to_fit$param[i][[1]]) == 1) {
+        mult_info <- dplyr::bind_rows(mult_info, inf_details$mult_to_fit[i, ])
       } else {
-        for(j in 1:length(inf_details$mult_to_fit$param[i][[1]])) {
-          temp <- inf_details$mult_to_fit[i,] %>%
-            unnest(param)
-          mult_info <- bind_rows(mult_info, temp)
+        for (j in seq_along(inf_details$mult_to_fit$param[i][[1]])) {
+          temp <- inf_details$mult_to_fit[i, ] |>
+            tidyr::unnest(param)
+          mult_info <- dplyr::bind_rows(mult_info, temp)
         }
       }
     }
@@ -374,134 +463,272 @@ make_stan_data <- function(inf_model, obs_model, data, init_probs, epsilon = 1e-
 
   # TODO: deal with missing observations (change NA to -1)
 
-  dat_stan <- list(n_states = length(inf_details$states),
-                   trans = inf_details$trans_matrix,
-                   n_inf_states = length(inf_details$inf_states),
-                   inf_states = array(inf_details$inf_states),
-                   n_trans_fit = nrow(inf_details$trans_to_fit),
-                   param_index = array(inf_details$trans_to_fit$param),
-                   trans_index = inf_details$trans_to_fit %>% select(trans_row, trans_col),
-                   source_states = source_state_matrix,
-                   transition_multiplier = inf_details$mult_matrix,
-                   n_mult_fit = nrow(mult_info),
-                   n_mult_params = length(unique(abs(unlist(mult_info$param)))),
-                   mult_param_index = unlist(mult_info$param),
-                   mult_index = mult_info %>% select(mult_row, mult_col),
-                   n_params = length(unique(inf_details$trans_to_fit$param[inf_details$trans_to_fit$param != 0])),
-                   n_hh = max(dat$hh_id),
-                   hh_size = hh_sum$hh_size,
-                   n_obs = nrow(dat),
-                   n_obs_type = length(obs_process),
-                   n_unique_obs = 2, #TODO: allow multi-level outcomes
-                   y = dat %>% select(names(obs_model)) + 1,
-                   part_id = dat$part_id,
-                   t_day = dat$t,
-                   obs_per_hh = hh_sum$obs_per_hh,
-                   hh_start_ind = hh_sum$hh_start_ind,
-                   hh_end_ind = hh_sum$hh_end_ind,
-                   hh_tmin = hh_sum$hh_tmin,
-                   hh_tmax = hh_sum$hh_tmax,
-                   obs_prob = obs_array,
-                   init_probs = init_probs, #TODO: Toggle to fit
-                   epsilon = epsilon,
-                   n_inf_prob = ifelse(inf_details$mult_inf_probs, length(inf_details$inf_states), 1))
+  dat_stan <- list(
+    n_states = length(inf_details$states),
+    trans = inf_details$trans_matrix,
+    n_inf_states = length(inf_details$inf_states),
+    inf_states = array(inf_details$inf_states),
+    n_trans_fit = nrow(inf_details$trans_to_fit),
+    param_index = array(inf_details$trans_to_fit$param),
+    trans_index = inf_details$trans_to_fit |>
+      dplyr::select(trans_row, trans_col),
+    source_states = source_state_matrix,
+    transition_multiplier = inf_details$mult_matrix,
+    n_mult_fit = nrow(mult_info),
+    n_mult_params = length(unique(abs(unlist(mult_info$param)))),
+    mult_param_index = unlist(mult_info$param),
+    mult_index = mult_info |> dplyr::select(mult_row, mult_col),
+    n_params = length(unique(
+      inf_details$trans_to_fit$param[inf_details$trans_to_fit$param != 0]
+    )),
+    n_hh = max(dat$hh_id),
+    hh_size = hh_sum$hh_size,
+    n_obs = nrow(dat),
+    n_obs_type = length(obs_model),
+    n_unique_obs = 2,
+    y = dat |> dplyr::select(names(obs_model)) + 1,
+    part_id = dat$part_id,
+    t_day = dat$t,
+    obs_per_hh = hh_sum$obs_per_hh,
+    hh_start_ind = hh_sum$hh_start_ind,
+    hh_end_ind = hh_sum$hh_end_ind,
+    hh_tmin = hh_sum$hh_tmin,
+    hh_tmax = hh_sum$hh_tmax,
+    obs_prob = obs_array,
+    init_probs = init_probs,
+    #TODO: Toggle to fit
+    epsilon = epsilon,
+    n_inf_prob = ifelse(
+      inf_details$mult_inf_probs,
+      length(inf_details$inf_states),
+      1
+    )
+  )
 
   # Get covariate information if applicable
-  if(!(is.null(eh_cov) & is.null(ih_cov))) {
-    if(!is.null(eh_cov) & !is.null(ih_cov)) {
-
+  if (!(is.null(eh_cov) && is.null(ih_cov))) {
+    if (!is.null(eh_cov) && !is.null(ih_cov)) {
       k_ih <- ncol(ih_cov)
       x_ih <- ih_cov
 
       k_eh <- ncol(eh_cov)
       x_eh <- eh_cov
 
-      dat_stan <- append(dat_stan,
-                         list(k_ih = k_ih,
-                              x_ih = x_ih,
-                              k_eh = k_eh,
-                              x_eh = x_eh))
-
+      dat_stan <- append(
+        dat_stan,
+        list(
+          k_ih = k_ih,
+          x_ih = x_ih,
+          k_eh = k_eh,
+          x_eh = x_eh
+        )
+      )
     } else {
-      stop("Currently only support having covariates on both intra- and extra-household infeciton probabilities.")
+      stop(
+        strwrap(
+          "Currently only support having covariates on both intra- ande
+                xtra-household infeciton probabilities."
+        )
+      )
     }
   }
 
-  return(dat_stan)
-
+  dat_stan
 }
 
 #' @title Run Household Transmission Model
-#' 
-#' @param inf_model Infection process model object generated by \link{make_infection_model}
-#' @param obs_model Observation process model object generated by \link{make_observation_model}
+#'
+#' @param inf_model Infection process model object generated by
+#'   \link{make_infection_model}
+#' @param obs_model Observation process model object generated by
+#'   \link{make_observation_model}
 #' @param data data frame with columns....
-#' @param init_probs vector of initial probabilities for each infection process model state
+#' @param init_probs vector of initial probabilities for each infection process
+#'   model state
 #' @param epsilon very small number to use for zero probability transitions
-#' @param ih_cov NULL for run without covariates, otherwise data frame with intra-household covariates for each participant
-#' @param eh_cov NULL for run without covariates, otherwise data frame with extra-household covariates for each participant
+#' @param ih_cov NULL for run without covariates, otherwise data frame with
+#'   intra-household covariates for each participant
+#' @param eh_cov NULL for run without covariates, otherwise data frame with
+#'   extra-household covariates for each participant
 #' @param file file path to stan model
 #' @param iter number of MCMC iterations
 #' @param chains number of MCMC chains
 #' @param cores number of cores for parallelization
 #' @param init initial conditions for MCMC chains
 #' @param save_states indicator for whether to save state probabilities
-#' 
+#'
 #' @export
-run_model <- function(inf_model, obs_model, data, init_probs, epsilon = 1e-10,
-                      ih_cov = NULL, eh_cov = NULL,
-                      file = "stan/hmm.stan", iter = 2000, chains = 4,
-                      cores = getOption("mc.cores", 1L), init = NULL, 
-                      save_states = FALSE) {
+run_model <- function(
+  inf_model,
+  obs_model,
+  data,
+  init_probs,
+  epsilon = 1e-10,
+  ih_cov = NULL,
+  eh_cov = NULL,
+  file = "stan/hmm.stan",
+  iter = 2000,
+  chains = 4,
+  cores = getOption("mc.cores", 1L),
+  init = NULL,
+  save_states = FALSE
+) {
+  dat_stan <- make_stan_data(
+    inf_model,
+    obs_model,
+    data,
+    init_probs,
+    epsilon,
+    ih_cov,
+    eh_cov
+  )
 
-  dat_stan <- make_stan_data(inf_model, obs_model, data, init_probs, epsilon, ih_cov, eh_cov)
-
-  if(is.null(init)) {
-    if(!is.null(eh_cov) & !is.null(ih_cov)) {
-      
-      init = rep(list(list(logit_params = array(rep(logit(0.5), dat_stan$n_params)),
-                           logit_mult_params = array(rep(logit(0.5), dat_stan$n_mult_params)),
-                           beta_eh = rep(0, dat_stan$k_eh),
-                           beta_ih = rep(0, dat_stan$k_ih),
-                           beta0_eh = logit(0.02),
-                           beta0_ih = array(rep(logit(0.02), dat_stan$n_inf_prob)))), 4)
-      
+  if (is.null(init)) {
+    if (!is.null(eh_cov) && !is.null(ih_cov)) {
+      init = rep(
+        list(
+          list(
+            logit_params = array(rep(logit(0.5), dat_stan$n_params)),
+            logit_mult_params = array(rep(
+              logit(0.5),
+              dat_stan$n_mult_params
+            )),
+            beta_eh = rep(0, dat_stan$k_eh),
+            beta_ih = rep(0, dat_stan$k_ih),
+            beta0_eh = logit(0.02),
+            beta0_ih = array(rep(logit(0.02), dat_stan$n_inf_prob))
+          )
+        ),
+        4
+      )
     } else {
-      
-      init = rep(list(list(logit_params = array(rep(logit(0.5), dat_stan$n_params)),
-                           logit_mult_params = array(rep(logit(0.5), dat_stan$n_mult_params)),
-                           beta_eh = logit(0.02),
-                           beta_ih = array(rep(logit(0.02), dat_stan$n_inf_prob)))), 4)
-      
+      init = rep(
+        list(
+          list(
+            logit_params = array(rep(logit(0.5), dat_stan$n_params)),
+            logit_mult_params = array(rep(
+              logit(0.5),
+              dat_stan$n_mult_params
+            )),
+            beta_eh = logit(0.02),
+            beta_ih = array(rep(logit(0.02), dat_stan$n_inf_prob))
+          )
+        ),
+        4
+      )
     }
-    
   } else {
     init <- rep(list(init), 4)
   }
 
-  if(save_states) {
-    stan_fit <- stan(file = file,
-                     data = dat_stan,
-                     iter = iter,
-                     chains = chains,
-                     cores = cores,
-                     init = init)
+  if (save_states) {
+    stan_fit <- rstan::stan(
+      file = file,
+      data = dat_stan,
+      iter = iter,
+      chains = chains,
+      cores = cores,
+      init = init
+    )
   } else {
-    stan_fit <- stan(file = file,
-                     data = dat_stan,
-                     iter = iter,
-                     chains = chains,
-                     cores = cores,
-                     init = init,
-                     pars = "logalpha",
-                     include = FALSE)
+    stan_fit <- rstan::stan(
+      file = file,
+      data = dat_stan,
+      iter = iter,
+      chains = chains,
+      cores = cores,
+      init = init,
+      pars = "logalpha",
+      include = FALSE
+    )
   }
 
-  return(stan_fit)
-
+  list(
+    stan_fit = stan_fit,
+    stan_data = dat_stan,
+    eh_cov_names = colnames(eh_cov),
+    ih_cov_names = colnames(ih_cov)
+  )
 }
 
+#' @title Extract chains and renames with user-provided parameter names
+#'
+#' @param inf_model Infection process model object generated by
+#'   \link{make_infection_model}
+#' @param model_output Bbject from \link{run_model}
+#'
+#' @keywords internal
+rename_chains <- function(inf_model, model_output) {
+  # Get parameter information
+  inf_details <- get_transmission_details(inf_model)
+  mult_names <- inf_details$mult_to_fit$mult_name[
+    inf_details$mult_to_fit$param >= 1
+  ]
+  trans_names <- inf_details$trans_to_fit$rate_name[
+    inf_details$trans_to_fit$param >= 1
+  ]
+  n_ih <- ifelse(
+    inf_details$mult_inf_probs == FALSE,
+    1,
+    length(inf_details$inf_states)
+  )
 
+  # Extract chains
+  draws_full <- posterior::as_draws_array(model_output$stan_fit)
 
+  # Get variable names and subset to parameters of interest
+  var_names <- posterior::variables(draws_full)
 
+  if (length(grep("beta0", var_names)) > 0) {
+    var_names_sub <- c(
+      grep("beta0_eh", var_names, value = TRUE),
+      grep("beta0_ih", var_names, value = TRUE)
+    )
+  } else {
+    var_names_sub <- c(
+      grep("beta_eh", var_names, value = TRUE),
+      grep("beta_ih", var_names, value = TRUE)
+    )
+  }
 
+  if (length(trans_names) > 0) {
+    var_names_sub <- c(var_names_sub, grep("^params", var_names, value = TRUE))
+  }
+
+  if (length(mult_names) > 0) {
+    var_names_sub <- c(
+      var_names_sub,
+      grep("mult_params", var_names, value = TRUE)
+    )
+  }
+
+  # Pull coovariate coefficients if covariate run
+  if (length(grep("beta0", var_names)) > 0) {
+    var_names_sub <- c(
+      var_names_sub,
+      grep("beta_eh", var_names, value = TRUE),
+      grep("beta_ih", var_names, value = TRUE)
+    )
+  }
+
+  # Make new variable names from user-specified parameter names
+  if (n_ih == 1) {
+    ih_names <- "ih_prob"
+  } else {
+    ih_names <- paste0("ih_prob_", inf_details$states[inf_details$inf_states])
+  }
+
+  var_names_new <- c("eh_prob", ih_names, trans_names, mult_names)
+
+  if (length(grep("beta0", var_names)) > 0) {
+    var_names_sub <- c(
+      var_names_sub,
+      model_output$eh_cov_names,
+      model_output$ih_cov_names
+    )
+  }
+
+  # Subset to variables of interest and rename
+  draws <- posterior::subset_draws(draws_full, variable = var_names_sub)
+  posterior::variables(draws) <- var_names_new
+}

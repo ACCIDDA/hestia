@@ -9,12 +9,13 @@ progress(from, to, split = NA, ...)
 \arguments{
 \item{from}{string giving name of origin compartment}
 
-\item{to}{string or vector of strings giving the name of the destination compartment}
+\item{to}{string or vector of strings giving the name of the destination
+compartment}
 
-\item{split}{an optional character or numeric vector indicating what proportion of individuals
-transition into each of the \code{to} compartments}
+\item{split}{an optional character or numeric vector indicating what
+proportion of individuals transition into each of the \code{to} compartments}
 }
 \description{
-Defines a state transition in the infection process model which does not
-represent an transmission (infection) event
+Defines a state transition in the infection process model which
+does not represent an transmission (infection) event
 }

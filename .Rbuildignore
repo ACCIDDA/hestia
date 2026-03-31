@@ -1,2 +1,9 @@
 ^hestia\.Rproj$
 ^\.Rproj\.user$
+^data-raw$
+^[.]?air[.]toml$
+^\.vscode$
+src/RcppExports*
+src/stanExports*
+src/*.dll
+^\.lintr$

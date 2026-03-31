@@ -12,3 +12,4 @@ logit(x)
 \description{
 Logit Transformation
 }
+\keyword{internal}

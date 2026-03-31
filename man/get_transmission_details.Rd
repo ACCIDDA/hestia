@@ -7,7 +7,8 @@
 get_transmission_details(inf_model)
 }
 \arguments{
-\item{inf_model}{infection process model object yielded by make_infection_model()}
+\item{inf_model}{infection process model object yielded by
+make_infection_model()}
 }
 \description{
 Create Transmission Probability Matrix

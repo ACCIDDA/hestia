@@ -12,3 +12,4 @@ inv_logit(x)
 \description{
 Inverse Logit Transformation
 }
+\keyword{internal}

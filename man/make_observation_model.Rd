@@ -7,10 +7,11 @@
 make_observation_model(...)
 }
 \arguments{
-\item{...}{A series of named vectors. Each vector corresponds to an observation
-type. Each entry in the vector is named for the corresponding compartment in
-the infection process model. The value is the proability of observing a positive
-observation given the individual is in the compartment.}
+\item{...}{A series of named vectors. Each vector corresponds to an
+observation type. Each entry in the vector is named for the corresponding
+compartment in the infection process model. The value is the probability of
+observing a positive observation given the individual is in the
+compartment.}
 }
 \description{
 Make Observation Process Model
