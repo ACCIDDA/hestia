@@ -6,15 +6,12 @@ output: html_document
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
-source("../R/hestia_functions.R")
-source("../R/simulation.R")
 
+library(hestia)
 library(rstan)
 library(tidyverse)
 library(posterior)
 library(cowplot)
-
-set.seed(6842)
 
 ```
 
@@ -22,25 +19,11 @@ set.seed(6842)
 
 ## Simulate data
 
-First we will simulate some data from a basic SIR model for 100 households. We will assume that all individuals start susceptible. The per day intra-household infection probability is 5% and the daily extra-household infection probability is 1%.
+We will use data simulated from a basic SIR model for 500 households. We will assume that all individuals start susceptible. The per day intra-household infection probability is 5% and the daily extra-household infection probability is 1%.
 
 ```{r}
 
-# Simulate data from a basic SIR model for 100 households
-# Everyone starts susceptible
-# Two observations, first informative about infection (e.g. culture or PCR, 
-# second informative about recovery (e.g. IgG))
-dat_sim <- sim_sir(eh_prob = 0.01, ih_prob = 0.05, n_hh = 100,
-                   hh_size = 1:5, tmax = 100, gamma = 1/5,
-                   obs_prob = list(c(0.05, 0.95, 0.05),
-                                   c(0.01, 0.01, 0.8)),
-                   start_prob = c(1, 0, 0),
-                   complete_enroll = TRUE)
-saveRDS(dat_sim, "dat_SIR.rds")
-
-# Name courcome columns
-dat <- dat_sim$obs %>%
-  rename(pcr = y1, igg = y2)
+head(sir)
 
 ```
 
@@ -72,14 +55,20 @@ The observation model is composed of a series of named vectors. Each vector corr
 In this example we have two observation types, one which is likely to be positive when a person is actively infectious (e.g. PCR test results) and the other which is more likely to be positive when the person is recovered and immune to infection (e.g. IgG antibody).
 
 ```{r}
-obs_process <- make_observation_model(pcr = c("S" = 0.05, "I" = 0.95, "R" = 0.05),
-                                      igg = c("S" = 0.01, "I" = 0.01, "R" = 0.8))
+obs_process <- make_observation_model(
+  pcr = c("S" = 0.05, "I" = 0.95, "R" = 0.05),
+  igg = c("S" = 0.01, "I" = 0.01, "R" = 0.8)
+)
 
 ```
 
 Now we are ready to run the model!
 
-```{r, message=FALSE, warning=FALSE}
+```{r, message=FALSE, warning=FALSE, eval=FALSE}
+
+# Note this is very computationally intensive so the block is not evaluated
+# when knitting
+
 ## Inputs
 # 1. Infection process model
 # 2. Observation process model
@@ -87,50 +76,35 @@ Now we are ready to run the model!
 # 4. Covariates (optional)
 # 5. Starting state probabilities
 
-res_stan <- run_model(inf_model = inf_process, obs_model = obs_process,
-                      data = dat, init_probs = c(1-2*1e-10, 1e-10, 1e-10),
-                      iter = 1000, cores = 4, save_chains = TRUE,
-                      file = "../inst/stan/hmm.stan",
-                      save_states = FALSE) # setting to FALSE to increase speed
-
-saveRDS(res_stan, "SIR_stanfit.rds")
+sir_res <- run_model(
+  inf_model = inf_process,
+  obs_model = obs_process,
+  data = sir,
+  init_probs = c(1 - 2 * 1e-10, 1e-10, 1e-10),
+  iter = 1000,
+  cores = 4
+)
 
 ```
 
 Now let's look at the model results using the `posterior` package.
 
 ```{r}
-# Convert to draws array
-draws_full <- as_draws_array(res_stan)
 
-# Transform variables and subset to variables of interest
-draws <- subset_draws(draws_full,
-                      variable = c("beta_ih[1]", "beta_eh", "logit_params[1]"))
-draws <- mutate_variables(draws,
-                          ih_prob = inv_logit(`beta_ih[1]`),
-                          eh_prob = inv_logit(beta_eh),
-                          gamma = inv_logit(`logit_params[1]`))
-draws <- subset_draws(draws,
-                      variable = c("ih_prob", "eh_prob", "gamma"))
+# The output from the model in the previous code chunk is available in the
+# sir_res package data object
 
-# Get summary statistics
-draws_sum <- summarise_draws(draws, "mean", "median",
-                             ~quantile2(.x, probs = c(0.025, 0.975))) %>%
-  mutate(var_type = c(rep("Infection probability", 2), "Recovery rate"))
+# Get summary statistics, note that parameters are returned on the logit scale
+# so we also transform back to arithmetic scale
+draws_sum <- summarise_draws(sir_res, "mean", "median", ~ quantile2(.x, probs = c(0.025, 0.975))) |>
+  mutate(var_type = c(rep("Infection probability", 2), "Recovery rate")) %>%
+  mutate(across(where(is.numeric), ~ plogis(.x)))
+
+# "True" values from underlying simulation
+draws_sum$true_value <- c(0.01, 0.05, 0.2) 
+
 draws_sum
 
-# Plot versus true values
-true_vals <- data.frame(var_type = c(rep("Infection probability", 2), "Recovery rate"),
-                        variable = c("ih_prob", "eh_prob", "gamma"),
-                        true_val = c(0.05, 0.01, 0.2))
-
-ggplot(draws_sum, aes(x = variable)) +
-  geom_point(aes(y = median)) +
-  geom_errorbar(aes(ymin = q2.5, ymax = q97.5)) +
-  geom_hline(data = true_vals, aes(yintercept = true_val),
-             color = "red", lty = "dashed") +
-  facet_wrap(~var_type, scales = "free") +
-  theme_bw()
 
 ```
 
@@ -138,94 +112,44 @@ ggplot(draws_sum, aes(x = variable)) +
 
 We can add covariates on the intra- and extra-household infection risk by including the optional `ih_cov` and `eh_cov` arguments, respectively, in `run_model()`.
 
-```{r, message=FALSE, warning=FALSE}
-# Simulate data from a basic SIR model for 100 households
-# Everyone starts susceptible
-# Two observations, first informative about infection (e.g. culture or PCR, 
-# second informative about recovery (e.g. IgG))
-dat_sim <- sim_sir(eh_prob = 0.01, ih_prob = 0.05, n_hh = 100,
-                   hh_size = 1:5, tmax = 100, gamma = 1/5,
-                   covs_eh = c(-0.4, 0.7), covs_ih = c(0.8, 0.1),
-                   obs_prob = list(c(0.05, 0.95, 0.05),
-                                   c(0.01, 0.01, 0.8)),
-                   start_prob = c(1, 0, 0),
-                   complete_enroll = TRUE)
-saveRDS(dat_sim, "dat_SIR_cov.rds")
-
-# Name courcome columns
-dat <- dat_sim$obs %>%
-  rename(pcr = y1, igg = y2)
+```{r, message=FALSE, warning=FALSE, eval=FALSE}
+# Simulated data from a basic SIR model for 500 households
+head(sir_cov$observations)
 
 # Run model with x1 and x2 as covariates
-res_stan <- run_model(inf_model = inf_process, obs_model = obs_process,
-                      data = dat, ih_cov = dat_sim$x, eh_cov = dat_sim$x,
-                      init_probs = c(1-2*1e-10, 1e-10, 1e-10),
-                      iter = 1000, cores = 4, save_chains = TRUE,
-                      file = "../inst/stan/hmm_cov.stan",
-                      save_states = FALSE) # setting to FALSE to increase speed
-
-saveRDS(res_stan, "SIR_cov_stanfit.rds")
+res_stan <- run_model(
+  inf_model = inf_process,
+  obs_model = obs_process,
+  data = sir_cov$observations,
+  ih_cov = sir_cov$covariates,
+  eh_cov = sir_cov$covariates,
+  init_probs = c(1 - 2 * 1e-10, 1e-10, 1e-10),
+  iter = 1000,
+  cores = 4
+)
 
 ```
 
 Let's take a look at the results once more.
 
 ```{r}
-# Convert to draws array
-draws_full <- as_draws_array(res_stan)
+# The output from the model in the previous code chunk is available in the
+# sir_cov_res package data object
 
-# Transform variables and subset to variables of interest
-draws <- subset_draws(draws_full,
-                      variable = c("beta0_ih[1]", "beta0_eh", "logit_params[1]",
-                                   "beta_ih[1]", "beta_ih[2]", "beta_eh[1]", "beta_eh[2]"))
-draws <- mutate_variables(draws,
-                          ih_prob = inv_logit(`beta0_ih[1]`),
-                          eh_prob = inv_logit(beta0_eh),
-                          x1_ih = exp(`beta_ih[1]`),
-                          x2_ih = exp(`beta_ih[2]`),
-                          x1_eh = exp(`beta_eh[1]`),
-                          x2_eh = exp(`beta_eh[2]`),
-                          gamma = inv_logit(`logit_params[1]`))
-draws <- subset_draws(draws,
-                      variable = c("ih_prob", "eh_prob", "gamma",
-                                   "x1_ih", "x2_ih", "x1_eh", "x2_eh"))
+# Get summary statistics, note that non-coefficients parameters are returned on
+# the logit scale and coefficients are returned on the log scale
+draws_sum <- summarise_draws(sir_cov_res, "mean", "median", 
+                             ~ quantile2(.x, probs = c(0.025, 0.975))) |>
+  mutate(var_type = c(rep("Infection probability", 2), "Recovery rate", rep("Coefficient", 4))) %>%
+  mutate(across(where(is.numeric),
+                ~ if_else(var_type != "Coefficient", 
+                          plogis(.x), 
+                          exp(.x))))
 
-# Get summary statistics
-draws_sum <- summarise_draws(draws, "mean", "median",
-                             ~quantile2(.x, probs = c(0.025, 0.975))) %>%
-  mutate(var_type = c(rep("Infection probability", 2), "Recovery rate", rep("Covariates", 4)))
+# "True" values from underlying simulation
+draws_sum$true_vals <- c(0.01, 0.05, 0.2, exp(-0.4), exp(0.7), exp(0.8), exp(0.1))
+
 draws_sum
-
-# Plot versus true values
-true_vals <- data.frame(var_type = c(rep("Infection probability", 2),
-                                     "Recovery rate", rep("Covariates", 4)),
-                        variable = c("ih_prob", "eh_prob", "gamma",
-                                     "x1_ih", "x2_ih", "x1_eh", "x2_eh"),
-                        true_val = c(0.05, 0.01, 0.2,
-                                     exp(0.8), exp(0.1), exp(-0.4), exp(0.7)))
-
-non_cov <- 
-  ggplot(draws_sum %>% filter(var_type != "Covariates"), aes(x = variable)) +
-  geom_point(aes(y = median)) +
-  geom_errorbar(aes(ymin = q2.5, ymax = q97.5)) +
-  geom_hline(data = true_vals %>% filter(var_type != "Covariates"),
-             aes(yintercept = true_val),
-             color = "red", lty = "dashed") +
-  facet_wrap(~var_type, scales = "free") +
-  theme_bw()
-
-cov <- 
-  ggplot(draws_sum %>% filter(var_type == "Covariates"), aes(x = variable)) +
-  geom_point(aes(y = median)) +
-  geom_errorbar(aes(ymin = q2.5, ymax = q97.5)) +
-  geom_hline(data = true_vals %>% filter(var_type == "Covariates"),
-             aes(yintercept = true_val),
-             color = "red", lty = "dashed") +
-  facet_wrap(~variable, scales = "free_x", nrow = 1) +
-  theme_bw() +
-  scale_y_log10()
-
-plot_grid(non_cov, cov, nrow = 2)
 
 ```
 
