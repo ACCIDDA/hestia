@@ -7,7 +7,10 @@
 logit(x)
 }
 \arguments{
-\item{x}{numeric value between 0 and 1}
+\item{x}{Numeric value between 0 and 1}
+}
+\value{
+A numeric value.
 }
 \description{
 Logit Transformation

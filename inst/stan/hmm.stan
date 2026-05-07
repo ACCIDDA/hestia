@@ -22,17 +22,17 @@ functions {
   // if(r_in(3,{1,2,3,4})) will evaluate as TRUE
   // from: https://discourse.mc-stan.org/t/stan-equivalent-of-rs-in-function/3849
 
-int is_in(int pos, array[] int pos_var) {
-  int pos_match;
-  array[size(pos_var)] int all_matches;
+  int is_in(int pos, array[] int pos_var) {
+    int pos_match;
+    array[size(pos_var)] int all_matches;
 
-  for (p in 1:size(pos_var)) {
-    all_matches[p] = (pos_var[p] == pos);
+    for (p in 1:size(pos_var)) {
+      all_matches[p] = (pos_var[p] == pos);
+    }
+
+    if (sum(all_matches) > 0) return 1;
+    else return 0;
   }
-
-  if (sum(all_matches) > 0) return 1;
-  else return 0;
-}
   
   // Normailze the columns of a matrix to sum to 1
   matrix normalize_cols(matrix m) {
@@ -46,16 +46,16 @@ int is_in(int pos, array[] int pos_var) {
   
   matrix replace_zeroes(matrix m, real epsilon) {
   
-  matrix[rows(m), cols(m)] out;
-  out = m;
-  for(i in 1:rows(m)) {
-    for(j in 1:cols(m)) {
-      if(m[i,j] == 0) {
-        out[i,j] = epsilon;
+    matrix[rows(m), cols(m)] out;
+    out = m;
+    for(i in 1:rows(m)) {
+      for(j in 1:cols(m)) {
+        if(m[i,j] == 0) {
+          out[i,j] = epsilon;
+        }
       }
     }
-  }
-  return(out);
+    return(out);
 }
   
 }
@@ -285,7 +285,7 @@ transformed parameters {
         }
         
         // transition splits
-        trans_temp = trans_temp .* mult_temp;
+        trans_temp .*= mult_temp;
 
         // fill in diagonals (columns must sum to one)
         for(i in 1:cols(trans_temp)) {

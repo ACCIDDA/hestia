@@ -101,12 +101,12 @@ sim_sir <- function(
         new_states <- rep(0, hh_size[i])
         for (part in 1:hh_size[i]) {
           if (prior[part] == 1) {
-            eh_prob_x <- inv_logit(
-              logit(eh_prob) +
+            eh_prob_x <- plogis(
+              qlogis(eh_prob) +
                 sum(x[last_x + part, ] * covs_eh)
             )
-            ih_prob_x <- inv_logit(
-              logit(ih_prob) +
+            ih_prob_x <- plogis(
+              qlogis(ih_prob) +
                 sum(x[last_x + part, ] * covs_ih)
             )
             no_inf_prob <- (1 - eh_prob_x) * (1 - ih_prob_x)^prior_inf
@@ -257,12 +257,12 @@ sim_siir <- function(
         new_states <- rep(0, hh_size[i])
         for (part in 1:hh_size[i]) {
           if (prior[part] == 1) {
-            eh_prob_x <- inv_logit(
-              logit(eh_prob) +
+            eh_prob_x <- plogis(
+              qlogis(eh_prob) +
                 sum(x[last_x + part, ] * covs_eh)
             )
-            ih_prob_x <- inv_logit(
-              logit(ih_prob) +
+            ih_prob_x <- plogis(
+              qlogis(ih_prob) +
                 sum(x[last_x + part, ] * covs_ih)
             )
             no_inf_prob <- (1 - eh_prob_x) * prod((1 - ih_prob_x)^prior_inf)
@@ -408,12 +408,12 @@ sim_seir <- function(
         new_states <- rep(0, hh_size[i])
         for (part in 1:hh_size[i]) {
           if (prior[part] == 1) {
-            eh_prob_x <- inv_logit(
-              logit(eh_prob) +
+            eh_prob_x <- plogis(
+              qlogis(eh_prob) +
                 sum(x[last_x + part, ] * covs_eh)
             )
-            ih_prob_x <- inv_logit(
-              logit(ih_prob) +
+            ih_prob_x <- plogis(
+              qlogis(ih_prob) +
                 sum(x[last_x + part, ] * covs_ih)
             )
             no_inf_prob <- (1 - eh_prob_x) * (1 - ih_prob_x)^prior_inf

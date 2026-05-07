@@ -14,8 +14,43 @@ compartment}
 
 \item{split}{an optional character or numeric vector indicating what
 proportion of individuals transition into each of the \code{to} compartments}
+
+\item{...}{Argument specifying the name and optionally the value of the
+transition rate parameter. For example if the parameter name is "gamma" and
+it is being fit this argument should be \code{gamma = NA}. If we want to provide
+a numeric value, x, for "gamma" this argument should be \code{gamma = x}.}
+}
+\value{
+Data frame with a row for each unique transition and the following
+columns:
+\itemize{
+\item "from", the name of the origin compartment
+\item "to", the name of the destination compartment
+\item "source", NA (so output columns match with \code{transmit})
+\item "rate_name", name of transition rate parameter if fitting
+\item "rate_value", numeric value of transition rate if not fitting
+\item "split_name", name of split parameter if fitting
+\item "split_value", numeric value of split if not fitting
+}
 }
 \description{
 Defines a state transition in the infection process model which
 does not represent an transmission (infection) event
+}
+\examples{
+# Transition from compartment A to B which occurs at rate gamma where
+# gamma is a user-specified value of 0.2
+progress(from = "A", to = "B", gamma = 0.2)
+
+# Transition from compartment A to B which occurs at rate gamma where
+# gamma is fit
+progress(from = "A", to = "B", gamma = NA)
+
+# Transition from compartment A split into two destination compartments, B1
+# and B2, were individuals leave A at rate delta (fit) and phi (fit) is the
+# proportion of those who leave A who go into B1 (i.e. 1-phi go into B2).
+# gamma is fit
+progress(from = "A", to = c("B1", "B2"), split = "phi", delta = NA)
+
+
 }

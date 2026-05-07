@@ -11,13 +11,35 @@ transmit(from, to, source = NA, split = NA)
 
 \item{to}{string giving the name of the destination compartment}
 
-\item{source}{string (or vector of strings) designating which compartments are infectious.
-If NULL, the destination compartment is presumed to be the infectious compartment.}
+\item{source}{string (or vector of strings) designating which compartments
+are infectious. If NA, the destination compartment is presumed to be the
+infectious compartment.}
 
-\item{split}{an optional character or numeric vector indicating what proportion of individuals
-transition into each of the \code{to} compartments}
+\item{split}{an optional character or numeric vector indicating what
+proportion of individuals transition into each of the \code{to} compartments}
+}
+\value{
+Data frame with a row for each unique transition and the following
+columns:
+\itemize{
+\item "from", the name of the origin compartment
+\item "to", the name of the destination compartment
+\item "split_name", name of split parameter if fitting
+\item "split_value", numeric value of split if not fitting
+\item "source", names of compartment(s) that are the source of new infections
+i.e. the infectious compartments
+}
 }
 \description{
-Defines a state transition in the infection process model which is
-the result of a transmission (infection) event
+Defines a state transition in the infection process model which
+is the result of a transmission (infection) event
+}
+\examples{
+# Specify S > E transition in an SEIR model
+transmit(from = "S", to = "E", source = "I")
+
+# Upon infection, individuals either enter Is (symptomatic infections) or
+# Ia (asymptomatic infection) where 30\% of infections are symptomatic.
+transmit(from = "S", to = c("Is", "Ia"), split = 0.3)
+
 }

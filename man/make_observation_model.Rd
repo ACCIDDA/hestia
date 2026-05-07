@@ -13,6 +13,18 @@ compartment in the infection process model. The value is the probability of
 observing a positive observation given the individual is in the
 compartment.}
 }
+\value{
+A list with one entry for each observation type.
+}
 \description{
 Make Observation Process Model
+}
+\examples{
+# Observation process for an SIR model with two observations, PCR test
+# results and presence of IgG antibodies.
+make_observation_model(
+  pcr = c("S" = 0.05, "I" = 0.95, "R" = 0.05),
+  igg = c("S" = 0.01, "I" = 0.01, "R" = 0.8)
+)
+
 }

@@ -1,5 +1,6 @@
 #' @title Logit Transformation
-#' @param x numeric value between 0 and 1
+#' @param x Numeric value between 0 and 1
+#' @returns A numeric value.
 #'
 #' @keywords internal
 logit <- function(x) {
@@ -7,7 +8,8 @@ logit <- function(x) {
 }
 
 #' @title Inverse Logit Transformation
-#' @param x numeric value
+#' @param x Numeric value
+#' @returns A numeric value between 0 and 1.
 #'
 #' @keywords internal
 inv_logit <- function(x) {
@@ -18,40 +20,45 @@ inv_logit <- function(x) {
 #' @description Utility function for checking whether split parameter is
 #'   properly defined
 #'
-#' @param to character vector giving the name(s) of the destination compartment
-#' @param split numeric or character vector indicating how people moving out of
+#' @param to Character vector giving the name(s) of the destination compartment
+#' @param split Numeric or character vector indicating how people moving out of
 #'   the starting compartment are split between the destination compartments
 #'
 #' @keywords internal
 split_check <- function(to, split) {
   # Make sure splits are valid
-  if (!(length(split == 1) && sum(is.na(split)) == 1)) {
+  if (length(split == 1) && sum(is.na(split)) == 1) {
+    if (length(to) > 1) {
+      stop("Need to specify a split if length(to) > 1")
+    }
+  } else {
     # single NA OK
     if (sum(is.na(split)) >= 1) {
       # otherwise NA not OK
       stop("Improper specification for split - cannot contain NA")
+    } else if (!(is.character(split) | is.numeric(split))) {
+      # Must be character or numeric
+      stop("Must provide character or numeric values for split")
     } else if (is.numeric(split)) {
       # numeric
+      if (sum(split < 0) > 0) {
+        stop("Splits cannot be negative")
+      }
       if (length(to) == 1) {
-        # single destination compartment
-        if (length(split != 1)) {
-          stop("Must have length(split) == 1 if length(to) == 1.")
-        }
+        stop("Cannot specify a split if length(to) == 1")
       } else {
         # multiple destination compartments
         if (length(split) == length(to)) {
           if (sum(split) != 1) {
             stop(
-              strwrap(
-                "Values for split must sum to 1 if providing for all
-                      destination compartments."
-              )
+              "Values for split must sum to 1 if providing for all ",
+              "destination compartments."
             )
           }
         } else {
           if (length(split) == length(to) - 1) {
             if (sum(split) > 1) {
-              stop("split cannot sum to greater than 1")
+              stop("Splits cannot sum to greater than 1")
             }
           } else {
             stop("length(split) must be equal to length(to) or length(to)-1")
@@ -61,17 +68,13 @@ split_check <- function(to, split) {
     } else {
       # not numeric
       if (length(to) == 1) {
-        if (length(split) != 1) {
-          stop("Must have length(split) == 1 if length(to) == 1.")
-        }
+        stop("Must have length(split) == 1 if length(to) == 1.")
       } else {
         # multiple destination compartments
         if (length(split) != length(to) - 1) {
           stop(
-            strwrap(
-              "Number of parameter names for split must be one less than
-                    the number of destination compartments."
-            )
+            "Number of parameter names for split must be one less than ",
+            "the number of destination compartments."
           )
         }
       }
@@ -79,22 +82,81 @@ split_check <- function(to, split) {
   }
 }
 
+#' @title Checking to and from parameter specification
+#' @description Utility function for checking whether to and from parameters
+#'   are properly defined
+#'
+#' @param to Character vector giving the name(s) of the destination compartment
+#' @param from string giving name of origin compartment
+#'
+#' @keywords internal
+to_from_check <- function(to, from) {
+  if (length(from) == 0 | length(to) == 0) {
+    stop("'to' and 'from' arguments cannot be empty")
+  }
+
+  if (length(from) != 1) {
+    stop("'from' must be of length one")
+  }
+
+  if (!is.character(from) | !is.character(to)) {
+    stop("'to' and 'from' arguments must be characters")
+  }
+
+  if (length(intersect(to, from)) > 0) {
+    stop("'to' and 'from' must be mutually exclusive")
+  }
+}
+
 
 #' @title Define a non-infection transition
 #'
 #' @description Defines a state transition in the infection process model which
-#' does not represent an transmission (infection) event
+#'   does not represent an transmission (infection) event
 #'
 #' @param from string giving name of origin compartment
 #' @param to string or vector of strings giving the name of the destination
 #'   compartment
 #' @param split an optional character or numeric vector indicating what
 #'   proportion of individuals transition into each of the `to` compartments
+#' @param ... Argument specifying the name and optionally the value of the
+#'   transition rate parameter. For example if the parameter name is "gamma" and
+#'   it is being fit this argument should be `gamma = NA`. If we want to provide
+#'   a numeric value, x, for "gamma" this argument should be `gamma = x`.
+#' @returns Data frame with a row for each unique transition and the following
+#'   columns:
+#'  - "from", the name of the origin compartment
+#'  - "to", the name of the destination compartment
+#'  - "source", NA (so output columns match with `transmit`)
+#'  - "rate_name", name of transition rate parameter if fitting
+#'  - "rate_value", numeric value of transition rate if not fitting
+#'  - "split_name", name of split parameter if fitting
+#'  - "split_value", numeric value of split if not fitting
+#'
+#' @examples
+#' # Transition from compartment A to B which occurs at rate gamma where
+#' # gamma is a user-specified value of 0.2
+#' progress(from = "A", to = "B", gamma = 0.2)
+#'
+#' @examples
+#' # Transition from compartment A to B which occurs at rate gamma where
+#' # gamma is fit
+#' progress(from = "A", to = "B", gamma = NA)
+#'
+#' @examples
+#' # Transition from compartment A split into two destination compartments, B1
+#' # and B2, were individuals leave A at rate delta (fit) and phi (fit) is the
+#' # proportion of those who leave A who go into B1 (i.e. 1-phi go into B2).
+#' # gamma is fit
+#' progress(from = "A", to = c("B1", "B2"), split = "phi", delta = NA)
+#'
 #'
 #' @export
 progress <- function(from, to, split = NA, ...) {
   .dots <- unlist(list(...))
 
+  # CHecks on parameter specification
+  to_from_check(to, from)
   split_check(to, split)
 
   out <- list()
@@ -102,7 +164,6 @@ progress <- function(from, to, split = NA, ...) {
     out[[i]] <- data.frame(
       from = from,
       to = to[i],
-      source = NA,
       rate_name = NA,
       rate_value = NA,
       split_name = NA,
@@ -138,7 +199,13 @@ progress <- function(from, to, split = NA, ...) {
     }
   }
 
-  dplyr::bind_rows(out)
+  out <- dplyr::bind_rows(out)
+
+  if (!("rate_name" %in% colnames(out))) {
+    stop("No paramter name provided for transition rate.")
+  }
+
+  out
 }
 
 #' @title Define a infection transition
@@ -149,13 +216,32 @@ progress <- function(from, to, split = NA, ...) {
 #' @param from string giving name of origin compartment
 #' @param to string giving the name of the destination compartment
 #' @param source string (or vector of strings) designating which compartments
-#'   are infectious. If NULL, the destination compartment is presumed to be the
+#'   are infectious. If NA, the destination compartment is presumed to be the
 #'   infectious compartment.
 #' @param split an optional character or numeric vector indicating what
 #'   proportion of individuals transition into each of the `to` compartments
+#' @returns Data frame with a row for each unique transition and the following
+#' columns:
+#'  - "from", the name of the origin compartment
+#'  - "to", the name of the destination compartment
+#'  - "split_name", name of split parameter if fitting
+#'  - "split_value", numeric value of split if not fitting
+#'  - "source", names of compartment(s) that are the source of new infections
+#'  i.e. the infectious compartments
+#'
+#' @examples
+#' # Specify S > E transition in an SEIR model
+#' transmit(from = "S", to = "E", source = "I")
+#'
+#' @examples
+#' # Upon infection, individuals either enter Is (symptomatic infections) or
+#' # Ia (asymptomatic infection) where 30% of infections are symptomatic.
+#' transmit(from = "S", to = c("Is", "Ia"), split = 0.3)
 #'
 #' @export
 transmit <- function(from, to, source = NA, split = NA) {
+  # Checks on parameter specification
+  to_from_check(to, from)
   split_check(to, split)
 
   out <- list()
@@ -164,14 +250,11 @@ transmit <- function(from, to, source = NA, split = NA) {
     out[[i]] <- data.frame(
       from = from,
       to = to[i],
-      rate_name = NA,
-      rate_value = NA,
       split_name = NA,
-      split_value = NA,
-      mult_inf_prob = NA
+      split_value = NA
     )
 
-    out[[i]]$source <- ifelse(sum(is.na(source)) > 0, to, list(source))
+    out[[i]]$source <- ifelse(sum(is.na(source)) > 0, list(to), list(source))
 
     if (i == 1) {
       if (is.numeric(split[i])) {
@@ -202,12 +285,47 @@ transmit <- function(from, to, source = NA, split = NA) {
   dplyr::bind_rows(out)
 }
 
-
 #' @title Build Infection Process Model
 #'
 #' @param ... a series of \link{progress} or \link{transmit} function calls
 #' @param mult_inf_probs If FALSE then all infection probabilities are shared
 #' across infectious compartments
+#' @returns A data frame with a row for each unique transition in the infection
+#' process model and the following columns:
+#'  - "from", the name of the origin compartment
+#'  - "to", the name of the destination compartment
+#'  - "source", NA (so output columns match with `transmit`)
+#'  - "rate_name", name of transition rate parameter if fitting
+#'  - "rate_value", numeric value of transition rate if not fitting
+#'  - "split_name", name of split parameter if fitting
+#'  - "split_value", numeric value of split if not fitting
+#'  - "source", names of compartment(s) that are the source of new infections
+#'  - "mult_inf_probs", a logical indicator for whether infectious compartments
+#'  have separate (`true`) or shared (`FALSE`) intra-household infection
+#'  probabilities
+#'
+#' @examples
+#' # Basic SIR model with recovery rate gamma to be fit
+#' make_infection_model(transmit(from = "S", to = "I"),
+#'                      progress(from = "I", to = "R", gamma = NA))
+#'
+#' @examples
+#' # SEIR model where infectious compartment is split into symptomatic
+#' # infections (I_s) and asymptomatic infections (I_a). Have separate
+#' # intra-household infection probabilities by symptom status
+#' make_infection_model(transmit(from = "S",
+#'                               to = "E",
+#'                               source = c("I_a", "I_s"),
+#'                      progress(from = "E",
+#'                      to = c("I_a", "I_s"),
+#'                      sigma = 1/2,
+#'                      split = "symp_prop),
+#'                      progress(from = "Is",
+#'                               to = "R",
+#'                               gamma = NA),
+#'                      progress(from = "Ia",
+#'                               to = "R",
+#'                               gamma = NA),)
 #'
 #' @export
 make_infection_model <- function(..., mult_inf_probs = FALSE) {
@@ -216,6 +334,33 @@ make_infection_model <- function(..., mult_inf_probs = FALSE) {
   out <- dplyr::bind_rows(.dots)
   out$mult_inf_probs <- mult_inf_probs
 
+  # Check that there is at least one transmit input
+  if (!("source" %in% names(out))) {
+    stop(
+      "No infection process specified. Must have at least one transmit input."
+    )
+  }
+
+  # Check for discontinuity
+  states <- unique(c(out$from, out$to))
+  graph <- matrix(0, nrow = length(states), ncol = length(states))
+  rownames(graph) <- states
+  colnames(graph) <- states
+  for (i in 1:nrow(out)) {
+    graph[out$from[i], out$to[i]] <- 1
+    graph[out$to[i], out$from[i]] <- 1
+  }
+
+  if (!Claddis::is_graph_connected(graph)) {
+    stop("Compartmental model structure cannot be disconnected.")
+  }
+
+  # Check that source compartments are defined elsewhere in model
+  sources <- unlist(out$source[!is.na(out$source)])
+  if (length(which(!(sources %in% states))) > 0) {
+    stop("Compartments specified in source argument do not exist in model.")
+  }
+
   out
 }
 
@@ -223,6 +368,47 @@ make_infection_model <- function(..., mult_inf_probs = FALSE) {
 #'
 #' @param inf_model infection process model object yielded by
 #'   make_infection_model()
+#' @returns A list with the following entries:
+#'  - "states", a character vector of state names
+#'  - "trans_matrix", a matrix with transition rate values between origin
+#'  (column) and destination (row) compartments where given. Where no values
+#'  are provided for transition rates the entry is equal to 1e-10.
+#'  - "mult_matrix", a matrix with split values for the transition between
+#'  origin (column) and destination (row) compartments where given. Where no
+#'  split values are provided for transition rates the entry is equal to 1.
+#'  - "trans_to_fit", a data frame with information on all transitions within
+#'  the model, with parameter indexing details if the transition rate is being
+#'  fit
+#'  - "mult_to_fit", a data frame with information on all splits specified in
+#'  the model, with parameter indexing details if the split is being fit
+#'  - "inf_states", numeric values corresponding to the indices in "states"
+#'  which are the infectious states
+#'  - "mult_inf_probs", indicator for whether infectious states have shared or
+#'  separate inta-household infection probabilities. If FALSE then all infection
+#'  probabilities are shared across infectious compartments.
+#'
+#' @examples
+#' # SEIR model where infectious compartment is split into symptomatic
+#' # infections (I_s) and asymptomatic infections (I_a). Have separate
+#' # intra-household infection probabilities by symptom status
+#' inf_model <- make_infection_model(
+#'   transmit(from = "S",
+#'            to = "E",
+#'            source = c("I_a", "I_s"),
+#'    progress(from = "E",
+#'             to = c("I_a", "I_s"),
+#'             sigma = 1/2,
+#'             split = "symp_prop),
+#'    progress(from = "Is",
+#'             to = "R",
+#'             gamma = NA),
+#'    progress(from = "Ia",
+#'             to = "R",
+#'             gamma = NA)
+#' )
+#'
+#' get_transmission_details(inf_model)
+#'
 #'
 #' @global param
 #'
@@ -254,6 +440,10 @@ get_transmission_details <- function(inf_model) {
     mult_name = character(),
     param = numeric()
   )
+
+  if (!("rate_value" %in% colnames(inf_model))) {
+    inf_model$rate_value <- NA
+  }
 
   for (i in seq_len(nrow(inf_model))) {
     # Transition probabilities
@@ -313,7 +503,7 @@ get_transmission_details <- function(inf_model) {
   if (sum(!is.na(mult_to_fit$mult_name)) > 0) {
     fac_levels <- unique(
       mult_to_fit$mult_name[
-        !is.na(mult_to_fit$mult_name) &&
+        !is.na(mult_to_fit$mult_name) &
           !stringr::str_detect(mult_to_fit$mult_name, "1-")
       ]
     )
@@ -356,6 +546,15 @@ get_transmission_details <- function(inf_model) {
 #'   compartment in the infection process model. The value is the probability of
 #'   observing a positive observation given the individual is in the
 #'   compartment.
+#' @returns A list with one entry for each observation type.
+#'
+#' @examples
+#' # Observation process for an SIR model with two observations, PCR test
+#' # results and presence of IgG antibodies.
+#' make_observation_model(
+#'   pcr = c("S" = 0.05, "I" = 0.95, "R" = 0.05),
+#'   igg = c("S" = 0.01, "I" = 0.01, "R" = 0.8)
+#' )
 #'
 #' @export
 make_observation_model <- function(...) {
@@ -371,6 +570,11 @@ make_observation_model <- function(...) {
     ops[[i]] <- op
   }
   names(ops) <- names(.dots)
+
+  if (length(unique(names(.dots))) < length(names(.dots))) {
+    stop("Observation names must be unique")
+  }
+
   ops
 }
 
@@ -381,7 +585,15 @@ make_observation_model <- function(...) {
 #'   \link{make_infection_model}
 #' @param obs_model Observation process model object generated by
 #'   \link{make_observation_model}
-#' @param data data frame with columns....
+#' @param data data frame with columns the following columns:
+#'  - "t", time of observation
+#'  - "hh_id", numeric household ID which must be 1, 2, ..., N where N is the
+#'  total number of household
+#'  - "part_id", participant ID within the household which must be 1, 2, ... n
+#'  where n is the number of observed household members
+#'  - "hh_size", number of household members (whether observed or not)
+#'  - At least one column with binary outcome information where the column
+#'  name matches the outcome name provided to \link{make_observation_model}
 #' @param init_probs vector of initial probabilities for each infection process
 #'   model state
 #' @param epsilon very small number to use for zero probability transitions
@@ -389,6 +601,7 @@ make_observation_model <- function(...) {
 #'   intra-household covariates for each participant
 #' @param eh_cov NULL for run without covariates, otherwise data frame with
 #'   extra-household covariates for each participant
+#' @returns A list with data elements for input to stan model.
 #'
 #' @global hh_id
 #' @global part_id
@@ -525,10 +738,8 @@ make_stan_data <- function(
       )
     } else {
       stop(
-        strwrap(
-          "Currently only support having covariates on both intra- ande
-                xtra-household infeciton probabilities."
-        )
+        "Currently only support having covariates on both intra- and ",
+        "extra-household infeciton probabilities."
       )
     }
   }
@@ -542,7 +753,15 @@ make_stan_data <- function(
 #'   \link{make_infection_model}
 #' @param obs_model Observation process model object generated by
 #'   \link{make_observation_model}
-#' @param data data frame with columns....
+#' @param data data frame with columns the following columns:
+#'  - "t", time of observation
+#'  - "hh_id", numeric household ID which must be 1, 2, ..., N where N is the
+#'  total number of household
+#'  - "part_id", participant ID within the household which must be 1, 2, ... n
+#'  where n is the number of observed household members
+#'  - "hh_size", number of household members (whether observed or not)
+#'  - At least one column with binary outcome information where the column
+#'  name matches the outcome name provided to \link{make_observation_model}
 #' @param init_probs vector of initial probabilities for each infection process
 #'   model state
 #' @param epsilon very small number to use for zero probability transitions
@@ -556,6 +775,26 @@ make_stan_data <- function(
 #' @param cores number of cores for parallelization
 #' @param init initial conditions for MCMC chains
 #' @param save_states indicator for whether to save state probabilities
+#' @returns `draws_array` object with chains for each model parameter
+#'
+#' @examples
+#' # Subset sir package data to 10 households (for speedy example)
+#' sir_sub <- sir[sir$hh_id <= 10, ]
+#'
+#' # Make infetion process model for SIR model
+#' inf_mod <- make_infection_model(
+#'   transmit(from = "S", to = "I"),
+#'   progress(from = "I", to = "R", gamma = NA))
+#'
+#' # Make observation process model
+#' obs_mod <- make_observation_model(
+#'   pcr = c("S" = 0.05, "I" = 0.95, "R" = 0.05),
+#'   igg = c("S" = 0.01, "I" = 0.01, "R" = 0.8))
+#'
+#' run_model(inf_model = inf_mod,
+#'           obs_model = obs_mod,
+#'           data = sir_sub,
+#'           init_probs = c(1 - 2 * 1e-10, 1e-10, 1e-10))
 #'
 #' @export
 run_model <- function(
@@ -566,7 +805,6 @@ run_model <- function(
   epsilon = 1e-10,
   ih_cov = NULL,
   eh_cov = NULL,
-  file = "stan/hmm.stan",
   iter = 2000,
   chains = 4,
   cores = getOption("mc.cores", 1L),
@@ -583,8 +821,10 @@ run_model <- function(
     eh_cov
   )
 
+  is_cov <- !is.null(eh_cov) && !is.null(ih_cov)
+
   if (is.null(init)) {
-    if (!is.null(eh_cov) && !is.null(ih_cov)) {
+    if (is_cov) {
       init = rep(
         list(
           list(
@@ -622,51 +862,79 @@ run_model <- function(
   }
 
   if (save_states) {
-    stan_fit <- rstan::stan(
-      file = file,
-      data = dat_stan,
-      iter = iter,
-      chains = chains,
-      cores = cores,
-      init = init
-    )
+    if (is_cov) {
+      stan_fit <- rstan::sampling(
+        stanmodels$hmm_cov,
+        data = dat_stan,
+        iter = iter,
+        chains = chains,
+        cores = cores,
+        init = init
+      )
+    } else {
+      stan_fit <- rstan::sampling(
+        stanmodels$hmm,
+        data = dat_stan,
+        iter = iter,
+        chains = chains,
+        cores = cores,
+        init = init
+      )
+    }
   } else {
-    stan_fit <- rstan::stan(
-      file = file,
-      data = dat_stan,
-      iter = iter,
-      chains = chains,
-      cores = cores,
-      init = init,
-      pars = "logalpha",
-      include = FALSE
-    )
+    if (is_cov) {
+      stan_fit <- rstan::sampling(
+        stanmodels$hmm_cov,
+        data = dat_stan,
+        iter = iter,
+        chains = chains,
+        cores = cores,
+        init = init,
+        pars = "logalpha",
+        include = FALSE
+      )
+    } else {
+      stan_fit <- rstan::sampling(
+        stanmodels$hmm,
+        data = dat_stan,
+        iter = iter,
+        chains = chains,
+        cores = cores,
+        init = init,
+        pars = "logalpha",
+        include = FALSE
+      )
+    }
   }
 
-  list(
+  stan_out <- list(
     stan_fit = stan_fit,
     stan_data = dat_stan,
     eh_cov_names = colnames(eh_cov),
     ih_cov_names = colnames(ih_cov)
   )
+
+  rename_chains(inf_model, stan_out)
 }
 
 #' @title Extract chains and renames with user-provided parameter names
 #'
 #' @param inf_model Infection process model object generated by
 #'   \link{make_infection_model}
-#' @param model_output Bbject from \link{run_model}
+#' @param model_output A list generated within \link{run_model} which contains
+#'   the stanfit, the stan input data, and covariate names
+#' @returns A `draws_array` object with chains for each model parameter
 #'
 #' @keywords internal
 rename_chains <- function(inf_model, model_output) {
   # Get parameter information
   inf_details <- get_transmission_details(inf_model)
-  mult_names <- inf_details$mult_to_fit$mult_name[
+  mult_names <- unique(inf_details$mult_to_fit$mult_name[
     inf_details$mult_to_fit$param >= 1
-  ]
-  trans_names <- inf_details$trans_to_fit$rate_name[
+  ])
+  trans_names <- unique(inf_details$trans_to_fit$rate_name[
     inf_details$trans_to_fit$param >= 1
-  ]
+  ])
   n_ih <- ifelse(
     inf_details$mult_inf_probs == FALSE,
     1,
@@ -692,17 +960,20 @@ rename_chains <- function(inf_model, model_output) {
   }
 
   if (length(trans_names) > 0) {
-    var_names_sub <- c(var_names_sub, grep("^params", var_names, value = TRUE))
+    var_names_sub <- c(
+      var_names_sub,
+      grep("logit_params", var_names, value = TRUE)
+    )
   }
 
   if (length(mult_names) > 0) {
     var_names_sub <- c(
       var_names_sub,
-      grep("mult_params", var_names, value = TRUE)
+      grep("logit_mult_params", var_names, value = TRUE)
     )
   }
 
-  # Pull coovariate coefficients if covariate run
+  # Pull covariate coefficients if covariate run
   if (length(grep("beta0", var_names)) > 0) {
     var_names_sub <- c(
       var_names_sub,
@@ -721,14 +992,16 @@ rename_chains <- function(inf_model, model_output) {
   var_names_new <- c("eh_prob", ih_names, trans_names, mult_names)
 
   if (length(grep("beta0", var_names)) > 0) {
-    var_names_sub <- c(
-      var_names_sub,
-      model_output$eh_cov_names,
-      model_output$ih_cov_names
+    var_names_new <- c(
+      var_names_new,
+      paste0(model_output$eh_cov_names, "_eh"),
+      paste0(model_output$ih_cov_names, "_ih")
     )
   }
 
   # Subset to variables of interest and rename
   draws <- posterior::subset_draws(draws_full, variable = var_names_sub)
   posterior::variables(draws) <- var_names_new
+
+  return(draws)
 }

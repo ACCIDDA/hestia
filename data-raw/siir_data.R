@@ -3,7 +3,7 @@ library(hestia)
 library(dplyr)
 source("inst/auxillary/simulation.R")
 
-set.seed(9435)
+set.seed(3579)
 
 # Simulate data from a SIIR model for 500 households with separate
 # intra-household infection probabilities for each infectious compartment.
@@ -30,7 +30,7 @@ dat_sim <- sim_siir(
   complete_enroll = TRUE
 )
 
-# Name courcome columns
+# Name outcome columns
 siir <- dat_sim$obs |>
   rename(pcr = y1, igg = y2, symp = y3)
 

@@ -4,8 +4,7 @@ Version: 0.0.0.9000
 Authors@R: 
     person("First", "Last", , "first.last@example.com", role = c("aut", "cre"))
 Description: What the package does (one paragraph).
-License: `use_mit_license()`, `use_gpl3_license()` or friends to pick a
-    license
+License: MIT + file LICENSE
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE, roclets = c("collate", "namespace", "rd",
     "roxyglobals::global_roclet"))
@@ -20,7 +19,6 @@ Imports:
     rlang,
     rstan (>= 2.18.1),
     rstantools (>= 2.5.0),
-    withr
 Biarch: true
 Depends: 
     R (>= 3.5)
@@ -34,6 +32,8 @@ LinkingTo:
 SystemRequirements: GNU make
 LazyData: true
 Suggests: 
-    roxyglobals
+    roxyglobals,
+    testthat (>= 3.0.0)
 Config/roxyglobals/filename: globals.R
 Config/roxyglobals/unique: FALSE
+Config/testthat/edition: 3

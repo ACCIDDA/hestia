@@ -7,7 +7,10 @@
 inv_logit(x)
 }
 \arguments{
-\item{x}{numeric value}
+\item{x}{Numeric value}
+}
+\value{
+A numeric value between 0 and 1.
 }
 \description{
 Inverse Logit Transformation
