@@ -7,3 +7,4 @@ src/RcppExports*
 src/stanExports*
 src/*.dll
 ^\.lintr$
+^\.github$

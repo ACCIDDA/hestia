@@ -1,0 +1,68 @@
+name: test-coverage
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  unit-tests:
+    runs-on: ubuntu-latest
+
+    env:
+      GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
+      R_KEEP_PKG_SOURCE: yes
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Setup R
+        uses: r-lib/actions/setup-r@v2
+        with:
+          r-version: 'release'
+          use-public-rspm: true
+
+      - name: Install dependencies
+        uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          extra-packages: any::covr, any::xml2
+          needs: coverage
+
+      - name: Cache Stan compilation objects
+        uses: actions/cache@v5
+        with:
+          path: src/
+          key: ${{ runner.os }}-rrelease-stan-${{ hashFiles('inst/stan/**/*.stan', 'src/**/*.stan') }}
+          restore-keys: |
+            ${{ runner.os }}-rrelease-stan-
+
+      - name: Run tests with coverage
+        run: |
+          cov <- covr::package_coverage(
+            quiet = FALSE,
+            clean = FALSE,
+            install_path = file.path(normalizePath(Sys.getenv("RUNNER_TEMP"), winslash = "/"), "package")
+          )
+          covr::to_cobertura(cov)
+        shell: Rscript {0}
+
+      - name: Upload coverage artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-data
+          path: cobertura.xml
+
+      - name: Show testthat output
+        if: always()
+        run: |
+          ## --------------------------------------------------------------------
+          find '${{ runner.temp }}/package' -name 'testthat.Rout*' -exec cat '{}' \; || true
+        shell: bash
+
+      - name: Upload test results
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-test-failures
+          path: ${{ runner.temp }}/package

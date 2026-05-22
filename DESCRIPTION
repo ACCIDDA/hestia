@@ -1,9 +1,17 @@
 Package: hestia
-Title: What the Package Does (One Line, Title Case)
+Title: Bayesian Compartmental Infection Models from Individual Outcomes
 Version: 0.0.0.9000
-Authors@R: 
-    person("First", "Last", , "first.last@example.com", role = c("aut", "cre"))
-Description: What the package does (one paragraph).
+Authors@R:
+    c(person("Claire Perrin", "Smith", email = "clairesmith6995@gmail.com",
+             role = c("aut", "cre"),
+             comment = c(ORCID = "0000-0003-1069-9460")),
+      person("Jack", "Goodall", email = "jackwgoodall@hotmail.com",
+             role = "aut"))
+Description: Fit Bayesian compartmental infection models (such as
+    susceptible-infected-recovered and multi-compartment hidden Markov
+    variants) from individual-level outcome data. Models are composed
+    from infection-process and observation-process components and fit
+    using Stan via 'rstan'.
 License: MIT + file LICENSE
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE, roclets = c("collate", "namespace", "rd",
