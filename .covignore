@@ -1,0 +1,12 @@
+# covr exclusion patterns. Matches gitignore-style globs against paths
+# relative to the package root. See:
+# https://cran.r-project.org/web/packages/covr/readme/README.html
+
+# Stan-generated C++ — emitted by rstantools from inst/stan/*.stan during
+# package build. There's no good way to unit-test it from R, and treating
+# it as coverable inflates the file count without measuring anything we
+# can act on. The Stan models themselves are exercised by integration
+# tests via hestia(), but coverage is recorded against the .stan source,
+# which covr doesn't instrument anyway.
+src/stanExports_*.cc
+src/stanExports_*.h
