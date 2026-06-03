@@ -1,0 +1,83 @@
+name: R-CMD-check
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  R-CMD-check:
+    runs-on: ${{ matrix.config.os }}
+
+    name: ${{ matrix.config.os }} (${{ matrix.config.r }})
+
+    strategy:
+      fail-fast: false
+      matrix:
+        config:
+          - {os: ubuntu-latest,  r: 'release'}
+          - {os: ubuntu-latest,  r: 'oldrel'}
+          - {os: ubuntu-latest,  r: 'devel'}
+          - {os: macos-latest,   r: 'release'}
+          - {os: macos-latest,   r: 'oldrel'}
+          - {os: macos-latest,   r: 'devel'}
+          - {os: windows-latest, r: 'release'}
+          - {os: windows-latest, r: 'oldrel'}
+          - {os: windows-latest, r: 'devel'}
+
+    continue-on-error: ${{ matrix.config.r == 'devel' }}
+
+    env:
+      GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
+      R_KEEP_PKG_SOURCE: yes
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Install macOS system dependencies
+        if: runner.os == 'macOS'
+        run: |
+          brew install gettext
+          GETTEXT_PREFIX="$(brew --prefix gettext)"
+          mkdir -p ~/.R
+          echo "CPPFLAGS += -I${GETTEXT_PREFIX}/include" >> ~/.R/Makevars
+          echo "LDFLAGS += -L${GETTEXT_PREFIX}/lib" >> ~/.R/Makevars
+
+      - name: Setup R
+        uses: r-lib/actions/setup-r@v2
+        with:
+          r-version: ${{ matrix.config.r }}
+          use-public-rspm: true
+
+      - name: Install dependencies
+        uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          extra-packages: any::rcmdcheck
+          needs: check
+
+      - name: Cache Stan compilation objects
+        uses: actions/cache@v5
+        with:
+          path: src/
+          key: ${{ runner.os }}-r${{ matrix.config.r }}-stan-${{ hashFiles('inst/stan/**/*.stan', 'src/**/*.stan') }}
+          restore-keys: |
+            ${{ runner.os }}-r${{ matrix.config.r }}-stan-
+
+      - name: Check package
+        uses: r-lib/actions/check-r-package@v2
+        with:
+          args: 'c("--no-manual", "--as-cran")'
+          error-on: '"error"'
+
+  check-result:
+    if: always()
+    needs: [R-CMD-check]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Verify all required checks passed
+        run: |
+          if [ "${{ needs.R-CMD-check.result }}" = "failure" ]; then
+            echo "One or more required checks failed"
+            exit 1
+          fi
