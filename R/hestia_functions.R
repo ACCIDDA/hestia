@@ -36,7 +36,7 @@ split_check <- function(to, split) {
     if (sum(is.na(split)) >= 1) {
       # otherwise NA not OK
       stop("Improper specification for split - cannot contain NA")
-    } else if (!(is.character(split) | is.numeric(split))) {
+    } else if (!(is.character(split) || is.numeric(split))) {
       # Must be character or numeric
       stop("Must provide character or numeric values for split")
     } else if (is.numeric(split)) {
@@ -91,7 +91,7 @@ split_check <- function(to, split) {
 #'
 #' @keywords internal
 to_from_check <- function(to, from) {
-  if (length(from) == 0 | length(to) == 0) {
+  if (length(from) == 0 || length(to) == 0) {
     stop("'to' and 'from' arguments cannot be empty")
   }
 
@@ -99,7 +99,7 @@ to_from_check <- function(to, from) {
     stop("'from' must be of length one")
   }
 
-  if (!is.character(from) | !is.character(to)) {
+  if (!is.character(from) || !is.character(to)) {
     stop("'to' and 'from' arguments must be characters")
   }
 
@@ -346,7 +346,7 @@ make_infection_model <- function(..., mult_inf_probs = FALSE) {
   graph <- matrix(0, nrow = length(states), ncol = length(states))
   rownames(graph) <- states
   colnames(graph) <- states
-  for (i in 1:nrow(out)) {
+  for (i in seq_len(nrow(out))) {
     graph[out$from[i], out$to[i]] <- 1
     graph[out$to[i], out$from[i]] <- 1
   }
@@ -1003,5 +1003,5 @@ rename_chains <- function(inf_model, model_output) {
   draws <- posterior::subset_draws(draws_full, variable = var_names_sub)
   posterior::variables(draws) <- var_names_new
 
-  return(draws)
+  draws
 }

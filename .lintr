@@ -1,3 +1,13 @@
-linters: linters_with_defaults() # see vignette("lintr")
+linters: linters_with_defaults(
+    line_length_linter = line_length_linter(100L),
+    object_usage_linter = NULL,
+    object_name_linter = object_name_linter(
+      styles = c("snake_case", "symbols"),
+      regexes = "^hestia$"
+    ),
+    return_linter(
+      return_style = "implicit"
+    )
+  )
 encoding: "UTF-8"
-exclusions: list("R/hestia-package.R", "R/stanmodels.R")
+exclusions: list("R/hestia-package.R", "R/stanmodels.R", "inst/auxillary", "vignettes")
