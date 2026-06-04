@@ -351,7 +351,7 @@ make_infection_model <- function(..., mult_inf_probs = FALSE) {
     graph[out$to[i], out$from[i]] <- 1
   }
 
-  if (!Claddis::is_graph_connected(graph)) {
+  if (!graph_connected(graph)) {
     stop("Compartmental model structure cannot be disconnected.")
   }
 
@@ -362,6 +362,33 @@ make_infection_model <- function(..., mult_inf_probs = FALSE) {
   }
 
   out
+}
+
+#' Check whether an undirected adjacency matrix is fully connected
+#'
+#' Breadth-first reachability from the first node. Replaces a single-use
+#' dependency on Claddis::is_graph_connected (the only reason hestia imported
+#' Claddis, whose heavy dependency tree failed to build on R-devel macOS).
+#'
+#' @param graph square symmetric 0/1 adjacency matrix.
+#' @return TRUE if every node is reachable from the first, else FALSE.
+#' @keywords internal
+graph_connected <- function(graph) {
+  n <- nrow(graph)
+  if (n <= 1) {
+    return(TRUE)
+  }
+  visited <- rep(FALSE, n)
+  visited[1] <- TRUE
+  queue <- 1L
+  while (length(queue) > 0) {
+    node <- queue[1]
+    queue <- queue[-1]
+    nbrs <- which(graph[node, ] != 0 & !visited)
+    visited[nbrs] <- TRUE
+    queue <- c(queue, nbrs)
+  }
+  all(visited)
 }
 
 #' @title Create Transmission Probability Matrix

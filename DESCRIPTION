@@ -18,7 +18,6 @@ Roxygen: list(markdown = TRUE, roclets = c("collate", "namespace", "rd",
     "roxyglobals::global_roclet"))
 RoxygenNote: 7.3.3
 Imports:
-    Claddis,
     cli,
     dplyr,
     glue,
