@@ -1,0 +1,55 @@
+name: CRAN submission
+
+on:
+  release:
+    types: [prereleased]
+  workflow_dispatch:
+    inputs:
+      confirmation:
+        description: 'Type "CONFIRM" to submit manually (skip via release: prereleased otherwise)'
+        required: true
+        default: ''
+
+permissions:
+  contents: read
+  issues: write   # so the action can create a tracking issue with submission status
+
+jobs:
+  news-version-sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Warn if NEWS.md is missing the version heading
+        run: |
+          if [ ! -f NEWS.md ]; then
+            echo "::warning::NEWS.md not found at repo root. CRAN convention is to ship one."
+            exit 0
+          fi
+          VERSION=$(grep -E '^Version:' DESCRIPTION | sed -E 's/Version:[[:space:]]*//')
+          if grep -qE "^# hestia[[:space:]]+$VERSION([[:space:]]|$)" NEWS.md; then
+            echo "NEWS.md heading found for version $VERSION."
+          else
+            echo "::warning::NEWS.md has no '# hestia $VERSION' heading. Add one before the release lands on CRAN."
+          fi
+
+  submit:
+    needs: news-version-sync
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          r-version: 'release'
+          use-public-rspm: true
+
+      - uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          extra-packages: any::rcmdcheck
+          needs: check
+
+      - uses: coatless-actions/cran-submission@v1
+        with:
+          error-on: 'warning'
+          confirmation: ${{ github.event.inputs.confirmation }}

@@ -1,0 +1,20 @@
+url: https://accidda.github.io/hestia/
+template:
+  light-switch: true
+  bootstrap: 5
+
+footer:
+  structure:
+    left: [developed_by, accidda]
+    right: built_with
+  components:
+    accidda: |
+      <br><a href="https://accidda.org/" class="accidda-footer-link"
+      aria-label="Part of the ACCIDDA project"><img
+      src="https://raw.githubusercontent.com/ACCIDDA/ACCIDDA-Images/refs/heads/main/accidda/accidda-logo-small.png"
+      alt="ACCIDDA" class="accidda-footer-logo accidda-footer-logo-light"
+      height="32"><img
+      src="https://raw.githubusercontent.com/ACCIDDA/ACCIDDA-Images/refs/heads/main/accidda/accidda-white.png"
+      alt="ACCIDDA" class="accidda-footer-logo accidda-footer-logo-dark"
+      height="32"></a><span class="accidda-footer-text"> Part of the
+      <a href="https://accidda.org/">ACCIDDA</a> project.</span>
