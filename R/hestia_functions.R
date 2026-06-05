@@ -310,22 +310,16 @@ transmit <- function(from, to, source = NA, split = NA) {
 #'                      progress(from = "I", to = "R", gamma = NA))
 #'
 #' @examples
-#' # SEIR model where infectious compartment is split into symptomatic
-#' # infections (I_s) and asymptomatic infections (I_a). Have separate
-#' # intra-household infection probabilities by symptom status
-#' make_infection_model(transmit(from = "S",
-#'                               to = "E",
-#'                               source = c("I_a", "I_s"),
-#'                      progress(from = "E",
-#'                      to = c("I_a", "I_s"),
-#'                      sigma = 1/2,
-#'                      split = "symp_prop),
-#'                      progress(from = "Is",
-#'                               to = "R",
-#'                               gamma = NA),
-#'                      progress(from = "Ia",
-#'                               to = "R",
-#'                               gamma = NA),)
+#' # Split the infectious compartment into symptomatic (I_s) and asymptomatic
+#' # (I_a) infections, with separate intra-household infection probabilities.
+#' make_infection_model(
+#'   transmit(from = "S",
+#'            to = c("I_s", "I_a"),
+#'            source = c("I_s", "I_a"),
+#'            split = "phi"),
+#'   progress(from = "I_s", to = "R", gamma_s = NA),
+#'   progress(from = "I_a", to = "R", gamma_a = NA),
+#'   mult_inf_probs = TRUE)
 #'
 #' @export
 make_infection_model <- function(..., mult_inf_probs = FALSE) {
@@ -415,24 +409,16 @@ graph_connected <- function(graph) {
 #'  probabilities are shared across infectious compartments.
 #'
 #' @examples
-#' # SEIR model where infectious compartment is split into symptomatic
-#' # infections (I_s) and asymptomatic infections (I_a). Have separate
-#' # intra-household infection probabilities by symptom status
+#' # Split the infectious compartment into symptomatic (I_s) and asymptomatic
+#' # (I_a) infections, with separate intra-household infection probabilities.
 #' inf_model <- make_infection_model(
 #'   transmit(from = "S",
-#'            to = "E",
-#'            source = c("I_a", "I_s"),
-#'    progress(from = "E",
-#'             to = c("I_a", "I_s"),
-#'             sigma = 1/2,
-#'             split = "symp_prop),
-#'    progress(from = "Is",
-#'             to = "R",
-#'             gamma = NA),
-#'    progress(from = "Ia",
-#'             to = "R",
-#'             gamma = NA)
-#' )
+#'            to = c("I_s", "I_a"),
+#'            source = c("I_s", "I_a"),
+#'            split = "phi"),
+#'   progress(from = "I_s", to = "R", gamma_s = NA),
+#'   progress(from = "I_a", to = "R", gamma_a = NA),
+#'   mult_inf_probs = TRUE)
 #'
 #' get_transmission_details(inf_model)
 #'
