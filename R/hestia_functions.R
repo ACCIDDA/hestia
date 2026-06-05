@@ -517,7 +517,7 @@ get_transmission_details <- function(inf_model) {
     fac_levels <- unique(
       mult_to_fit$mult_name[
         !is.na(mult_to_fit$mult_name) &
-          !stringr::str_detect(mult_to_fit$mult_name, "1-")
+          !grepl("1-", mult_to_fit$mult_name, fixed = TRUE)
       ]
     )
     mult_to_fit$param <- as.numeric(factor(
