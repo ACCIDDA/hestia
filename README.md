@@ -4,6 +4,17 @@
 [![lint](https://github.com/ACCIDDA/hestia/actions/workflows/lint.yaml/badge.svg)](https://github.com/ACCIDDA/hestia/actions/workflows/lint.yaml)
 [![pkgdown](https://github.com/ACCIDDA/hestia/actions/workflows/pkgdown.yaml/badge.svg)](https://github.com/ACCIDDA/hestia/actions/workflows/pkgdown.yaml)
 [![codecov](https://codecov.io/gh/ACCIDDA/hestia/branch/main/graph/badge.svg)](https://app.codecov.io/gh/ACCIDDA/hestia)
+[![DOI](https://zenodo.org/badge/DOI/PENDING.svg)](https://doi.org/PENDING)
+
+<!--
+Zenodo DOI badge placeholder. Zenodo tracking is already enabled for this
+repo, but the DOI is only minted when the first GitHub Release is published.
+After that first release, replace the two PENDING values above with the
+concept DOI (the version-independent DOI that always resolves to the latest
+release). Zenodo also displays the exact badge Markdown on the deposition
+page once a release exists.
+-->
+
 
 `{hestia}` fits Bayesian compartmental infection models — such as
 susceptible-infected-recovered (SIR) and multi-compartment hidden Markov
