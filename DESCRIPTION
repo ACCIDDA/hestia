@@ -29,7 +29,6 @@ Imports:
     rlang,
     rstan (>= 2.18.1),
     rstantools (>= 2.5.0),
-    stringr,
     tidyr,
 Biarch: true
 Depends: 
