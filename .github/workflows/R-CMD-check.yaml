@@ -53,7 +53,7 @@ jobs:
       - name: Install dependencies
         uses: r-lib/actions/setup-r-dependencies@v2
         with:
-          extra-packages: any::rcmdcheck
+          extra-packages: any::rcmdcheck, any::roxygen2, any::roxyglobals
           needs: check
 
       - name: Cache Stan compilation objects
@@ -63,6 +63,17 @@ jobs:
           key: ${{ runner.os }}-r${{ matrix.config.r }}-stan-${{ hashFiles('inst/stan/**/*.stan', 'src/**/*.stan') }}
           restore-keys: |
             ${{ runner.os }}-r${{ matrix.config.r }}-stan-
+
+      # PKG_BUILD_EXTRA_FLAGS=false stops pkgbuild from injecting its
+      # debug flags (-g -O0) when pkgload::load_all() recompiles the
+      # package under roxygen2. -O0 inflates Stan template object files
+      # past the Windows COFF section limit even with -Wa,-mbig-obj.
+      # See pkgbuild docs: ?pkgbuild::compile_dll.
+      - name: Generate documentation
+        env:
+          PKG_BUILD_EXTRA_FLAGS: "false"
+        run: roxygen2::roxygenise()
+        shell: Rscript {0}
 
       - name: Check package
         uses: r-lib/actions/check-r-package@v2
