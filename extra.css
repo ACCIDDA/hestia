@@ -1,0 +1,36 @@
+/* ACCIDDA footer logo: swap light/dark variants based on Bootstrap 5.3
+   colour mode (data-bs-theme) so pkgdown's light-switch toggles them
+   correctly. The "auto" mode falls back to the OS preference via
+   prefers-color-scheme. */
+
+.accidda-footer-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  text-decoration: none;
+}
+
+.accidda-footer-logo {
+  height: 32px;
+  width: auto;
+  vertical-align: middle;
+}
+
+.accidda-footer-text {
+  margin-left: 0.5rem;
+}
+
+/* Default (light mode, no theme attribute): show light variant. */
+.accidda-footer-logo-dark { display: none; }
+.accidda-footer-logo-light { display: inline; }
+
+/* Explicit dark mode via the light-switch. */
+html[data-bs-theme="dark"] .accidda-footer-logo-light { display: none; }
+html[data-bs-theme="dark"] .accidda-footer-logo-dark { display: inline; }
+
+/* Auto mode: follow the OS preference, unless the user explicitly chose
+   light via the light-switch. */
+@media (prefers-color-scheme: dark) {
+  html:not([data-bs-theme="light"]) .accidda-footer-logo-light { display: none; }
+  html:not([data-bs-theme="light"]) .accidda-footer-logo-dark { display: inline; }
+}
