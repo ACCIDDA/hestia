@@ -788,6 +788,8 @@ make_stan_data <- function(
 #' @param cores number of cores for parallelization
 #' @param init initial conditions for MCMC chains
 #' @param save_states indicator for whether to save state probabilities
+#' @param stan_interface gives the option of either using rstan (default) or CmdstanR as the interface for stan
+#' @param adapt_delta,max_treedepth sampler control, passed to CmdstanR only.
 #' @returns `draws_array` object with chains for each model parameter
 #'
 #' @examples
@@ -822,8 +824,17 @@ run_model <- function(
   chains = 4,
   cores = getOption("mc.cores", 1L),
   init = NULL,
-  save_states = FALSE
+  save_states = FALSE,  #TODO write a workaround for this for cmdstanr
+  stan_interface = "rstan", 
+  adapt_delta = 0.9,
+  max_treedepth = 12
 ) {
+    stan_interface <- match.arg(stan_interface)
+       if (stan_interface == "cmdstanr" && !requireNamespace("cmdstanr", quietly = TRUE)) {
+         stop("stan_interface = 'cmdstanr' requires the cmdstanr package. ",
+               "See https://mc-stan.org/cmdstanr/#installing-the-r-package or use stan_interface = 'rstan'.")
+   }
+    
   dat_stan <- make_stan_data(
     inf_model,
     obs_model,
@@ -852,7 +863,7 @@ run_model <- function(
             beta0_ih = array(rep(logit(0.02), dat_stan$n_inf_prob))
           )
         ),
-        4
+        chains
       )
     } else {
       init = rep(
@@ -867,66 +878,59 @@ run_model <- function(
             beta_ih = array(rep(logit(0.02), dat_stan$n_inf_prob))
           )
         ),
-        4
+        chains
       )
     }
   } else {
-    init <- rep(list(init), 4)
+    init <- rep(list(init), chains)
   }
 
-  if (save_states) {
-    if (is_cov) {
-      stan_fit <- rstan::sampling(
-        stanmodels$hmm_cov,
-        data = dat_stan,
-        iter = iter,
-        chains = chains,
-        cores = cores,
-        init = init
-      )
-    } else {
-      stan_fit <- rstan::sampling(
-        stanmodels$hmm,
-        data = dat_stan,
-        iter = iter,
-        chains = chains,
-        cores = cores,
-        init = init
-      )
+  if (stan_interface == "rstan") {
+    
+    model <- if (is_cov) stanmodels$hmm_cov else stanmodels$hmm
+    
+    args <- list(object = model, data = dat_stan, iter = iter,
+                 chains = chains, cores = cores, init = init)
+    if (!save_states) {
+      args$pars    <- "logalpha"
+      args$include <- FALSE
     }
-  } else {
-    if (is_cov) {
-      stan_fit <- rstan::sampling(
-        stanmodels$hmm_cov,
-        data = dat_stan,
-        iter = iter,
-        chains = chains,
-        cores = cores,
-        init = init,
-        pars = "logalpha",
-        include = FALSE
-      )
-    } else {
-      stan_fit <- rstan::sampling(
-        stanmodels$hmm,
-        data = dat_stan,
-        iter = iter,
-        chains = chains,
-        cores = cores,
-        init = init,
-        pars = "logalpha",
-        include = FALSE
-      )
-    }
+    stan_fit <- do.call(rstan::sampling, args)
+    
+  } else {  # cmdstanr
+    
+    # cmdstanr is stricter than rstan about types: coerce data frames to matrices
+    dat_stan <- lapply(dat_stan, function(x) {
+      if (is.data.frame(x)) as.matrix(x) else x
+    })
+    
+    mod <- cmdstanr::cmdstan_model(
+      stan_file,
+      cpp_options = list(stan_threads = TRUE)
+    )
+    
+    stan_fit <- mod$sample(
+      data              = dat_stan,
+      iter_warmup       = iter %/% 2,
+      iter_sampling     = iter %/% 2,
+      chains            = chains,
+      parallel_chains   = cores,
+      adapt_delta       = adapt_delta,
+      max_treedepth     = max_treedepth,
+      init              = init
+    )
+    # NB: cmdstanr has no equivalent of rstan's pars/include, so `logalpha`
+    # is always written to the output even when save_states = FALSE 
   }
-
+  
   stan_out <- list(
-    stan_fit = stan_fit,
-    stan_data = dat_stan,
+    stan_fit     = stan_fit,
+    stan_data    = dat_stan,
     eh_cov_names = colnames(eh_cov),
-    ih_cov_names = colnames(ih_cov)
+    ih_cov_names = colnames(ih_cov),
+    stan_interface      = stan_interface          # <- field rename_chains uses to route extraction
   )
-
+  
   rename_chains(inf_model, stan_out)
 }
 
@@ -954,8 +958,12 @@ rename_chains <- function(inf_model, model_output) {
     length(inf_details$inf_states)
   )
 
-  # Extract chains
-  draws_full <- posterior::as_draws_array(model_output$stan_fit)
+  # Extract chains (backend-aware; reads the field set in run_model)
+  draws_full <- if (identical(model_output$backend, "cmdstanr")) {
+      model_output$stan_fit$draws(format = "draws_array")
+        } else {
+            posterior::as_draws_array(model_output$stan_fit)
+          }
 
   # Get variable names and subset to parameters of interest
   var_names <- posterior::variables(draws_full)

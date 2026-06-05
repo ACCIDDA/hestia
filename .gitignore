@@ -12,3 +12,6 @@ man/*.Rd
 
 # pkgdown site, built in CI
 docs/
+
+# Mac specific
+.RDataTmp*
