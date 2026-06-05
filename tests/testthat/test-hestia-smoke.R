@@ -8,8 +8,8 @@ test_that("the package and its bundled data are available", {
 
   data(sir, package = "hestia", envir = environment())
   expect_s3_class(sir, "data.frame")
-  expect_true(all(c("t", "part_id", "hh_size", "hh_id", "pcr", "igg") %in%
-    names(sir)))
+  expected_cols <- c("t", "part_id", "hh_size", "hh_id", "pcr", "igg")
+  expect_true(all(expected_cols %in% names(sir)))
 })
 
 test_that("run_model fits an SIR model end-to-end and returns named draws", {
