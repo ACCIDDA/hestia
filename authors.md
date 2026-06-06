@@ -9,12 +9,14 @@
 
 ## Citation
 
-Smith C, Goodall J (2026). *hestia: Bayesian Compartmental Infection
-Models from Individual Outcomes*. R package version 0.0.0.9000.
+Smith, Claire Perrin and Goodall, Jack (2026). hestia: Bayesian
+Compartmental Infection Models from Individual Outcomes. R package
+version 0.0.0.9000. https://github.com/ACCIDDA/hestia
 
     @Manual{,
-      title = {hestia: Bayesian Compartmental Infection Models from Individual Outcomes},
+      title = {{hestia}: Bayesian Compartmental Infection Models from Individual Outcomes},
       author = {Claire Perrin Smith and Jack Goodall},
       year = {2026},
       note = {R package version 0.0.0.9000},
+      url = {https://github.com/ACCIDDA/hestia},
     }

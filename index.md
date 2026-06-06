@@ -4,6 +4,7 @@
 [![lint](https://github.com/ACCIDDA/hestia/actions/workflows/lint.yaml/badge.svg)](https://github.com/ACCIDDA/hestia/actions/workflows/lint.yaml)
 [![pkgdown](https://github.com/ACCIDDA/hestia/actions/workflows/pkgdown.yaml/badge.svg)](https://github.com/ACCIDDA/hestia/actions/workflows/pkgdown.yaml)
 [![codecov](https://codecov.io/gh/ACCIDDA/hestia/branch/main/graph/badge.svg)](https://app.codecov.io/gh/ACCIDDA/hestia)
+[![DOI](https://zenodo.org/badge/DOI/PENDING.svg)](https://doi.org/PENDING)
 
 `{hestia}` fits Bayesian compartmental infection models — such as
 susceptible-infected-recovered (SIR) and multi-compartment hidden Markov
