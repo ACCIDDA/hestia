@@ -9,3 +9,5 @@ src/*.dll
 ^\.lintr$
 ^\.github$
 ^\.covignore$
+^\.zenodo\.json$
+^CITATION\.cff$

@@ -1,0 +1,37 @@
+{
+  "title": "hestia - Bayesian Compartmental Infection Models from Individual Outcomes",
+  "description": "Fit Bayesian compartmental infection models (such as susceptible-infected-recovered and multi-compartment hidden Markov variants) from individual-level outcome data. Models are composed from infection-process and observation-process components and fit using Stan via rstan.",
+  "upload_type": "software",
+  "license": "MIT",
+  "access_right": "open",
+  "creators": [
+    {
+      "name": "Smith, Claire Perrin",
+      "orcid": "0000-0003-1069-9460"
+    },
+    {
+      "name": "Goodall, Jack"
+    }
+  ],
+  "keywords": [
+    "bayesian",
+    "compartmental-model",
+    "hidden-markov-model",
+    "infectious-disease",
+    "epidemiology",
+    "stan",
+    "rstan"
+  ],
+  "related_identifiers": [
+    {
+      "identifier": "https://github.com/ACCIDDA/hestia",
+      "relation": "isSupplementTo",
+      "scheme": "url"
+    },
+    {
+      "identifier": "https://accidda.github.io/hestia/",
+      "relation": "isDocumentedBy",
+      "scheme": "url"
+    }
+  ]
+}
