@@ -43,10 +43,11 @@ LinkingTo:
 SystemRequirements: GNU make
 LazyData: true
 Suggests:
-    cowplot,
+    knitr,
+    rmarkdown,
     roxyglobals,
-    testthat (>= 3.0.0),
-    tidyverse
+    testthat (>= 3.0.0)
+VignetteBuilder: knitr
 Config/roxyglobals/filename: globals.R
 Config/roxyglobals/unique: FALSE
 Config/testthat/edition: 3

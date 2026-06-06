@@ -1,15 +1,18 @@
 ---
 title: "Basic SIR Model"
 author: "Claire P. Smith"
-output: html_document
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Basic SIR Model}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 
 library(hestia)
-library(rstan)
-library(tidyverse)
+library(dplyr)
 library(posterior)
 
 ```
