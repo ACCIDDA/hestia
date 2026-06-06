@@ -2,6 +2,7 @@
 #' @param x Numeric value between 0 and 1
 #' @returns A numeric value.
 #'
+#' @importFrom stats qlogis
 #' @keywords internal
 logit <- function(x) {
   qlogis(x)
@@ -11,6 +12,7 @@ logit <- function(x) {
 #' @param x Numeric value
 #' @returns A numeric value between 0 and 1.
 #'
+#' @importFrom stats plogis
 #' @keywords internal
 inv_logit <- function(x) {
   plogis(x)
@@ -789,7 +791,6 @@ make_stan_data <- function(
 #'   intra-household covariates for each participant
 #' @param eh_cov NULL for run without covariates, otherwise data frame with
 #'   extra-household covariates for each participant
-#' @param file file path to stan model
 #' @param iter number of MCMC iterations
 #' @param chains number of MCMC chains
 #' @param cores number of cores for parallelization
