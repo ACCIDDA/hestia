@@ -27,8 +27,9 @@
 #' Posterior draws from \code{\link{run_model}} fit to the \code{\link{sir}}
 #' data using a basic SIR infection process (fitting the recovery rate) and a
 #' two-test observation process. Bundling the result lets the vignette display
-#' model output without re-running the Stan model. Parameters are on the model's
-#' internal scale (logit for probabilities and rates).
+#' model output without re-running the Stan model. Parameters are on the natural
+#' (model) scale: probabilities and rates are returned in their original units
+#' rather than on the logit fitting scale.
 #'
 #' @format A \code{posterior} \code{draws_array} with parameters
 #'   \code{eh_prob}, \code{ih_prob}, and \code{gamma}.
@@ -56,9 +57,10 @@
 #'
 #' Posterior draws from \code{\link{run_model}} fit to \code{\link{sir_cov}}
 #' with both intra- and extra-household covariates. Bundling the result lets the
-#' vignette display model output without re-running the Stan model. Infection
-#' probabilities and rates are on the logit scale and covariate coefficients are
-#' on the log scale.
+#' vignette display model output without re-running the Stan model. Parameters
+#' are on the natural (model) scale: infection probabilities and rates in their
+#' original units and covariate coefficients exponentiated, rather than on the
+#' logit and log fitting scales.
 #'
 #' @format A \code{posterior} \code{draws_array} with parameters
 #'   \code{eh_prob}, \code{ih_prob}, \code{gamma}, \code{x1_eh}, \code{x2_eh},
@@ -97,8 +99,9 @@
 #' Posterior draws from \code{\link{run_model}} fit to the \code{\link{siir}}
 #' data using an infection process with separate symptomatic and asymptomatic
 #' compartments. Bundling the result lets the vignette display model output
-#' without re-running the Stan model. Parameters are on the model's internal
-#' scale (logit for probabilities, rates, and the symptomatic split).
+#' without re-running the Stan model. Parameters are on the natural (model)
+#' scale: probabilities, rates, and the symptomatic split are returned in their
+#' original units rather than on the logit fitting scale.
 #'
 #' @format A \code{posterior} \code{draws_array} with parameters
 #'   \code{eh_prob}, \code{ih_prob_Is}, \code{ih_prob_Ia}, \code{gamma_s},

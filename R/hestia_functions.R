@@ -849,10 +849,13 @@ make_stan_data <- function(
 #'   pcr = c("S" = 0.05, "I" = 0.95, "R" = 0.05),
 #'   igg = c("S" = 0.01, "I" = 0.01, "R" = 0.8))
 #'
+#' # Fitting the Stan model is slow, so it is not run on CRAN.
+#' \donttest{
 #' run_model(inf_model = inf_mod,
 #'           obs_model = obs_mod,
 #'           data = sir_sub,
 #'           init_probs = c(1 - 2 * 1e-10, 1e-10, 1e-10))
+#' }
 #'
 #' @importFrom rstan sampling
 #' @export
@@ -1067,6 +1070,28 @@ rename_chains <- function(inf_model, model_output) {
   # Subset to variables of interest and rename
   draws <- posterior::subset_draws(draws_full, variable = var_names_sub)
   posterior::variables(draws) <- var_names_new
+
+  # Return draws on the natural (model) scale rather than the fitting scale
+  # (#19). Infection probabilities, transition rates and splits are fit on the
+  # logit scale, so map them back with inv_logit(). Covariate coefficients are
+  # fit on the log scale, so map them back with exp(). A draws_array has
+  # dimensions [iteration, chain, variable], so we transform variable slices in
+  # place by name.
+  coef_names <- character(0)
+  if (length(grep("beta0", var_names)) > 0) {
+    coef_names <- c(
+      paste0(model_output$eh_cov_names, "_eh"),
+      paste0(model_output$ih_cov_names, "_ih")
+    )
+  }
+  prob_names <- setdiff(var_names_new, coef_names)
+
+  for (nm in prob_names) {
+    draws[, , nm] <- inv_logit(draws[, , nm])
+  }
+  for (nm in coef_names) {
+    draws[, , nm] <- exp(draws[, , nm])
+  }
 
   draws
 }
