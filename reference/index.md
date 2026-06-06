@@ -15,5 +15,17 @@
   : Define a non-infection transition
 - [`run_model()`](https://accidda.github.io/hestia/reference/run_model.md)
   : Run Household Transmission Model
+- [`siir`](https://accidda.github.io/hestia/reference/siir.md) :
+  Simulated SIIR household data
+- [`siir_res`](https://accidda.github.io/hestia/reference/siir_res.md) :
+  Fitted draws for the SIIR model
+- [`sir`](https://accidda.github.io/hestia/reference/sir.md) : Simulated
+  SIR household data
+- [`sir_cov`](https://accidda.github.io/hestia/reference/sir_cov.md) :
+  Simulated SIR household data with covariates
+- [`sir_cov_res`](https://accidda.github.io/hestia/reference/sir_cov_res.md)
+  : Fitted draws for the SIR model with covariates
+- [`sir_res`](https://accidda.github.io/hestia/reference/sir_res.md) :
+  Fitted draws for the basic SIR model
 - [`transmit()`](https://accidda.github.io/hestia/reference/transmit.md)
   : Define a infection transition
