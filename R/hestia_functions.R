@@ -787,7 +787,7 @@ make_stan_data <- function(
 #' @param chains number of MCMC chains
 #' @param cores number of cores for parallelization
 #' @param init initial conditions for MCMC chains
-#' @param save_states indicator for whether to save state probabilities
+#' @param save_states indicator for whether to save state probabilities (only compatible if rstan is used as the stan interface)
 #' @param stan_interface gives the option of either using rstan (default) or CmdstanR as the interface for stan
 #' @param adapt_delta,max_treedepth sampler control, passed to CmdstanR only.
 #' @returns `draws_array` object with chains for each model parameter
@@ -958,9 +958,9 @@ rename_chains <- function(inf_model, model_output) {
     length(inf_details$inf_states)
   )
 
-  # Extract chains (backend-aware; reads the field set in run_model)
-  draws_full <- if (identical(model_output$backend, "cmdstanr")) {
-      model_output$stan_fit$draws(format = "draws_array")
+  # Extract chains (interface-aware; reads the field set in run_model)
+  draws_full <- if (identical(model_output$stan_interface, "cmdstanr")) {
+    posterior::as_draws_array(model_output$stan_fit)
         } else {
             posterior::as_draws_array(model_output$stan_fit)
           }

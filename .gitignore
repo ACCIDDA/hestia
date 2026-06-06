@@ -1,4 +1,5 @@
 .Rproj.user
+*.Rproj
 .Rhistory
 .RData
 .Ruserdata
@@ -15,3 +16,4 @@ docs/
 
 # Mac specific
 .RDataTmp*
+.DS_Store
