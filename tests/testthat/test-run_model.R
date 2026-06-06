@@ -64,4 +64,51 @@ test_that("multiple infections probabilities supported", {
   expect_equal(length(grep("ih_prob", posterior::variables(model_out))), 2)
 })
 
+test_that("entry validation rejects bad run_model inputs before sampling", {
+  inf_mod <- make_infection_model(
+    transmit(from = "S", to = "I"),
+    progress(from = "I", to = "R", gamma = NA)
+  )
+  obs_mod <- make_observation_model(
+    pcr = c("S" = 0.05, "I" = 0.95, "R" = 0.05),
+    igg = c("S" = 0.01, "I" = 0.01, "R" = 0.8)
+  )
+  good_data <- sir[sir$hh_id <= 10, ]
+  good_init <- c(1 - 2 * 1e-10, 1e-10, 1e-10)
+
+  # init_probs that do not sum to 1
+  expect_error(
+    run_model(inf_mod, obs_mod, good_data, init_probs = c(0.2, 0.2, 0.2)),
+    "sum to 1"
+  )
+
+  # data missing a required structural column
+  expect_error(
+    run_model(
+      inf_mod,
+      obs_mod,
+      good_data[, setdiff(names(good_data), "hh_size")],
+      init_probs = good_init
+    ),
+    "hh_size"
+  )
+
+  # data missing an outcome column named in the observation model
+  expect_error(
+    run_model(
+      inf_mod,
+      obs_mod,
+      good_data[, setdiff(names(good_data), "igg")],
+      init_probs = good_init
+    ),
+    "igg"
+  )
+
+  # obs_model that is not a named list
+  expect_error(
+    run_model(inf_mod, list(), good_data, init_probs = good_init),
+    "obs_model"
+  )
+})
+
 # Variable names match inputs

@@ -158,6 +158,11 @@ to_from_check <- function(to, from) {
 progress <- function(from, to, split = NA, ...) {
   .dots <- unlist(list(...))
 
+  # Entry-level input validation
+  check_to_from(from, to)
+  check_split(split)
+  check_rate_dots(.dots)
+
   # CHecks on parameter specification
   to_from_check(to, from)
   split_check(to, split)
@@ -244,6 +249,10 @@ progress <- function(from, to, split = NA, ...) {
 #' @importFrom dplyr bind_rows
 #' @export
 transmit <- function(from, to, source = NA, split = NA) {
+  # Entry-level input validation
+  check_to_from(from, to)
+  check_split(split)
+
   # Checks on parameter specification
   to_from_check(to, from)
   split_check(to, split)
@@ -326,9 +335,25 @@ transmit <- function(from, to, source = NA, split = NA) {
 #'   mult_inf_probs = TRUE)
 #'
 #' @importFrom dplyr bind_rows
+#' @importFrom checkmate assert_data_frame assert_flag
 #' @export
 make_infection_model <- function(..., mult_inf_probs = FALSE) {
   .dots <- list(...)
+
+  # Entry-level input validation
+  checkmate::assert_flag(mult_inf_probs, .var.name = "mult_inf_probs")
+  if (length(.dots) == 0) {
+    stop(
+      "At least one transmit() or progress() transition must be supplied."
+    )
+  }
+  for (i in seq_along(.dots)) {
+    checkmate::assert_data_frame(
+      .dots[[i]],
+      min.rows = 1,
+      .var.name = sprintf("transition %d", i)
+    )
+  }
 
   out <- dplyr::bind_rows(.dots)
   out$mult_inf_probs <- mult_inf_probs
@@ -579,6 +604,18 @@ get_transmission_details <- function(inf_model) {
 #' @export
 make_observation_model <- function(...) {
   .dots <- list(...)
+
+  # Entry-level input validation
+  if (length(.dots) == 0) {
+    stop("At least one observation specification must be supplied.")
+  }
+  obs_names <- names(.dots)
+  if (is.null(obs_names) || any(obs_names == "")) {
+    stop("Every observation specification must be named.")
+  }
+  for (i in seq_along(.dots)) {
+    check_observation(.dots[[i]], nm = obs_names[i])
+  }
 
   ops <- list()
   for (i in seq_along(.dots)) {
@@ -833,6 +870,11 @@ run_model <- function(
   init = NULL,
   save_states = FALSE
 ) {
+  # Entry-level input validation
+  check_models(inf_model, obs_model)
+  check_run_data(data, obs_model)
+  check_init_probs(init_probs)
+
   dat_stan <- make_stan_data(
     inf_model,
     obs_model,

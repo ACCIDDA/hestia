@@ -235,3 +235,29 @@ test_that("to and from can't overlap", {
     split = rep(TRUE, length(to_ref) - 1)
   ))
 })
+
+test_that("entry validation rejects bad from/to/split types", {
+  # Non-character from is caught by the entry checker
+  expect_error(
+    transmit(from = 1, to = to_ref),
+    "from"
+  )
+
+  # Missing values in to
+  expect_error(
+    transmit(from = from_ref, to = c("B1", NA)),
+    "to"
+  )
+
+  # split that is neither NA, character, nor numeric
+  expect_error(
+    transmit(from = from_ref, to = to_ref, split = list(1, 2)),
+    "split"
+  )
+
+  # numeric split containing NA (beyond the single-NA default)
+  expect_error(
+    transmit(from = from_ref, to = to_ref, split = c(0.5, NA)),
+    "split"
+  )
+})

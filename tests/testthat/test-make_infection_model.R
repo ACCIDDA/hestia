@@ -22,3 +22,27 @@ test_that("Requires at least one tranmit component", {
     progress(from = "I", to = "R", gamma = NA)
   ))
 })
+
+test_that("entry validation rejects empty or malformed inputs", {
+  # No transitions at all
+  expect_error(
+    make_infection_model(),
+    "transmit|progress|transition"
+  )
+
+  # A transition that is not a transmit()/progress() data frame
+  expect_error(
+    make_infection_model("not a transition"),
+    "data frame|transition"
+  )
+
+  # mult_inf_probs must be a single logical flag
+  expect_error(
+    make_infection_model(
+      transmit(from = "S", to = "I"),
+      progress(from = "I", to = "R", gamma = NA),
+      mult_inf_probs = "yes"
+    ),
+    "mult_inf_probs"
+  )
+})
