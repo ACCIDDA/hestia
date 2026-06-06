@@ -151,6 +151,7 @@ to_from_check <- function(to, from) {
 #' progress(from = "A", to = c("B1", "B2"), split = "phi", delta = NA)
 #'
 #'
+#' @importFrom dplyr bind_rows
 #' @export
 progress <- function(from, to, split = NA, ...) {
   .dots <- unlist(list(...))
@@ -238,6 +239,7 @@ progress <- function(from, to, split = NA, ...) {
 #' # Ia (asymptomatic infection) where 30% of infections are symptomatic.
 #' transmit(from = "S", to = c("Is", "Ia"), split = 0.3)
 #'
+#' @importFrom dplyr bind_rows
 #' @export
 transmit <- function(from, to, source = NA, split = NA) {
   # Checks on parameter specification
@@ -321,6 +323,7 @@ transmit <- function(from, to, source = NA, split = NA) {
 #'   progress(from = "I_a", to = "R", gamma_a = NA),
 #'   mult_inf_probs = TRUE)
 #'
+#' @importFrom dplyr bind_rows
 #' @export
 make_infection_model <- function(..., mult_inf_probs = FALSE) {
   .dots <- list(...)
@@ -425,6 +428,8 @@ graph_connected <- function(graph) {
 #'
 #' @global param
 #'
+#' @importFrom dplyr bind_rows mutate
+#' @importFrom tidyr replace_na
 #' @export
 get_transmission_details <- function(inf_model) {
   states <- unique(c(inf_model$from, inf_model$to))
@@ -625,6 +630,8 @@ make_observation_model <- function(...) {
 #' @global mult_row
 #' @global mult_col
 #'
+#' @importFrom dplyr arrange group_by summarize ungroup n select bind_rows
+#' @importFrom tidyr unnest
 #' @keywords internal
 make_stan_data <- function(
   inf_model,
@@ -809,6 +816,7 @@ make_stan_data <- function(
 #'           data = sir_sub,
 #'           init_probs = c(1 - 2 * 1e-10, 1e-10, 1e-10))
 #'
+#' @importFrom rstan sampling
 #' @export
 run_model <- function(
   inf_model,
@@ -938,6 +946,7 @@ run_model <- function(
 #'   the stanfit, the stan input data, and covariate names
 #' @returns A `draws_array` object with chains for each model parameter
 #'
+#' @importFrom posterior as_draws_array variables subset_draws
 #' @keywords internal
 rename_chains <- function(inf_model, model_output) {
   # Get parameter information
