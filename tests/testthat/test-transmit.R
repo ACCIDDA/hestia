@@ -261,3 +261,12 @@ test_that("entry validation rejects bad from/to/split types", {
     "split"
   )
 })
+
+test_that("transmit rejects a from compartment that is also a destination", {
+  # A compartment cannot transition to itself.
+  expect_error(transmit(from = "S", to = "S"), "different compartments")
+  expect_error(
+    transmit(from = "S", to = c("S", "I"), split = "phi"),
+    "different compartments"
+  )
+})

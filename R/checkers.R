@@ -25,6 +25,10 @@ check_to_from <- function(from, to) {
     any.missing = FALSE,
     .var.name = "to"
   )
+  if (any(from %in% to)) {
+    stop("'from' and 'to' must be different compartments.")
+  }
+  invisible(NULL)
 }
 
 #' Validate the `split` argument shared by `transmit()` and `progress()`
@@ -35,7 +39,7 @@ check_to_from <- function(from, to) {
 #' `split_check()`.
 #'
 #' @param split the split specification to validate.
-#' @importFrom checkmate assert_numeric
+#' @importFrom checkmate assert_numeric assert_character
 #' @keywords internal
 check_split <- function(split) {
   if (length(split) == 1 && is.na(split)) {
@@ -49,6 +53,14 @@ check_split <- function(split) {
       split,
       any.missing = FALSE,
       finite = TRUE,
+      .var.name = "split"
+    )
+  } else {
+    checkmate::assert_character(
+      split,
+      min.len = 1,
+      min.chars = 1,
+      any.missing = FALSE,
       .var.name = "split"
     )
   }
