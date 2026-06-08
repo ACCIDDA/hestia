@@ -61,3 +61,29 @@ test_that("error when inconsistent number of to compartments and splits", {
 test_that("error when no rate information provided", {
   expect_error(progress(from = "A", to = "B"))
 })
+
+test_that("entry validation rejects bad from/to and rate values", {
+  # Non-character from is caught by the entry checker
+  expect_error(
+    progress(from = 1, to = "B", gamma = NA),
+    "from"
+  )
+
+  # Empty to
+  expect_error(
+    progress(from = "A", to = character(0), gamma = NA),
+    "to"
+  )
+
+  # Negative transition rate is rejected
+  expect_error(
+    progress(from = "A", to = "B", gamma = -0.2),
+    "positive"
+  )
+
+  # Zero transition rate is rejected
+  expect_error(
+    progress(from = "A", to = "B", gamma = 0),
+    "positive"
+  )
+})

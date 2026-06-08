@@ -96,14 +96,13 @@ Now let's look at the model results using the `posterior` package.
 # The output from the model in the previous code chunk is available in the
 # sir_res package data object
 
-# Get summary statistics, note that parameters are returned on the logit scale
-# so we also transform back to arithmetic scale
+# Get summary statistics. Parameters are returned on the natural (model) scale,
+# so no back-transformation is needed.
 draws_sum <- summarise_draws(sir_res, "mean", "median", ~ quantile2(.x, probs = c(0.025, 0.975))) |>
-  mutate(var_type = c(rep("Infection probability", 2), "Recovery rate")) %>%
-  mutate(across(where(is.numeric), ~ plogis(.x)))
+  mutate(var_type = c(rep("Infection probability", 2), "Recovery rate"))
 
 # "True" values from underlying simulation
-draws_sum$true_value <- c(0.01, 0.05, 0.2) 
+draws_sum$true_value <- c(0.01, 0.05, 0.2)
 
 draws_sum
 
@@ -138,15 +137,12 @@ Let's take a look at the results once more.
 # The output from the model in the previous code chunk is available in the
 # sir_cov_res package data object
 
-# Get summary statistics, note that non-coefficients parameters are returned on
-# the logit scale and coefficients are returned on the log scale
-draws_sum <- summarise_draws(sir_cov_res, "mean", "median", 
+# Get summary statistics. Infection probabilities and rates are returned on the
+# natural (model) scale and coefficients on the natural (exponentiated) scale,
+# so no back-transformation is needed.
+draws_sum <- summarise_draws(sir_cov_res, "mean", "median",
                              ~ quantile2(.x, probs = c(0.025, 0.975))) |>
-  mutate(var_type = c(rep("Infection probability", 2), "Recovery rate", rep("Coefficient", 4))) %>%
-  mutate(across(where(is.numeric),
-                ~ if_else(var_type != "Coefficient", 
-                          plogis(.x), 
-                          exp(.x))))
+  mutate(var_type = c(rep("Infection probability", 2), "Recovery rate", rep("Coefficient", 4)))
 
 # "True" values from underlying simulation
 draws_sum$true_vals <- c(0.01, 0.05, 0.2, exp(-0.4), exp(0.7), exp(0.8), exp(0.1))

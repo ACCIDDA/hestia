@@ -98,17 +98,16 @@ Now let's look at the model results using the `posterior` package.
 # The output from the model in the previous code chunk is available in the
 # siir_res package data object
 
-# Get summary statistics, note that parameters are returned on the logit scale
-# so we also transform back to arithmetic scale
+# Get summary statistics. Parameters are returned on the natural (model) scale,
+# so no back-transformation is needed.
 draws_sum <- summarise_draws(siir_res, "mean", "median",
                              ~ quantile2(.x, probs = c(0.025, 0.975))) |>
   mutate(var_type = c(rep("Infection probability", 3),
                       rep("Recovery rate", 2),
-                      "Symptomatic proportion")) %>%
-  mutate(across(where(is.numeric), ~ plogis(.x)))
+                      "Symptomatic proportion"))
 
 # "True" values from underlying simulation
-draws_sum$true_value <- c(0.01, 0.05, 0.025, 0.2, 1/3, 0.7) 
+draws_sum$true_value <- c(0.01, 0.05, 0.025, 0.2, 1/3, 0.7)
 
 draws_sum
 

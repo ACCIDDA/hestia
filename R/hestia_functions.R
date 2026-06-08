@@ -2,6 +2,7 @@
 #' @param x Numeric value between 0 and 1
 #' @returns A numeric value.
 #'
+#' @importFrom stats qlogis
 #' @keywords internal
 logit <- function(x) {
   qlogis(x)
@@ -11,6 +12,7 @@ logit <- function(x) {
 #' @param x Numeric value
 #' @returns A numeric value between 0 and 1.
 #'
+#' @importFrom stats plogis
 #' @keywords internal
 inv_logit <- function(x) {
   plogis(x)
@@ -151,9 +153,15 @@ to_from_check <- function(to, from) {
 #' progress(from = "A", to = c("B1", "B2"), split = "phi", delta = NA)
 #'
 #'
+#' @importFrom dplyr bind_rows
 #' @export
 progress <- function(from, to, split = NA, ...) {
   .dots <- unlist(list(...))
+
+  # Entry-level input validation
+  check_to_from(from, to)
+  check_split(split)
+  check_rate_dots(.dots)
 
   # CHecks on parameter specification
   to_from_check(to, from)
@@ -238,8 +246,13 @@ progress <- function(from, to, split = NA, ...) {
 #' # Ia (asymptomatic infection) where 30% of infections are symptomatic.
 #' transmit(from = "S", to = c("Is", "Ia"), split = 0.3)
 #'
+#' @importFrom dplyr bind_rows
 #' @export
 transmit <- function(from, to, source = NA, split = NA) {
+  # Entry-level input validation
+  check_to_from(from, to)
+  check_split(split)
+
   # Checks on parameter specification
   to_from_check(to, from)
   split_check(to, split)
@@ -321,9 +334,26 @@ transmit <- function(from, to, source = NA, split = NA) {
 #'   progress(from = "I_a", to = "R", gamma_a = NA),
 #'   mult_inf_probs = TRUE)
 #'
+#' @importFrom dplyr bind_rows
+#' @importFrom checkmate assert_data_frame assert_flag
 #' @export
 make_infection_model <- function(..., mult_inf_probs = FALSE) {
   .dots <- list(...)
+
+  # Entry-level input validation
+  checkmate::assert_flag(mult_inf_probs, .var.name = "mult_inf_probs")
+  if (length(.dots) == 0) {
+    stop(
+      "At least one transmit() or progress() transition must be supplied."
+    )
+  }
+  for (i in seq_along(.dots)) {
+    checkmate::assert_data_frame(
+      .dots[[i]],
+      min.rows = 1,
+      .var.name = sprintf("transition %d", i)
+    )
+  }
 
   out <- dplyr::bind_rows(.dots)
   out$mult_inf_probs <- mult_inf_probs
@@ -425,6 +455,8 @@ graph_connected <- function(graph) {
 #'
 #' @global param
 #'
+#' @importFrom dplyr bind_rows mutate
+#' @importFrom tidyr replace_na
 #' @export
 get_transmission_details <- function(inf_model) {
   states <- unique(c(inf_model$from, inf_model$to))
@@ -573,6 +605,18 @@ get_transmission_details <- function(inf_model) {
 make_observation_model <- function(...) {
   .dots <- list(...)
 
+  # Entry-level input validation
+  if (length(.dots) == 0) {
+    stop("At least one observation specification must be supplied.")
+  }
+  obs_names <- names(.dots)
+  if (is.null(obs_names) || any(obs_names == "")) {
+    stop("Every observation specification must be named.")
+  }
+  for (i in seq_along(.dots)) {
+    check_observation(.dots[[i]], nm = obs_names[i])
+  }
+
   ops <- list()
   for (i in seq_along(.dots)) {
     op <- matrix(nrow = 2, ncol = length(.dots[[i]]))
@@ -625,6 +669,8 @@ make_observation_model <- function(...) {
 #' @global mult_row
 #' @global mult_col
 #'
+#' @importFrom dplyr arrange group_by summarize ungroup n select bind_rows
+#' @importFrom tidyr unnest
 #' @keywords internal
 make_stan_data <- function(
   inf_model,
@@ -782,7 +828,6 @@ make_stan_data <- function(
 #'   intra-household covariates for each participant
 #' @param eh_cov NULL for run without covariates, otherwise data frame with
 #'   extra-household covariates for each participant
-#' @param file file path to stan model
 #' @param iter number of MCMC iterations
 #' @param chains number of MCMC chains
 #' @param cores number of cores for parallelization
@@ -804,11 +849,15 @@ make_stan_data <- function(
 #'   pcr = c("S" = 0.05, "I" = 0.95, "R" = 0.05),
 #'   igg = c("S" = 0.01, "I" = 0.01, "R" = 0.8))
 #'
+#' # Fitting the Stan model is slow, so it is not run on CRAN.
+#' \donttest{
 #' run_model(inf_model = inf_mod,
 #'           obs_model = obs_mod,
 #'           data = sir_sub,
 #'           init_probs = c(1 - 2 * 1e-10, 1e-10, 1e-10))
+#' }
 #'
+#' @importFrom rstan sampling
 #' @export
 run_model <- function(
   inf_model,
@@ -824,6 +873,11 @@ run_model <- function(
   init = NULL,
   save_states = FALSE
 ) {
+  # Entry-level input validation
+  check_models(inf_model, obs_model)
+  check_run_data(data, obs_model)
+  check_init_probs(init_probs)
+
   dat_stan <- make_stan_data(
     inf_model,
     obs_model,
@@ -938,6 +992,7 @@ run_model <- function(
 #'   the stanfit, the stan input data, and covariate names
 #' @returns A `draws_array` object with chains for each model parameter
 #'
+#' @importFrom posterior as_draws_array variables subset_draws
 #' @keywords internal
 rename_chains <- function(inf_model, model_output) {
   # Get parameter information
@@ -1015,6 +1070,28 @@ rename_chains <- function(inf_model, model_output) {
   # Subset to variables of interest and rename
   draws <- posterior::subset_draws(draws_full, variable = var_names_sub)
   posterior::variables(draws) <- var_names_new
+
+  # Return draws on the natural (model) scale rather than the fitting scale
+  # (#19). Infection probabilities, transition rates and splits are fit on the
+  # logit scale, so map them back with inv_logit(). Covariate coefficients are
+  # fit on the log scale, so map them back with exp(). A draws_array has
+  # dimensions [iteration, chain, variable], so we transform variable slices in
+  # place by name.
+  coef_names <- character(0)
+  if (length(grep("beta0", var_names)) > 0) {
+    coef_names <- c(
+      paste0(model_output$eh_cov_names, "_eh"),
+      paste0(model_output$ih_cov_names, "_ih")
+    )
+  }
+  prob_names <- setdiff(var_names_new, coef_names)
+
+  for (nm in prob_names) {
+    draws[, , nm] <- inv_logit(draws[, , nm])
+  }
+  for (nm in coef_names) {
+    draws[, , nm] <- exp(draws[, , nm])
+  }
 
   draws
 }

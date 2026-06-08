@@ -11,3 +11,7 @@ src/*.dll
 ^\.covignore$
 ^\.zenodo\.json$
 ^CITATION\.cff$
+^CONTRIBUTING\.md$
+^LICENSE\.md$
+^_pkgdown\.yml$
+^pkgdown$

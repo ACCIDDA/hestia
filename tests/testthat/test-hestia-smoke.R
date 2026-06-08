@@ -33,9 +33,11 @@ test_that("run_model fits an SIR model end-to-end and returns named draws", {
   expect_equal(posterior::nchains(draws), 4)
 
   # rename_chains labels the fitted parameters: the two infection probabilities
-  # and the recovery rate gamma. They come back on the model (logit) scale, so
-  # we assert they are present and finite, not that they sit in (0, 1).
+  # and the recovery rate gamma. They are returned on the natural (model) scale
+  # (#19), so every value is a probability in (0, 1).
   param_names <- c("eh_prob", "ih_prob", "gamma")
   expect_setequal(posterior::variables(draws), param_names)
-  expect_true(all(is.finite(posterior::as_draws_matrix(draws))))
+  draws_mat <- posterior::as_draws_matrix(draws)
+  expect_true(all(is.finite(draws_mat)))
+  expect_true(all(draws_mat > 0 & draws_mat < 1))
 })
