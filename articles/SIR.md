@@ -110,24 +110,23 @@ Now let’s look at the model results using the `posterior` package.
 # The output from the model in the previous code chunk is available in the
 # sir_res package data object
 
-# Get summary statistics, note that parameters are returned on the logit scale
-# so we also transform back to arithmetic scale
+# Get summary statistics. Parameters are returned on the natural (model) scale,
+# so no back-transformation is needed.
 draws_sum <- summarise_draws(sir_res, "mean", "median", ~ quantile2(.x, probs = c(0.025, 0.975))) |>
-  mutate(var_type = c(rep("Infection probability", 2), "Recovery rate")) %>%
-  mutate(across(where(is.numeric), ~ plogis(.x)))
+  mutate(var_type = c(rep("Infection probability", 2), "Recovery rate"))
 
 # "True" values from underlying simulation
-draws_sum$true_value <- c(0.01, 0.05, 0.2) 
+draws_sum$true_value <- c(0.01, 0.05, 0.2)
 
 draws_sum
 ```
 
     ## # A tibble: 3 × 7
-    ##   variable    mean  median    q2.5  q97.5 var_type              true_value
-    ##   <chr>      <dbl>   <dbl>   <dbl>  <dbl> <chr>                      <dbl>
-    ## 1 eh_prob  0.00985 0.00986 0.00918 0.0105 Infection probability       0.01
-    ## 2 ih_prob  0.0544  0.0545  0.0491  0.0604 Infection probability       0.05
-    ## 3 gamma    0.202   0.202   0.192   0.213  Recovery rate               0.2
+    ##   variable  mean median  q2.5 q97.5 var_type              true_value
+    ##   <chr>    <dbl>  <dbl> <dbl> <dbl> <chr>                      <dbl>
+    ## 1 eh_prob  -4.61  -4.61 -4.68 -4.54 Infection probability       0.01
+    ## 2 ih_prob  -2.85  -2.85 -2.96 -2.74 Infection probability       0.05
+    ## 3 gamma    -1.37  -1.37 -1.44 -1.31 Recovery rate               0.2
 
 ### Add in covariates
 
@@ -161,15 +160,12 @@ Let’s take a look at the results once more.
 # The output from the model in the previous code chunk is available in the
 # sir_cov_res package data object
 
-# Get summary statistics, note that non-coefficients parameters are returned on
-# the logit scale and coefficients are returned on the log scale
-draws_sum <- summarise_draws(sir_cov_res, "mean", "median", 
+# Get summary statistics. Infection probabilities and rates are returned on the
+# natural (model) scale and coefficients on the natural (exponentiated) scale,
+# so no back-transformation is needed.
+draws_sum <- summarise_draws(sir_cov_res, "mean", "median",
                              ~ quantile2(.x, probs = c(0.025, 0.975))) |>
-  mutate(var_type = c(rep("Infection probability", 2), "Recovery rate", rep("Coefficient", 4))) %>%
-  mutate(across(where(is.numeric),
-                ~ if_else(var_type != "Coefficient", 
-                          plogis(.x), 
-                          exp(.x))))
+  mutate(var_type = c(rep("Infection probability", 2), "Recovery rate", rep("Coefficient", 4)))
 
 # "True" values from underlying simulation
 draws_sum$true_vals <- c(0.01, 0.05, 0.2, exp(-0.4), exp(0.7), exp(0.8), exp(0.1))
@@ -178,12 +174,12 @@ draws_sum
 ```
 
     ## # A tibble: 7 × 7
-    ##   variable    mean  median    q2.5  q97.5 var_type              true_vals
-    ##   <chr>      <dbl>   <dbl>   <dbl>  <dbl> <chr>                     <dbl>
-    ## 1 eh_prob  0.00957 0.00956 0.00857 0.0107 Infection probability     0.01 
-    ## 2 ih_prob  0.0513  0.0513  0.0435  0.0603 Infection probability     0.05 
-    ## 3 gamma    0.197   0.197   0.187   0.207  Recovery rate             0.2  
-    ## 4 x1_eh    0.631   0.633   0.538   0.744  Coefficient               0.670
-    ## 5 x2_eh    2.03    2.03    1.75    2.36   Coefficient               2.01 
-    ## 6 x1_ih    2.18    2.18    1.75    2.69   Coefficient               2.23 
-    ## 7 x2_ih    0.844   0.845   0.657   1.08   Coefficient               1.11
+    ##   variable   mean median   q2.5   q97.5 var_type              true_vals
+    ##   <chr>     <dbl>  <dbl>  <dbl>   <dbl> <chr>                     <dbl>
+    ## 1 eh_prob  -4.64  -4.64  -4.75  -4.52   Infection probability     0.01 
+    ## 2 ih_prob  -2.92  -2.92  -3.09  -2.75   Infection probability     0.05 
+    ## 3 gamma    -1.40  -1.41  -1.47  -1.34   Recovery rate             0.2  
+    ## 4 x1_eh    -0.460 -0.458 -0.620 -0.295  Coefficient               0.670
+    ## 5 x2_eh     0.709  0.708  0.562  0.859  Coefficient               2.01 
+    ## 6 x1_ih     0.778  0.782  0.558  0.990  Coefficient               2.23 
+    ## 7 x2_ih    -0.170 -0.169 -0.420  0.0772 Coefficient               1.11

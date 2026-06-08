@@ -1,12 +1,13 @@
 # Fitted draws for the basic SIR model
 
 Posterior draws from
-[`run_model`](https://accidda.github.io/hestia/reference/run_model.md)
-fit to the [`sir`](https://accidda.github.io/hestia/reference/sir.md)
-data using a basic SIR infection process (fitting the recovery rate) and
-a two-test observation process. Bundling the result lets the vignette
+[`run_model()`](https://accidda.github.io/hestia/reference/run_model.md)
+fit to the [sir](https://accidda.github.io/hestia/reference/sir.md) data
+using a basic SIR infection process (fitting the recovery rate) and a
+two-test observation process. Bundling the result lets the vignette
 display model output without re-running the Stan model. Parameters are
-on the model's internal scale (logit for probabilities and rates).
+on the natural (model) scale: probabilities and rates are returned in
+their original units rather than on the logit fitting scale.
 
 ## Usage
 

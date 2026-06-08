@@ -1,13 +1,14 @@
 # Fitted draws for the SIR model with covariates
 
 Posterior draws from
-[`run_model`](https://accidda.github.io/hestia/reference/run_model.md)
-fit to
-[`sir_cov`](https://accidda.github.io/hestia/reference/sir_cov.md) with
-both intra- and extra-household covariates. Bundling the result lets the
-vignette display model output without re-running the Stan model.
-Infection probabilities and rates are on the logit scale and covariate
-coefficients are on the log scale.
+[`run_model()`](https://accidda.github.io/hestia/reference/run_model.md)
+fit to [sir_cov](https://accidda.github.io/hestia/reference/sir_cov.md)
+with both intra- and extra-household covariates. Bundling the result
+lets the vignette display model output without re-running the Stan
+model. Parameters are on the natural (model) scale: infection
+probabilities and rates in their original units and covariate
+coefficients exponentiated, rather than on the logit and log fitting
+scales.
 
 ## Usage
 

@@ -18,7 +18,7 @@ A list with two elements:
 - observations:
 
   A data frame of outcomes with the same columns as
-  [`sir`](https://accidda.github.io/hestia/reference/sir.md).
+  [sir](https://accidda.github.io/hestia/reference/sir.md).
 
 - covariates:
 

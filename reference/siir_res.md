@@ -1,13 +1,14 @@
 # Fitted draws for the SIIR model
 
 Posterior draws from
-[`run_model`](https://accidda.github.io/hestia/reference/run_model.md)
-fit to the [`siir`](https://accidda.github.io/hestia/reference/siir.md)
+[`run_model()`](https://accidda.github.io/hestia/reference/run_model.md)
+fit to the [siir](https://accidda.github.io/hestia/reference/siir.md)
 data using an infection process with separate symptomatic and
 asymptomatic compartments. Bundling the result lets the vignette display
 model output without re-running the Stan model. Parameters are on the
-model's internal scale (logit for probabilities, rates, and the
-symptomatic split).
+natural (model) scale: probabilities, rates, and the symptomatic split
+are returned in their original units rather than on the logit fitting
+scale.
 
 ## Usage
 

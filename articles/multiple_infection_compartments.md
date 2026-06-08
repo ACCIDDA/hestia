@@ -112,27 +112,26 @@ Now let’s look at the model results using the `posterior` package.
 # The output from the model in the previous code chunk is available in the
 # siir_res package data object
 
-# Get summary statistics, note that parameters are returned on the logit scale
-# so we also transform back to arithmetic scale
+# Get summary statistics. Parameters are returned on the natural (model) scale,
+# so no back-transformation is needed.
 draws_sum <- summarise_draws(siir_res, "mean", "median",
                              ~ quantile2(.x, probs = c(0.025, 0.975))) |>
   mutate(var_type = c(rep("Infection probability", 3),
                       rep("Recovery rate", 2),
-                      "Symptomatic proportion")) %>%
-  mutate(across(where(is.numeric), ~ plogis(.x)))
+                      "Symptomatic proportion"))
 
 # "True" values from underlying simulation
-draws_sum$true_value <- c(0.01, 0.05, 0.025, 0.2, 1/3, 0.7) 
+draws_sum$true_value <- c(0.01, 0.05, 0.025, 0.2, 1/3, 0.7)
 
 draws_sum
 ```
 
     ## # A tibble: 6 × 7
-    ##   variable      mean  median    q2.5   q97.5 var_type               true_value
-    ##   <chr>        <dbl>   <dbl>   <dbl>   <dbl> <chr>                       <dbl>
-    ## 1 eh_prob    0.00927 0.00928 0.00860 0.00993 Infection probability       0.01 
-    ## 2 ih_prob_Is 0.0440  0.0441  0.0379  0.0510  Infection probability       0.05 
-    ## 3 ih_prob_Ia 0.0225  0.0233  0.0125  0.0362  Infection probability       0.025
-    ## 4 gamma_s    0.193   0.193   0.180   0.205   Recovery rate               0.2  
-    ## 5 gamma_a    0.321   0.321   0.290   0.352   Recovery rate               0.333
-    ## 6 phi        0.703   0.703   0.674   0.730   Symptomatic proportion      0.7
+    ##   variable     mean median   q2.5  q97.5 var_type               true_value
+    ##   <chr>       <dbl>  <dbl>  <dbl>  <dbl> <chr>                       <dbl>
+    ## 1 eh_prob    -4.67  -4.67  -4.75  -4.60  Infection probability       0.01 
+    ## 2 ih_prob_Is -3.08  -3.08  -3.23  -2.92  Infection probability       0.05 
+    ## 3 ih_prob_Ia -3.77  -3.74  -4.37  -3.28  Infection probability       0.025
+    ## 4 gamma_s    -1.43  -1.43  -1.51  -1.35  Recovery rate               0.2  
+    ## 5 gamma_a    -0.748 -0.747 -0.897 -0.610 Recovery rate               0.333
+    ## 6 phi         0.864  0.862  0.727  0.996 Symptomatic proportion      0.7
