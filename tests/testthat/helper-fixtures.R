@@ -49,18 +49,3 @@ siir_observation_model <- function() {
 sir_subset <- function(n_hh = 10) {
   sir[sir$hh_id <= n_hh, ]
 }
-
-# A small slice of the bundled `sir_cov` data (observations + covariates) for
-# the covariate end-to-end test. `sir_cov$covariates` is positional - one row
-# per individual in observation order, with no id columns - so we map the kept
-# households to their individual indices and take the matching covariate rows.
-# Kept tiny: a covariate fit on the full data is far too slow for CI.
-sir_cov_subset <- function(n_hh = 5) {
-  obs <- sir_cov$observations
-  indiv <- unique(obs[, c("hh_id", "part_id")])
-  keep_idx <- which(indiv$hh_id <= n_hh)
-  list(
-    observations = obs[obs$hh_id <= n_hh, ],
-    covariates = sir_cov$covariates[keep_idx, , drop = FALSE]
-  )
-}
