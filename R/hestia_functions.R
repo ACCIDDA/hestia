@@ -825,7 +825,7 @@ run_model <- function(
   cores = getOption("mc.cores", 1L),
   init = NULL,
   save_states = FALSE,  #TODO write a workaround for this for cmdstanr
-  stan_interface = "rstan", 
+  stan_interface = c("rstan", "cmdstanr"),
   adapt_delta = 0.9,
   max_treedepth = 12
 ) {
@@ -904,10 +904,14 @@ run_model <- function(
       if (is.data.frame(x)) as.matrix(x) else x
     })
     
-    mod <- cmdstanr::cmdstan_model(
-      stan_file,
-      cpp_options = list(stan_threads = TRUE)
-    )
+    stan_file <- system.file(
+            "stan",
+            if (is_cov) "hmm_cov.stan" else "hmm.stan",
+            package = "hestia",
+            mustWork = TRUE
+          )
+    
+          mod <- cmdstanr::cmdstan_model(stan_file)
     
     stan_fit <- mod$sample(
       data              = dat_stan,
