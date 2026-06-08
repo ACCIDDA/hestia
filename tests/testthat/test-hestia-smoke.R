@@ -48,14 +48,15 @@ test_that("run_model fits a covariate model and exp-transforms coefficients", {
   # exp() coefficient transform that the non-covariate smoke test never reaches.
   inf_mod <- sir_infection_model()
   obs_mod <- sir_observation_model()
+  cov_data <- sir_cov_subset(5)
 
   suppressWarnings(suppressMessages(
     draws <- run_model(
       inf_model = inf_mod,
       obs_model = obs_mod,
-      data = sir_cov$observations,
-      ih_cov = sir_cov$covariates,
-      eh_cov = sir_cov$covariates,
+      data = cov_data$observations,
+      ih_cov = cov_data$covariates,
+      eh_cov = cov_data$covariates,
       init_probs = c(1 - 2 * 1e-10, 1e-10, 1e-10),
       iter = 200
     )
