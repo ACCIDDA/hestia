@@ -1,6 +1,6 @@
 Package: hestia
 Title: Bayesian Compartmental Infection Models from Individual Outcomes
-Version: 0.0.0.9000
+Version: 0.1.0
 Authors@R:
     c(person("Claire Perrin", "Smith", email = "clairesmith6995@gmail.com",
              role = c("aut", "cre"),
