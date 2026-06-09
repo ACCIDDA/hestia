@@ -826,8 +826,8 @@ run_model <- function(
   init = NULL,
   save_states = FALSE,  #TODO write a workaround for this for cmdstanr
   stan_interface = c("rstan", "cmdstanr"),
-  adapt_delta = 0.9,
-  max_treedepth = 12
+  adapt_delta = 0.95,
+  max_treedepth = 10
 ) {
     stan_interface <- match.arg(stan_interface)
        if (stan_interface == "cmdstanr" && !requireNamespace("cmdstanr", quietly = TRUE)) {
@@ -890,7 +890,8 @@ run_model <- function(
     model <- if (is_cov) stanmodels$hmm_cov else stanmodels$hmm
     
     args <- list(object = model, data = dat_stan, iter = iter,
-                 chains = chains, cores = cores, init = init)
+                 chains = chains, cores = cores, init = init,
+                 control = list(adapt_delta = adapt_delta, max_treedepth = max_treedepth))
     if (!save_states) {
       args$pars    <- "logalpha"
       args$include <- FALSE
