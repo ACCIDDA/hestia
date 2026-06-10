@@ -26,14 +26,13 @@ test_that("rename_chains covers the covariate path on a minimal live fit", {
   cov_sub <- sir_cov$covariates[1:7, ]
   init_probs <- c(1 - 2 * 1e-10, 1e-10, 1e-10)
 
-  dat_stan <- hestia:::make_stan_data(
+  dat_stan <- make_stan_data(
     inf_model, obs_model, data_sub, init_probs,
     epsilon = 1e-10, ih_cov = cov_sub, eh_cov = cov_sub
   )
 
   # One-chain init mirroring run_model()'s covariate inner list, sized from the
-  # stan data so the dimensions match.
-  logit <- function(p) log(p / (1 - p))
+  # stan data so the dimensions match. Reuses the package's internal logit().
   init <- list(list(
     logit_params = array(rep(logit(0.5), dat_stan$n_params)),
     logit_mult_params = array(rep(logit(0.5), dat_stan$n_mult_params)),
@@ -44,7 +43,7 @@ test_that("rename_chains covers the covariate path on a minimal live fit", {
   ))
 
   fit <- suppressWarnings(rstan::sampling(
-    hestia:::stanmodels$hmm_cov,
+    stanmodels$hmm_cov,
     data = dat_stan,
     iter = 100,
     chains = 1,
@@ -62,7 +61,7 @@ test_that("rename_chains covers the covariate path on a minimal live fit", {
     ih_cov_names = colnames(cov_sub)
   )
 
-  out <- hestia:::rename_chains(inf_model, stan_out)
+  out <- rename_chains(inf_model, stan_out)
 
   expect_s3_class(out, "draws_array")
   expect_setequal(
