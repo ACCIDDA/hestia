@@ -25,7 +25,7 @@ test_that("run_model fits an SIR model end-to-end and returns named draws", {
       obs_model = obs_mod,
       data = dat,
       init_probs = c(1 - 2 * 1e-10, 1e-10, 1e-10),
-      iter = 200
+      stan_opts = stan_options(iter = 200)
     )
   ))
 

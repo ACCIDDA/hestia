@@ -184,3 +184,42 @@ check_init_probs <- function(init_probs) {
   }
   invisible(NULL)
 }
+
+#' Validate a positive-integer sampler argument
+#'
+#' Used by [stan_options()] to coerce and check scalar count arguments such as
+#' `iter`, `chains`, and `cores`.
+#'
+#' @param x the value to validate.
+#' @param name the argument name, used in the error message.
+#' @returns `x` coerced to a length-one integer.
+#' @importFrom checkmate assert_integerish
+#' @keywords internal
+check_positive_int <- function(x, name) {
+  checkmate::assert_integerish(
+    x,
+    lower = 1,
+    len = 1,
+    any.missing = FALSE,
+    .var.name = name
+  )
+  as.integer(x)
+}
+
+#' Validate the `seed` sampler argument passed to [stan_options()]
+#'
+#' `seed` must be a single value coercible to an integer.
+#'
+#' @param seed the value to validate.
+#' @returns `seed` coerced to a length-one integer.
+#' @keywords internal
+check_seed <- function(seed) {
+  if (length(seed) != 1L) {
+    stop("'seed' must be a single value.", call. = FALSE)
+  }
+  val <- suppressWarnings(as.integer(seed))
+  if (is.na(val)) {
+    stop("'seed' must be coercible to an integer.", call. = FALSE)
+  }
+  val
+}
