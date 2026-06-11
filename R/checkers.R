@@ -201,9 +201,9 @@ check_positive_int <- function(x, name) {
     lower = 1,
     len = 1,
     any.missing = FALSE,
-    .var.name = name
+    .var.name = name,
+    coerce = TRUE
   )
-  as.integer(x)
 }
 
 #' Validate the `seed` sampler argument passed to [stan_options()]
