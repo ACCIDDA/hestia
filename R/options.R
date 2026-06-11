@@ -39,6 +39,10 @@ stan_options <- function(...) {
     )
   }
 
+  if (is.null(res$chains)) {
+    res$chains <- 4L
+  }
+
   int_args <- c("iter", "chains", "warmup", "cores")
   for (arg in intersect(names(res), int_args)) {
     res[[arg]] <- check_positive_int(res[[arg]], arg)

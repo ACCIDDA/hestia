@@ -1,5 +1,6 @@
-test_that("stan_options() returns an empty list by default", {
-  expect_identical(stan_options(), list())
+test_that("stan_options() defaults chains and is otherwise empty", {
+  expect_identical(stan_options(), list(chains = 4L))
+  expect_identical(stan_options()$chains, 4L)
 })
 
 test_that("stan_options() passes through and coerces sampler arguments", {

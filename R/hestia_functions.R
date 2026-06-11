@@ -894,9 +894,7 @@ run_model <- function(
 
   is_cov <- !is.null(eh_cov) && !is.null(ih_cov)
 
-  # The number of chains drives how many init lists we build. It lives in
-  # `stan_opts`; default to rstan::sampling()'s own default of 4 when unset.
-  chains <- if (is.null(stan_opts$chains)) 4L else stan_opts$chains
+  chains <- stan_opts$chains
 
   if (is.null(init)) {
     if (is_cov) {
