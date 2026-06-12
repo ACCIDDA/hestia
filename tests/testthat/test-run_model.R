@@ -20,7 +20,7 @@ test_that("return one set of chains per parameter", {
       obs_model = obs_mod,
       data = siir_sub,
       init_probs = c(1 - 3 * 1e-10, 1e-10, 1e-10, 1e-10),
-      iter = 10
+      stan_opts = stan_options(iter = 10)
     )
   ))
 
@@ -52,7 +52,7 @@ test_that("multiple infections probabilities supported", {
       obs_model = obs_mod,
       data = siir_sub,
       init_probs = c(1 - 3 * 1e-10, 1e-10, 1e-10, 1e-10),
-      iter = 10
+      stan_opts = stan_options(iter = 10)
     )
   ))
 

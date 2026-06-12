@@ -828,11 +828,10 @@ make_stan_data <- function(
 #'   intra-household covariates for each participant
 #' @param eh_cov NULL for run without covariates, otherwise data frame with
 #'   extra-household covariates for each participant
-#' @param iter number of MCMC iterations
-#' @param chains number of MCMC chains
-#' @param cores number of cores for parallelization
 #' @param init initial conditions for MCMC chains
 #' @param save_states indicator for whether to save state probabilities
+#' @param stan_opts a named list of Stan sampler options, as produced by
+#'   [stan_options()] (for example `stan_options(iter = 1000, cores = 4)`).
 #' @returns `draws_array` object with chains for each model parameter
 #'
 #' @examples
@@ -867,16 +866,21 @@ run_model <- function(
   epsilon = 1e-10,
   ih_cov = NULL,
   eh_cov = NULL,
-  iter = 2000,
-  chains = 4,
-  cores = getOption("mc.cores", 1L),
   init = NULL,
-  save_states = FALSE
+  save_states = FALSE,
+  stan_opts = stan_options()
 ) {
   # Entry-level input validation
   check_models(inf_model, obs_model)
   check_run_data(data, obs_model)
   check_init_probs(init_probs)
+  checkmate::assert_list(stan_opts, .var.name = "stan_opts")
+  if (length(stan_opts) > 0 && is.null(names(stan_opts))) {
+    stop(
+      "'stan_opts' must be a named list, e.g. from stan_options().",
+      call. = FALSE
+    )
+  }
 
   dat_stan <- make_stan_data(
     inf_model,
@@ -889,6 +893,8 @@ run_model <- function(
   )
 
   is_cov <- !is.null(eh_cov) && !is.null(ih_cov)
+
+  chains <- stan_opts$chains
 
   if (is.null(init)) {
     if (is_cov) {
@@ -906,7 +912,7 @@ run_model <- function(
             beta0_ih = array(rep(logit(0.02), dat_stan$n_inf_prob))
           )
         ),
-        4
+        chains
       )
     } else {
       init = rep(
@@ -921,58 +927,27 @@ run_model <- function(
             beta_ih = array(rep(logit(0.02), dat_stan$n_inf_prob))
           )
         ),
-        4
+        chains
       )
     }
   } else {
-    init <- rep(list(init), 4)
+    init <- rep(list(init), chains)
   }
 
-  if (save_states) {
-    if (is_cov) {
-      stan_fit <- rstan::sampling(
-        stanmodels$hmm_cov,
-        data = dat_stan,
-        iter = iter,
-        chains = chains,
-        cores = cores,
-        init = init
-      )
-    } else {
-      stan_fit <- rstan::sampling(
-        stanmodels$hmm,
-        data = dat_stan,
-        iter = iter,
-        chains = chains,
-        cores = cores,
-        init = init
-      )
-    }
-  } else {
-    if (is_cov) {
-      stan_fit <- rstan::sampling(
-        stanmodels$hmm_cov,
-        data = dat_stan,
-        iter = iter,
-        chains = chains,
-        cores = cores,
-        init = init,
-        pars = "logalpha",
-        include = FALSE
-      )
-    } else {
-      stan_fit <- rstan::sampling(
-        stanmodels$hmm,
-        data = dat_stan,
-        iter = iter,
-        chains = chains,
-        cores = cores,
-        init = init,
-        pars = "logalpha",
-        include = FALSE
-      )
-    }
+  model <- if (is_cov) stanmodels$hmm_cov else stanmodels$hmm
+
+  # Build the rstan::sampling() call from the user's sampler options, then set
+  # the arguments run_model() owns (these overwrite any colliding entry).
+  args <- stan_opts
+  args$object <- model
+  args$data <- dat_stan
+  args$init <- init
+  if (!save_states) {
+    # Drop the per-timestep state probabilities from the saved output.
+    args$pars <- "logalpha"
+    args$include <- FALSE
   }
+  stan_fit <- do.call(rstan::sampling, args)
 
   stan_out <- list(
     stan_fit = stan_fit,
