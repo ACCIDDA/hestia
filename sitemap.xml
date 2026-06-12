@@ -12,8 +12,10 @@
 <url><loc>https://accidda.github.io/hestia/reference/check_init_probs.html</loc></url>
 <url><loc>https://accidda.github.io/hestia/reference/check_models.html</loc></url>
 <url><loc>https://accidda.github.io/hestia/reference/check_observation.html</loc></url>
+<url><loc>https://accidda.github.io/hestia/reference/check_positive_int.html</loc></url>
 <url><loc>https://accidda.github.io/hestia/reference/check_rate_dots.html</loc></url>
 <url><loc>https://accidda.github.io/hestia/reference/check_run_data.html</loc></url>
+<url><loc>https://accidda.github.io/hestia/reference/check_seed.html</loc></url>
 <url><loc>https://accidda.github.io/hestia/reference/check_split.html</loc></url>
 <url><loc>https://accidda.github.io/hestia/reference/check_to_from.html</loc></url>
 <url><loc>https://accidda.github.io/hestia/reference/get_transmission_details.html</loc></url>
@@ -35,6 +37,7 @@
 <url><loc>https://accidda.github.io/hestia/reference/sir_cov_res.html</loc></url>
 <url><loc>https://accidda.github.io/hestia/reference/sir_res.html</loc></url>
 <url><loc>https://accidda.github.io/hestia/reference/split_check.html</loc></url>
+<url><loc>https://accidda.github.io/hestia/reference/stan_options.html</loc></url>
 <url><loc>https://accidda.github.io/hestia/reference/to_from_check.html</loc></url>
 <url><loc>https://accidda.github.io/hestia/reference/transmit.html</loc></url>
 </urlset>
