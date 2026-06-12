@@ -21,6 +21,7 @@ test_that("stan_options() forwards arbitrary sampling() arguments untouched", {
 test_that("stan_options() rejects internally-managed arguments", {
   expect_error(stan_options(object = "hmm"), "object")
   expect_error(stan_options(data = list()), "data")
+  expect_error(stan_options(init = list()), "init")
 })
 
 test_that("stan_options() rejects non-positive or non-scalar integer arguments", {

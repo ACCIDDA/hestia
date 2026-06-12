@@ -4,7 +4,9 @@
 #' Collects and validates the arguments passed through to the Stan sampler.
 #'
 #' Any argument accepted by [rstan::sampling()] may be supplied, with the
-#' exception of `object` and `data`, which [run_model()] constructs internally.
+#' exception of `object` and `data` (which [run_model()] constructs internally)
+#' and `init` (which is passed to [run_model()] directly, as its defaults
+#' depend on the model structure).
 #' Sampler controls such as `adapt_delta` and `max_treedepth` are set through
 #' `control = list(...)`, exactly as in [rstan::sampling()].
 #'
@@ -35,6 +37,14 @@ stan_options <- function(...) {
     stop(
       "Passing 'data' in stan_options() is not allowed; ",
       "run_model() constructs the 'data' argument internally.",
+      call. = FALSE
+    )
+  }
+  if ("init" %in% names(res)) {
+    stop(
+      "Passing 'init' in stan_options() is not allowed; ",
+      "pass it to run_model() directly, as its defaults depend on the ",
+      "model structure.",
       call. = FALSE
     )
   }
