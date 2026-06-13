@@ -81,6 +81,55 @@ jobs:
           args: 'c("--no-manual", "--as-cran")'
           error-on: '"error"'
 
+      # CRAN rejects source tarballs over 10MB at submission. That ceiling is
+      # an incoming-policy check, not part of R CMD check --as-cran (which only
+      # measures *installed* size), so the matrix above can be fully green while
+      # the package is still too big to submit. This step builds the source
+      # tarball and guards its size before a submission attempt. See issue #62.
+      #
+      # Runs on a single matrix cell (Ubuntu, release): the size of the source
+      # tarball does not vary by OS or R version, and this cell already has R,
+      # the toolchain, and the restored Stan cache, so R CMD build reuses the
+      # cached objects instead of triggering a fresh heavy compile.
+      - name: Guard source tarball size
+        if: runner.os == 'Linux' && matrix.config.r == 'release'
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          # --no-build-vignettes / --no-manual keep this step light: building the
+          # vignettes would refit the Stan models (a heavy compile) and building
+          # the manual needs LaTeX, while neither changes the dominant size driver
+          # this guard exists to catch (bundled data fixtures in data/, e.g. the
+          # fitted-draw .rda files, which ship in the tarball regardless of these
+          # flags). The measured size is therefore a conservative lower bound: if
+          # it trips the limit, the full CRAN tarball is at least as large.
+          R CMD build . --no-build-vignettes --no-manual
+
+          # Pick the newest tarball in case more than one is present.
+          TARBALL="$(ls -t ./*.tar.gz | head -n 1)"
+          if [ -z "${TARBALL}" ]; then
+            echo "::error::No source tarball (*.tar.gz) was produced by R CMD build."
+            exit 1
+          fi
+
+          SIZE_BYTES="$(wc -c < "${TARBALL}")"
+          HUMAN="$(ls -lh "${TARBALL}" | awk '{print $5}')"
+          echo "Source tarball: ${TARBALL} (${HUMAN}, ${SIZE_BYTES} bytes)"
+
+          # Explicit thresholds (binary units, matching `ls -lh` / du):
+          WARN_BYTES=5242880    #  5 MB  -> early heads-up before it becomes a problem
+          FAIL_BYTES=10485760   # 10 MB  -> hard CRAN incoming limit; reject the build
+
+          if [ "${SIZE_BYTES}" -gt "${FAIL_BYTES}" ]; then
+            echo "::error::Source tarball is ${HUMAN} (${SIZE_BYTES} bytes), over the 10MB (${FAIL_BYTES} bytes) CRAN hard limit. CRAN will reject this submission. Shrink bundled data/fixtures before submitting."
+            exit 1
+          elif [ "${SIZE_BYTES}" -gt "${WARN_BYTES}" ]; then
+            echo "::warning::Source tarball is ${HUMAN} (${SIZE_BYTES} bytes), over the 5MB (${WARN_BYTES} bytes) early-warning threshold and approaching the 10MB CRAN hard limit. Consider shrinking bundled data/fixtures."
+          else
+            echo "Source tarball is under the 5MB warning threshold; well within the 10MB CRAN limit."
+          fi
+
   check-result:
     if: always()
     needs: [R-CMD-check]
