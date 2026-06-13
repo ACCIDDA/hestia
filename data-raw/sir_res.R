@@ -20,8 +20,7 @@ sir_res <- run_model(
   obs_model = obs_process,
   data = sir,
   init_probs = c(1 - 2 * 1e-10, 1e-10, 1e-10),
-  iter = 1000,
-  cores = 4
+  stan_opts = stan_options(iter = 1000, cores = 4)
 )
 
 usethis::use_data(sir_res, overwrite = TRUE)
