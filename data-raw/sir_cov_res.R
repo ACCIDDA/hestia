@@ -22,8 +22,7 @@ sir_cov_res <- run_model(
   ih_cov = sir_cov$covariates,
   eh_cov = sir_cov$covariates,
   init_probs = c(1 - 2 * 1e-10, 1e-10, 1e-10),
-  iter = 1000,
-  cores = 4
+  stan_opts = stan_options(iter = 1000, cores = 4)
 )
 
 usethis::use_data(sir_cov_res, overwrite = TRUE)
