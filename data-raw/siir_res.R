@@ -1,36 +1,19 @@
-## code to prepare `DATASET` dataset goes here
+## code to prepare `siir_res` dataset goes here
 library(hestia)
-library(dplyr)
 
-# Infection process model
-inf_process <- make_infection_model(
-  transmit(
-    from = "S",
-    to = c("Is", "Ia"),
-    source = c("Is", "Ia"),
-    split = "phi"
-  ),
-  progress(from = "Is", to = "R", gamma_s = NA),
-  progress(from = "Ia", to = "R", gamma_a = NA),
-  mult_inf_probs = TRUE
-)
+# Shared bake spec: model definition lives in recipes.R so the production bake
+# and the data-raw/tests/ integration tests cannot drift.
+source("data-raw/recipes.R")
 
+spec <- build_siir_res_spec()
 
-# Observation process
-obs_process <- make_observation_model(
-  pcr = c("S" = 0.05, "Is" = 0.95, "Ia" = 0.95, "R" = 0.05),
-  igg = c("S" = 0.01, "Is" = 0.01, "Ia" = 0.01, "R" = 0.8),
-  symp = c("S" = 0.03, "Is" = 1 - 1e-10, "Ia" = 0.03, "R" = 0.03)
-)
-
-# Run stan model on SIR package data
+# Run the Stan model on the bundled `siir` data with the production budget.
 siir_res <- run_model(
-  inf_model = inf_process,
-  obs_model = obs_process,
-  data = siir,
-  init_probs = c(1 - 3 * 1e-10, 1e-10, 1e-10, 1e-10),
-  iter = 1000,
-  cores = 4
+  inf_model = spec$inf_model,
+  obs_model = spec$obs_model,
+  data = spec$data,
+  init_probs = spec$init_probs,
+  stan_opts = stan_options(iter = 1000, cores = 4)
 )
 
 usethis::use_data(siir_res, overwrite = TRUE)

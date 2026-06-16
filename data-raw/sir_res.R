@@ -1,27 +1,19 @@
-## code to prepare `DATASET` dataset goes here
+## code to prepare `sir_res` dataset goes here
 library(hestia)
-library(dplyr)
 
-# Basic SIR, fit recovery rate
-inf_process <- make_infection_model(
-  transmit(from = "S", to = "I"),
-  progress(from = "I", to = "R", gamma = NA)
-)
+# Shared bake spec: model definition lives in recipes.R so the production bake
+# and the data-raw/tests/ integration tests cannot drift.
+source("data-raw/recipes.R")
 
-# Observation process
-obs_process <- make_observation_model(
-  pcr = c("S" = 0.05, "I" = 0.95, "R" = 0.05),
-  igg = c("S" = 0.01, "I" = 0.01, "R" = 0.8)
-)
+spec <- build_sir_res_spec()
 
-# Run stan model on SIR package data
+# Run the Stan model on the bundled `sir` data with the production budget.
 sir_res <- run_model(
-  inf_model = inf_process,
-  obs_model = obs_process,
-  data = sir,
-  init_probs = c(1 - 2 * 1e-10, 1e-10, 1e-10),
-  iter = 1000,
-  cores = 4
+  inf_model = spec$inf_model,
+  obs_model = spec$obs_model,
+  data = spec$data,
+  init_probs = spec$init_probs,
+  stan_opts = stan_options(iter = 1000, cores = 4)
 )
 
 usethis::use_data(sir_res, overwrite = TRUE)

@@ -5,6 +5,8 @@
 src/RcppExports*
 src/stanExports*
 src/*.dll
+src/*.so
+src/*.o
 *.quarto
 *_extensions
 JG/*
