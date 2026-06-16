@@ -1,0 +1,56 @@
+name: data-raw-integration
+
+# Dedicated workflow for the data-raw/*_res.R bake integration tests. These live
+# under data-raw/ (build-excluded) and are NOT part of R CMD check or covr, so
+# they run here on their own: load_all() to compile and attach the package, then
+# testthat::test_dir() on data-raw/tests. NOT_CRAN lets the skip_on_cran() fits
+# (siir, sir_cov) actually run in CI.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  data-raw-integration:
+    runs-on: ubuntu-latest
+
+    env:
+      GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
+      R_KEEP_PKG_SOURCE: yes
+      NOT_CRAN: true
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Setup R
+        uses: r-lib/actions/setup-r@v2
+        with:
+          r-version: 'release'
+          use-public-rspm: true
+
+      - name: Install dependencies
+        uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          extra-packages: any::pkgload, any::testthat, local::.
+          needs: check
+
+      - name: Cache Stan compilation objects
+        uses: actions/cache@v5
+        with:
+          path: src/
+          key: ${{ runner.os }}-rrelease-stan-${{ hashFiles('inst/stan/**/*.stan', 'src/**/*.stan') }}
+          restore-keys: |
+            ${{ runner.os }}-rrelease-stan-
+
+      # load_all() recompiles the Stan models, so the cache above is essential.
+      # PKG_BUILD_EXTRA_FLAGS=false stops pkgbuild from injecting -g -O0, matching
+      # R-CMD-check.yaml's load_all guard.
+      - name: Run data-raw bake integration tests
+        env:
+          PKG_BUILD_EXTRA_FLAGS: "false"
+        run: |
+          pkgload::load_all(".")
+          res <- testthat::test_dir("data-raw/tests", stop_on_failure = TRUE)
+        shell: Rscript {0}
