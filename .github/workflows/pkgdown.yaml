@@ -33,8 +33,7 @@ jobs:
 
       - uses: r-lib/actions/setup-r-dependencies@v2
         with:
-          extra-packages: any::pkgdown, any::roxygen2, any::roxyglobals, local::.
-          extra-repositories: https://stan-dev.r-universe.dev
+          extra-packages: any::pkgdown, any::roxygen2, any::roxyglobals, local::., stan-dev/cmdstanr
           needs: website
 
       - name: Cache Stan compilation objects
