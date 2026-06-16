@@ -54,6 +54,7 @@ jobs:
         uses: r-lib/actions/setup-r-dependencies@v2
         with:
           extra-packages: any::rcmdcheck, any::roxygen2, any::roxyglobals
+          extra-repositories: https://stan-dev.r-universe.dev
           needs: check
 
       - name: Cache Stan compilation objects
