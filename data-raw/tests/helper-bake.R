@@ -46,14 +46,36 @@ test_stan_opts <- stan_options(chains = 1, iter = 80, seed = 1L, refresh = 0)
 # 1..N ids; hh_id <= 3 does.
 test_n_hh <- 3L
 
-# Loose tolerance for the Tier-2 golden-means regression. The golden is a small
-# stored vector of posterior means from the same seeded budget; the comparison is
-# means only (no draws) so it stays backend-agnostic for a future rstan ->
-# cmdstan swap.
+# Per-parameter RELATIVE tolerance (with a small absolute floor) for the Tier-2
+# golden-means regression. waldo's pooled tolerance is scaled by the whole
+# vector's magnitude, so a large exp-scale coefficient would swamp the bound on a
+# small probability; expect_means_close() below compares each parameter on its
+# own so the same headroom applies to every variable.
 golden_tol <- 0.05
+golden_floor <- 1e-3
+
+# The two heavier fits (siir, sir_cov) only run when HESTIA_RUN_INTEGRATION is
+# set, so a bare local test_dir() pays for just the cheap SIR fit; the dedicated
+# CI workflow sets it so all three run there. data-raw is build-excluded, so
+# these tests never reach R CMD check / CRAN: skip_on_cran() would guard a
+# context that cannot occur.
+run_full_integration <- function() {
+  isTRUE(as.logical(Sys.getenv("HESTIA_RUN_INTEGRATION", "false")))
+}
+
+# Slice a positional covariate frame to the first n_ind individuals. The frame
+# carries one row per individual in the full data, in (hh_id, part_id) order;
+# assert that one-row-per-individual shape so a reordered or regenerated dataset
+# fails loudly here rather than silently mis-aligning the slice.
+slice_cov <- function(cov, data, n_ind) {
+  n_full <- length(unique(paste(data$hh_id, data$part_id)))
+  stopifnot(nrow(cov) == n_full)
+  cov[seq_len(n_ind), , drop = FALSE]
+}
 
 # Fit a recipe with the tiny test budget. `spec` is a build_*_res_spec() list;
-# `cov` toggles the covariate path (passes ih_cov/eh_cov sliced positionally).
+# `cov` toggles the covariate path (slices and passes ih_cov and eh_cov
+# independently from the spec, so a recipe that diverged them would be caught).
 fit_test_recipe <- function(spec, cov = FALSE) {
   data_sub <- spec$data[spec$data$hh_id <= test_n_hh, ]
 
@@ -66,34 +88,40 @@ fit_test_recipe <- function(spec, cov = FALSE) {
   )
 
   if (cov) {
-    # sir_cov$covariates is positional (no hh_id): one row per individual in
-    # (hh_id, part_id) order, so households 1..3 are the first
-    # length(unique(part)) rows of the covariate frame.
     n_ind <- length(unique(paste(data_sub$hh_id, data_sub$part_id)))
-    cov_sub <- spec$ih_cov[seq_len(n_ind), , drop = FALSE]
-    args$ih_cov <- cov_sub
-    args$eh_cov <- cov_sub
+    args$ih_cov <- slice_cov(spec$ih_cov, spec$data, n_ind)
+    args$eh_cov <- slice_cov(spec$eh_cov, spec$data, n_ind)
   }
 
   suppressWarnings(suppressMessages(do.call(run_model, args)))
 }
 
-# Posterior means as a named numeric vector, in a stable variable order. This is
-# what both the stored golden and the live fit are reduced to for Tier 2.
+# Posterior means as a named numeric vector in a stable variable order. This is
+# what both the stored golden and the live fit reduce to for Tier 2.
 draws_means <- function(draws) {
-  mat <- posterior::as_draws_matrix(draws)
-  means <- colMeans(mat)
-  means[order(names(means))]
+  summ <- posterior::summarise_draws(draws, mean)
+  out <- stats::setNames(summ$mean, summ$variable)
+  out[order(names(out))]
 }
 
-# Load the stored golden means for one recipe (NULL if not yet generated).
+# Load the stored golden means for one recipe.
 read_golden <- function(name) {
-  path <- tryCatch(
-    data_raw_path("tests", "golden-means.rds"),
-    error = function(e) NULL
+  readRDS(data_raw_path("tests", "golden-means.rds"))[[name]]
+}
+
+# Tier-2 regression assertion: every parameter's posterior mean is within a
+# relative tolerance (with an absolute floor) of the stored golden. Per-parameter
+# so the same headroom applies to a small probability and a large coefficient.
+expect_means_close <- function(means, golden) {
+  testthat::expect_setequal(names(means), names(golden))
+  golden <- golden[names(means)]
+  bound <- pmax(abs(golden) * golden_tol, golden_floor)
+  off <- abs(means - golden) > bound
+  testthat::expect_false(
+    any(off),
+    info = paste(
+      "means outside tolerance:",
+      paste(names(means)[off], collapse = ", ")
+    )
   )
-  if (is.null(path)) {
-    return(NULL)
-  }
-  readRDS(path)[[name]]
 }

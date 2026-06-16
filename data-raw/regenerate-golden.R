@@ -21,7 +21,7 @@ golden <- list(
   sir_cov_res = draws_means(fit_test_recipe(build_sir_cov_res_spec(), cov = TRUE))
 )
 
-saveRDS(golden, file.path("data-raw", "tests", "golden-means.rds"))
+saveRDS(golden, data_raw_path("tests", "golden-means.rds"))
 
 message("Wrote data-raw/tests/golden-means.rds:")
 for (nm in names(golden)) {
