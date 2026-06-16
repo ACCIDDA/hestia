@@ -1,6 +1,16 @@
 test_that("stan_options() defaults chains and is otherwise empty", {
-  expect_identical(stan_options(), list(chains = 4L))
-  expect_identical(stan_options()$chains, 4L)
+  opts <- stan_options()
+  expect_identical(opts$chains, 4L)
+  expect_named(opts, "chains")
+})
+
+test_that("stan_options() defaults to and tags the rstan backend", {
+  expect_identical(attr(stan_options(), "hestia_backend"), "rstan")
+  expect_identical(
+    attr(stan_options(backend = "cmdstanr"), "hestia_backend"),
+    "cmdstanr"
+  )
+  expect_error(stan_options(backend = "nonsense"))
 })
 
 test_that("stan_options() passes through and coerces sampler arguments", {

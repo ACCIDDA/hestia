@@ -1,29 +1,35 @@
 #' @title Stan sampler options for `run_model()`
 #'
 #' @description
-#' Collects and validates the arguments passed through to the Stan sampler.
+#' Collects and validates sampler arguments for the chosen `backend`, forwarding
+#' them **verbatim** so calls feel native to that backend. Use the backend's own
+#' argument names; mixing one backend's vocabulary into the other errors with a
+#' hint. `object`, `data`, and `init` may not be set here — [run_model()] owns
+#' those.
 #'
-#' Any argument accepted by [rstan::sampling()] may be supplied, with the
-#' exception of `object` and `data` (which [run_model()] constructs internally)
-#' and `init` (which is passed to [run_model()] directly, as its defaults
-#' depend on the model structure).
-#' Sampler controls such as `adapt_delta` and `max_treedepth` are set through
-#' `control = list(...)`, exactly as in [rstan::sampling()].
+#' @param ... sampler arguments forwarded verbatim to the chosen backend's
+#'   sampler. Use the backend's own names: for `"rstan"`, the
+#'   [rstan::sampling()] arguments (`iter`, `chains`, `cores`, `seed`,
+#'   `control = list(adapt_delta = 0.95)`); for `"cmdstanr"`, the `$sample()`
+#'   arguments (`iter_warmup`, `iter_sampling`, `parallel_chains`,
+#'   `adapt_delta`, ...).
+#' @param backend which Stan interface to target, one of `"rstan"` (default) or
+#'   `"cmdstanr"`. Determines which argument vocabulary is accepted and which
+#'   sampler [run_model()] calls. Whatever is set here wins.
 #'
-#' @param ... arguments forwarded to [rstan::sampling()], for example `iter`,
-#'   `chains`, `cores`, `seed`, or
-#'   `control = list(adapt_delta = 0.95, max_treedepth = 12)`.
-#'
-#' @returns a named list of validated arguments for [rstan::sampling()].
+#' @returns a named list of validated sampler arguments, tagged with the
+#'   backend it was built for.
 #'
 #' @examples
 #' stan_options()
 #' stan_options(chains = 2, iter = 500)
 #' stan_options(control = list(adapt_delta = 0.95, max_treedepth = 12))
+#' stan_options(backend = "cmdstanr", parallel_chains = 4, iter_warmup = 500)
 #'
 #' @seealso [run_model()], [rstan::sampling()]
 #' @export
-stan_options <- function(...) {
+stan_options <- function(..., backend = "rstan") {
+  backend <- match.arg(backend, c("rstan", "cmdstanr"))
   res <- list(...)
 
   if ("object" %in% names(res)) {
@@ -49,11 +55,21 @@ stan_options <- function(...) {
     )
   }
 
+  # Reject the other backend's vocabulary with a "did you mean" hint.
+  check_backend_vocab(names(res), backend)
+
+  # `chains` is native to both backends and run_model() needs it to size the
+  # init list, so guarantee a value; default to the samplers' own default of 4.
   if (is.null(res$chains)) {
     res$chains <- 4L
   }
 
-  int_args <- c("iter", "chains", "warmup", "cores")
+  # Validate the positive-integer count arguments native to this backend.
+  int_args <- if (backend == "rstan") {
+    c("iter", "chains", "warmup", "cores")
+  } else {
+    c("iter_warmup", "iter_sampling", "thin", "chains", "parallel_chains")
+  }
   for (arg in intersect(names(res), int_args)) {
     res[[arg]] <- check_positive_int(res[[arg]], arg)
   }
@@ -62,5 +78,6 @@ stan_options <- function(...) {
     res[["seed"]] <- check_seed(res[["seed"]])
   }
 
+  attr(res, "hestia_backend") <- backend
   res
 }

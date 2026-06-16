@@ -41,10 +41,13 @@ LinkingTo:
 SystemRequirements: GNU make
 LazyData: true
 Suggests:
+    cmdstanr,
     knitr,
     rmarkdown,
     roxyglobals,
     testthat (>= 3.0.0)
+Additional_repositories:
+    https://stan-dev.r-universe.dev
 VignetteBuilder: knitr
 Config/roxyglobals/filename: globals.R
 Config/roxyglobals/unique: FALSE

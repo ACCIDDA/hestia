@@ -830,8 +830,10 @@ make_stan_data <- function(
 #'   extra-household covariates for each participant
 #' @param init initial conditions for MCMC chains
 #' @param save_states indicator for whether to save state probabilities
-#' @param stan_opts a named list of Stan sampler options, as produced by
-#'   [stan_options()] (for example `stan_options(iter = 1000, cores = 4)`).
+#' @param stan_opts Stan sampler options, as produced by [stan_options()] (for
+#'   example `stan_options(iter = 1000, cores = 4)`). This also selects the
+#'   backend: `stan_options(backend = "cmdstanr", ...)` fits via cmdstanr
+#'   instead of the default rstan.
 #' @returns `draws_array` object with chains for each model parameter
 #'
 #' @examples
@@ -934,26 +936,25 @@ run_model <- function(
     init <- rep(list(init), chains)
   }
 
-  model <- if (is_cov) stanmodels$hmm_cov else stanmodels$hmm
+  model_name <- if (is_cov) "hmm_cov" else "hmm"
 
-  # Build the rstan::sampling() call from the user's sampler options, then set
-  # the arguments run_model() owns (these overwrite any colliding entry).
-  args <- stan_opts
-  args$object <- model
-  args$data <- dat_stan
-  args$init <- init
-  if (!save_states) {
-    # Drop the per-timestep state probabilities from the saved output.
-    args$pars <- "logalpha"
-    args$include <- FALSE
+  # The backend is carried on stan_opts (set by stan_options()); whatever it
+  # says wins. Fall back to rstan for a hand-built list with no tag.
+  backend <- attr(stan_opts, "hestia_backend")
+  if (is.null(backend)) {
+    backend <- "rstan"
   }
-  stan_fit <- do.call(rstan::sampling, args)
+
+  stan_fit <- fit_model(
+    backend, model_name, dat_stan, init, stan_opts, save_states
+  )
 
   stan_out <- list(
     stan_fit = stan_fit,
     stan_data = dat_stan,
     eh_cov_names = colnames(eh_cov),
-    ih_cov_names = colnames(ih_cov)
+    ih_cov_names = colnames(ih_cov),
+    backend = backend
   )
 
   rename_chains(inf_model, stan_out)
