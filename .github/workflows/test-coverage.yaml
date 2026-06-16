@@ -22,11 +22,12 @@ jobs:
         with:
           r-version: 'release'
           use-public-rspm: true
+          extra-repositories: https://stan-dev.r-universe.dev
 
       - name: Install dependencies
         uses: r-lib/actions/setup-r-dependencies@v2
         with:
-          extra-packages: any::covr, any::xml2, stan-dev/cmdstanr
+          extra-packages: any::covr, any::xml2
           needs: coverage
 
       - name: Cache Stan compilation objects
