@@ -7,6 +7,12 @@ src/stanExports*
 src/*.dll
 src/*.so
 src/*.o
+
+# cmdstanr compiles executables next to the .stan files if run in-place
+inst/stan/hmm
+inst/stan/hmm_cov
+inst/stan/*.exe
+inst/stan/*.hpp
 *.quarto
 *_extensions
 JG/*

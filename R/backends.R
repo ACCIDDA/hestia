@@ -5,7 +5,7 @@
 
 # cmdstanr-only argument names, shown when the active backend is rstan (i.e. the
 # user reached for a cmdstanr word), each mapped to the rstan way to do it.
-CMDSTANR_HINTS <- c(
+cmdstanr_hints <- c(
   parallel_chains   = "use `cores`",
   iter_warmup       = "use `iter` (with `warmup`)",
   iter_sampling     = "use `iter` (with `warmup`)",
@@ -19,7 +19,7 @@ CMDSTANR_HINTS <- c(
 
 # rstan-only argument names, shown when the active backend is cmdstanr, mapped to
 # the cmdstanr way to do it.
-RSTAN_HINTS <- c(
+rstan_hints <- c(
   cores           = "use `parallel_chains`",
   control         = "set `adapt_delta`/`max_treedepth`/`step_size` as top-level arguments",
   iter            = "use `iter_warmup` and `iter_sampling`",
@@ -38,8 +38,8 @@ RSTAN_HINTS <- c(
 check_backend_vocab <- function(arg_names, backend) {
   foreign <- switch(
     backend,
-    rstan    = CMDSTANR_HINTS,
-    cmdstanr = RSTAN_HINTS
+    rstan    = cmdstanr_hints,
+    cmdstanr = rstan_hints
   )
   bad <- intersect(arg_names, names(foreign))
   if (length(bad) > 0) {
@@ -89,6 +89,7 @@ fit_rstan <- function(model_name, dat_stan, init, stan_opts, save_states) {
 
 #' @keywords internal
 fit_cmdstanr <- function(model_name, dat_stan, init, stan_opts, save_states) {
+  # nocov start: needs the CmdStan toolchain, unavailable on CI/CRAN
   if (!requireNamespace("cmdstanr", quietly = TRUE)) {
     stop(
       "The 'cmdstanr' backend requires the cmdstanr package. ",
@@ -112,11 +113,17 @@ fit_cmdstanr <- function(model_name, dat_stan, init, stan_opts, save_states) {
     "stan", paste0(model_name, ".stan"),
     package = "hestia", mustWork = TRUE
   )
-  mod <- cmdstanr::cmdstan_model(stan_file)
+  # Compile into a writable user cache, not next to the installed .stan file
+  # (the package directory may be read-only, and stray executables there trip
+  # R CMD check's "executable files" warning).
+  exe_dir <- tools::R_user_dir("hestia", "cache")
+  dir.create(exe_dir, showWarnings = FALSE, recursive = TRUE)
+  mod <- cmdstanr::cmdstan_model(stan_file, dir = exe_dir)
 
   args <- stan_opts
   attr(args, "hestia_backend") <- NULL
   args$data <- dat_stan
   args$init <- init
   do.call(mod$sample, args)
+  # nocov end
 }
