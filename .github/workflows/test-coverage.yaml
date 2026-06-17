@@ -27,7 +27,7 @@ jobs:
       - name: Install dependencies
         uses: r-lib/actions/setup-r-dependencies@v2
         with:
-          extra-packages: any::covr, any::xml2
+          extra-packages: any::covr, any::xml2, cran::rstan, cran::StanHeaders, cran::rstantools
           needs: coverage
 
       - name: Cache Stan compilation objects

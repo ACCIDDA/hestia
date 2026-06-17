@@ -27,7 +27,7 @@ jobs:
       - name: Install dependencies
         uses: r-lib/actions/setup-r-dependencies@v2
         with:
-          extra-packages: any::lintr, local::.
+          extra-packages: any::lintr, local::., cran::rstan, cran::StanHeaders, cran::rstantools
           needs: lint
 
       - name: Lint

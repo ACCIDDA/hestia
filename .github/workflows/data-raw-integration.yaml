@@ -40,7 +40,7 @@ jobs:
       - name: Install dependencies
         uses: r-lib/actions/setup-r-dependencies@v2
         with:
-          extra-packages: any::pkgload, any::testthat
+          extra-packages: any::pkgload, any::testthat, cran::rstan, cran::StanHeaders, cran::rstantools
           needs: check
 
       # The package is compiled once, by load_all() below; restore the cached
