@@ -35,12 +35,11 @@ jobs:
         with:
           r-version: 'release'
           use-public-rspm: true
-          extra-repositories: https://stan-dev.r-universe.dev
 
       - name: Install dependencies
         uses: r-lib/actions/setup-r-dependencies@v2
         with:
-          extra-packages: any::pkgload, any::testthat, cran::rstan, cran::StanHeaders, cran::rstantools
+          extra-packages: any::pkgload, any::testthat
           needs: check
 
       # The package is compiled once, by load_all() below; restore the cached
