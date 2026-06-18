@@ -877,9 +877,12 @@ run_model <- function(
   check_run_data(data, obs_model)
   check_init_probs(init_probs)
   checkmate::assert_list(stan_opts, .var.name = "stan_opts")
-  if (length(stan_opts) > 0 && is.null(names(stan_opts))) {
+  # The backend tag is the marker that stan_opts came from stan_options(); its
+  # absence means a hand-built list. Whatever backend it names wins.
+  backend <- attr(stan_opts, "hestia_backend")
+  if (is.null(backend)) {
     stop(
-      "'stan_opts' must be a named list, e.g. from stan_options().",
+      "`stan_opts` must be created by stan_options().",
       call. = FALSE
     )
   }
@@ -893,6 +896,13 @@ run_model <- function(
     ih_cov,
     eh_cov
   )
+
+  # Coerce data frames (e.g. covariate matrices) to numeric matrices. cmdstanr
+  # requires this; rstan tolerates it, so we do it once here rather than in the
+  # per-backend fit functions.
+  dat_stan <- lapply(dat_stan, function(x) {
+    if (is.data.frame(x)) as.matrix(x) else x
+  })
 
   is_cov <- !is.null(eh_cov) && !is.null(ih_cov)
 
@@ -937,13 +947,6 @@ run_model <- function(
   }
 
   model_name <- if (is_cov) "hmm_cov" else "hmm"
-
-  # The backend is carried on stan_opts (set by stan_options()); whatever it
-  # says wins. Fall back to rstan for a hand-built list with no tag.
-  backend <- attr(stan_opts, "hestia_backend")
-  if (is.null(backend)) {
-    backend <- "rstan"
-  }
 
   stan_fit <- fit_model(
     backend, model_name, dat_stan, init, stan_opts, save_states

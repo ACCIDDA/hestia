@@ -30,6 +30,30 @@ remotes::install_github("ACCIDDA/hestia")
 
 Requires R >= 4.1.0 and a C++ toolchain (for Stan model compilation).
 
+### Optional: cmdstanr backend
+
+By default `run_model()` fits via `{rstan}` (installed automatically). It can
+also fit via [`{cmdstanr}`](https://mc-stan.org/cmdstanr/), which is **not on
+CRAN** and so is not installed as a dependency. To use it, install the package
+and the CmdStan toolchain yourself:
+
+```r
+install.packages(
+  "cmdstanr",
+  repos = c("https://stan-dev.r-universe.dev", getOption("repos"))
+)
+cmdstanr::install_cmdstan()
+```
+
+Then select it per call via `stan_options()`:
+
+```r
+run_model(..., stan_opts = stan_options(backend = "cmdstanr"))
+```
+
+With the cmdstanr backend you supply cmdstanr's own sampler arguments (e.g.
+`parallel_chains`, `iter_warmup`); see `?stan_options`.
+
 ## Usage
 
 Compose an infection-process model from `transmit()` (transmission between

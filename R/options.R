@@ -9,13 +9,16 @@
 #'
 #' @param ... sampler arguments forwarded verbatim to the chosen backend's
 #'   sampler. Use the backend's own names: for `"rstan"`, the
-#'   [rstan::sampling()] arguments (`iter`, `chains`, `cores`, `seed`,
+#'   [rstan::sampling()] arguments (`iter`, `cores`, `seed`,
 #'   `control = list(adapt_delta = 0.95)`); for `"cmdstanr"`, the `$sample()`
 #'   arguments (`iter_warmup`, `iter_sampling`, `parallel_chains`,
 #'   `adapt_delta`, ...).
 #' @param backend which Stan interface to target, one of `"rstan"` (default) or
 #'   `"cmdstanr"`. Determines which argument vocabulary is accepted and which
-#'   sampler [run_model()] calls. Whatever is set here wins.
+#'   sampler [run_model()] calls. Whatever is set here wins. Selecting
+#'   `"cmdstanr"` errors if the cmdstanr package is not installed.
+#' @param chains number of MCMC chains. Native to both backends; also used by
+#'   [run_model()] to size the per-chain list of initial values.
 #'
 #' @returns a named list of validated sampler arguments, tagged with the
 #'   backend it was built for.
@@ -24,12 +27,15 @@
 #' stan_options()
 #' stan_options(chains = 2, iter = 500)
 #' stan_options(control = list(adapt_delta = 0.95, max_treedepth = 12))
-#' stan_options(backend = "cmdstanr", parallel_chains = 4, iter_warmup = 500)
+#' if (requireNamespace("cmdstanr", quietly = TRUE)) {
+#'   stan_options(backend = "cmdstanr", parallel_chains = 4, iter_warmup = 500)
+#' }
 #'
 #' @seealso [run_model()], [rstan::sampling()]
 #' @export
-stan_options <- function(..., backend = "rstan") {
+stan_options <- function(..., backend = "rstan", chains = 4L) {
   backend <- match.arg(backend, c("rstan", "cmdstanr"))
+  check_backend_available(backend)
   res <- list(...)
 
   if ("object" %in% names(res)) {
@@ -59,16 +65,16 @@ stan_options <- function(..., backend = "rstan") {
   check_backend_vocab(names(res), backend)
 
   # `chains` is native to both backends and run_model() needs it to size the
-  # init list, so guarantee a value; default to the samplers' own default of 4.
-  if (is.null(res$chains)) {
-    res$chains <- 4L
-  }
+  # init list, so it is an explicit argument with a default rather than a
+  # value injected from `...`.
+  res$chains <- check_positive_int(chains, "chains")
 
-  # Validate the positive-integer count arguments native to this backend.
+  # Validate the remaining positive-integer count arguments native to this
+  # backend.
   int_args <- if (backend == "rstan") {
-    c("iter", "chains", "warmup", "cores")
+    c("iter", "warmup", "cores")
   } else {
-    c("iter_warmup", "iter_sampling", "thin", "chains", "parallel_chains")
+    c("iter_warmup", "iter_sampling", "thin", "parallel_chains")
   }
   for (arg in intersect(names(res), int_args)) {
     res[[arg]] <- check_positive_int(res[[arg]], arg)

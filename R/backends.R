@@ -53,6 +53,26 @@ check_backend_vocab <- function(arg_names, backend) {
   invisible(NULL)
 }
 
+#' Error if the selected backend's package is not installed
+#'
+#' rstan is always available (a hard dependency); cmdstanr is optional, so
+#' selecting it without the package installed fails early here rather than deep
+#' inside the fit.
+#'
+#' @param backend the backend to check.
+#' @keywords internal
+check_backend_available <- function(backend) {
+  if (backend == "cmdstanr" && !requireNamespace("cmdstanr", quietly = TRUE)) {
+    stop(
+      "backend = 'cmdstanr' requires the cmdstanr package, which is not ",
+      "installed. Install it from https://mc-stan.org/cmdstanr/, or use ",
+      "backend = 'rstan'.",
+      call. = FALSE
+    )
+  }
+  invisible(NULL)
+}
+
 #' Dispatch a fit to the chosen backend
 #'
 #' @param backend one of `"rstan"` or `"cmdstanr"`.
@@ -105,17 +125,15 @@ fit_cmdstanr <- function(model_name, dat_stan, init, stan_opts, save_states) {
       call. = FALSE
     )
   }
-  # cmdstanr is stricter than rstan about types: coerce data frames to matrices.
-  dat_stan <- lapply(dat_stan, function(x) {
-    if (is.data.frame(x)) as.matrix(x) else x
-  })
   stan_file <- system.file(
     "stan", paste0(model_name, ".stan"),
     package = "hestia", mustWork = TRUE
   )
   # Compile into a writable user cache, not next to the installed .stan file
   # (the package directory may be read-only, and stray executables there trip
-  # R CMD check's "executable files" warning).
+  # R CMD check's "executable files" warning). cmdstan_model() reuses the cached
+  # executable across sessions and recompiles only when the .stan source is
+  # newer than it -- e.g. after a package update reinstalls the .stan file.
   exe_dir <- tools::R_user_dir("hestia", "cache")
   dir.create(exe_dir, showWarnings = FALSE, recursive = TRUE)
   mod <- cmdstanr::cmdstan_model(stan_file, dir = exe_dir)

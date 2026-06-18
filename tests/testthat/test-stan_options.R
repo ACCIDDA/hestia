@@ -6,10 +6,6 @@ test_that("stan_options() defaults chains and is otherwise empty", {
 
 test_that("stan_options() defaults to and tags the rstan backend", {
   expect_identical(attr(stan_options(), "hestia_backend"), "rstan")
-  expect_identical(
-    attr(stan_options(backend = "cmdstanr"), "hestia_backend"),
-    "cmdstanr"
-  )
   expect_error(stan_options(backend = "nonsense"))
 })
 
