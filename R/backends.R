@@ -53,15 +53,18 @@ check_backend_vocab <- function(arg_names, backend) {
   invisible(NULL)
 }
 
-#' Error if the selected backend's package is not installed
+#' Validate the backend name and that its package is installed
 #'
-#' rstan is always available (a hard dependency); cmdstanr is optional, so
-#' selecting it without the package installed fails early here rather than deep
-#' inside the fit.
+#' Errors for an unknown backend (via `match.arg`) and for the optional cmdstanr
+#' backend when its package is not installed (rstan is always available). This is
+#' the single gate for both checks: `stan_options()` calls it early, and
+#' `fit_model()` calls it again as the authoritative check at dispatch.
 #'
-#' @param backend the backend to check.
+#' @param backend the backend to validate.
+#' @returns the validated backend string.
 #' @keywords internal
 check_backend_available <- function(backend) {
+  backend <- match.arg(backend, c("rstan", "cmdstanr"))
   if (backend == "cmdstanr" && !requireNamespace("cmdstanr", quietly = TRUE)) {
     stop(
       "backend = 'cmdstanr' requires the cmdstanr package, which is not ",
@@ -70,7 +73,20 @@ check_backend_available <- function(backend) {
       call. = FALSE
     )
   }
-  invisible(NULL)
+  backend
+}
+
+#' Positive-integer count arguments native to a backend's sampler
+#'
+#' @param backend the backend the options are for.
+#' @returns a character vector of argument names to validate.
+#' @keywords internal
+backend_int_args <- function(backend) {
+  switch(
+    backend,
+    rstan    = c("iter", "warmup", "cores"),
+    cmdstanr = c("iter_warmup", "iter_sampling", "thin", "parallel_chains")
+  )
 }
 
 #' Dispatch a fit to the chosen backend
@@ -85,10 +101,9 @@ check_backend_available <- function(backend) {
 #' @keywords internal
 fit_model <- function(backend, model_name, dat_stan, init, stan_opts, save_states) {
   switch(
-    backend,
+    check_backend_available(backend),
     rstan    = fit_rstan(model_name, dat_stan, init, stan_opts, save_states),
-    cmdstanr = fit_cmdstanr(model_name, dat_stan, init, stan_opts, save_states),
-    stop("Unknown backend: ", backend, call. = FALSE)
+    cmdstanr = fit_cmdstanr(model_name, dat_stan, init, stan_opts, save_states)
   )
 }
 
@@ -109,15 +124,8 @@ fit_rstan <- function(model_name, dat_stan, init, stan_opts, save_states) {
 
 #' @keywords internal
 fit_cmdstanr <- function(model_name, dat_stan, init, stan_opts, save_states) {
-  # nocov start: needs the CmdStan toolchain, unavailable on CI/CRAN
-  if (!requireNamespace("cmdstanr", quietly = TRUE)) {
-    stop(
-      "The 'cmdstanr' backend requires the cmdstanr package. ",
-      "See https://mc-stan.org/cmdstanr/#installing-the-r-package, ",
-      "or use backend = 'rstan'.",
-      call. = FALSE
-    )
-  }
+  # nocov start: needs the CmdStan toolchain, unavailable on CI/CRAN.
+  # cmdstanr availability is already guaranteed by check_backend_available().
   if (!save_states) {
     warning(
       "save_states is not supported by the cmdstanr backend; ",

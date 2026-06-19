@@ -30,30 +30,6 @@ remotes::install_github("ACCIDDA/hestia")
 
 Requires R >= 4.1.0 and a C++ toolchain (for Stan model compilation).
 
-### Optional: cmdstanr backend
-
-By default `run_model()` fits via `{rstan}` (installed automatically). It can
-also fit via [`{cmdstanr}`](https://mc-stan.org/cmdstanr/), which is **not on
-CRAN** and so is not installed as a dependency. To use it, install the package
-and the CmdStan toolchain yourself:
-
-```r
-install.packages(
-  "cmdstanr",
-  repos = c("https://stan-dev.r-universe.dev", getOption("repos"))
-)
-cmdstanr::install_cmdstan()
-```
-
-Then select it per call via `stan_options()`:
-
-```r
-run_model(..., stan_opts = stan_options(backend = "cmdstanr"))
-```
-
-With the cmdstanr backend you supply cmdstanr's own sampler arguments (e.g.
-`parallel_chains`, `iter_warmup`); see `?stan_options`.
-
 ## Usage
 
 Compose an infection-process model from `transmit()` (transmission between
@@ -73,6 +49,20 @@ Pair the infection process with an observation model
 (`make_observation_model()`) and fit it with `run_model()`. See the
 [vignettes](https://accidda.github.io/hestia/articles/) for full worked
 examples, including a multi-compartment (symptomatic/asymptomatic) model.
+
+### Optional: cmdstanr backend
+
+By default `run_model()` fits via `{rstan}` (installed automatically). If you
+wish to use [`{cmdstanr}`](https://mc-stan.org/cmdstanr/), this needs to be installed separately as this is not on CRAN. 
+Follow its [getting-started guide](https://mc-stan.org/cmdstanr/articles/cmdstanr.html).
+You can then fit via that backend instead:
+
+```r
+run_model(..., stan_opts = stan_options(backend = "cmdstanr"))
+```
+
+Cmdstanr's own sampler arguments are supplied direcetly (e.g. `parallel_chains`,
+`iter_warmup`); see `?stan_options`. 
 
 ## Part of ACCIDDA
 

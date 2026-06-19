@@ -46,9 +46,14 @@ test_that("cmdstanr backend rejects rstan vocabulary when available", {
   expect_error(stan_options(backend = "cmdstanr", iter = 1000), "iter")
 })
 
-test_that("fit_model errors on an unknown backend", {
+test_that("fit_model rejects an unknown backend", {
   expect_error(
     fit_model("nonsense", "hmm", list(), NULL, stan_options(), FALSE),
-    "Unknown backend"
+    "should be one of"
   )
+})
+
+test_that("check_backend_available validates and returns the backend", {
+  expect_identical(check_backend_available("rstan"), "rstan")
+  expect_error(check_backend_available("nonsense"), "should be one of")
 })

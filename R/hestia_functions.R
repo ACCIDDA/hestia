@@ -858,7 +858,6 @@ make_stan_data <- function(
 #'           init_probs = c(1 - 2 * 1e-10, 1e-10, 1e-10))
 #' }
 #'
-#' @importFrom rstan sampling
 #' @export
 run_model <- function(
   inf_model,

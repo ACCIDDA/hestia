@@ -34,8 +34,7 @@
 #' @seealso [run_model()], [rstan::sampling()]
 #' @export
 stan_options <- function(..., backend = "rstan", chains = 4L) {
-  backend <- match.arg(backend, c("rstan", "cmdstanr"))
-  check_backend_available(backend)
+  backend <- check_backend_available(backend)
   res <- list(...)
 
   if ("object" %in% names(res)) {
@@ -71,12 +70,7 @@ stan_options <- function(..., backend = "rstan", chains = 4L) {
 
   # Validate the remaining positive-integer count arguments native to this
   # backend.
-  int_args <- if (backend == "rstan") {
-    c("iter", "warmup", "cores")
-  } else {
-    c("iter_warmup", "iter_sampling", "thin", "parallel_chains")
-  }
-  for (arg in intersect(names(res), int_args)) {
+  for (arg in intersect(names(res), backend_int_args(backend))) {
     res[[arg]] <- check_positive_int(res[[arg]], arg)
   }
 
