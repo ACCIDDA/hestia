@@ -2,7 +2,11 @@
 //
 // The forward algorithm is household-separable: each household's likelihood is
 // independent given the parameters, so households are sliced across threads via
-// reduce_sum. Compile with stan_threads = TRUE and run with threads_per_chain.
+// reduce_sum.
+//
+// Kept in inst/stan_threaded/ (not inst/stan/) on purpose: rstantools
+// precompiles every inst/stan/*.stan as an rstan model at install time, which
+// fails for this threaded model. It is instead compiled at runtime by cmdstanr.
 
 functions {
 
@@ -83,10 +87,12 @@ functions {
 
         obs_switch = (t_day_hh[index] == 1 && part_id_hh[index] == i);
         if (obs_switch) {
-          for (k in 1:n_obs_type)
-            obs[k, ] = y_hh[index, k] != -1
-              ? obs_prob[k][y_hh[index, k], ]
-              : rep_row_vector(1, n_states);
+          for (k in 1:n_obs_type) {
+            if (y_hh[index, k] != -1)
+              obs[k, ] = obs_prob[k][y_hh[index, k], ];
+            else
+              obs[k, ] = rep_row_vector(1, n_states);
+          }
           index = min(index + 1, obs_per_hh[h]);
         } else {
           obs = rep_matrix(1, n_obs_type, n_states);
@@ -116,10 +122,12 @@ functions {
 
           obs_switch = (t_day_hh[index] == tt && part_id_hh[index] == p);
           if (obs_switch) {
-            for (k in 1:n_obs_type)
-              obs[k, ] = y_hh[index, k] != -1
-                ? obs_prob[k][y_hh[index, k], ]
-                : rep_row_vector(1, n_states);
+            for (k in 1:n_obs_type) {
+              if (y_hh[index, k] != -1)
+                obs[k, ] = obs_prob[k][y_hh[index, k], ];
+              else
+                obs[k, ] = rep_row_vector(1, n_states);
+            }
             index = min(index + 1, obs_per_hh[h]);
           } else {
             obs = rep_matrix(1, n_obs_type, n_states);
