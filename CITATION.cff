@@ -8,7 +8,7 @@ abstract: >-
   infection-process and observation-process components and fit using Stan
   via rstan.
 type: software
-version: "0.0.0.9000"
+version: "0.1.0"
 license: MIT
 repository-code: "https://github.com/ACCIDDA/hestia"
 url: "https://accidda.github.io/hestia/"
