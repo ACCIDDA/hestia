@@ -83,7 +83,7 @@ Every pull request triggers these GitHub Actions workflows:
 | Workflow | What it does |
 |----|----|
 | **R-CMD-check** | Runs `R CMD check --as-cran` on Ubuntu, macOS, and Windows across R release, oldrel, and devel (9 jobs total). R-devel jobs are allowed to fail without blocking the PR. Stan compilation artifacts are cached per OS and R version. |
-| **lint** | Runs [`lintr::lint_package()`](https://lintr.r-lib.org/reference/lint.html). |
+| **lint** | Runs `lintr::lint_package()`. |
 | **test-coverage** | Runs the test suite under `covr` and uploads coverage to Codecov. |
 | **pkgdown** | Builds the documentation site. On PRs this is a build-only check (no deployment); the site is deployed to GitHub Pages on pushes to `main`, published releases, and manual workflow dispatches. |
 
