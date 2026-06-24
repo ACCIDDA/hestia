@@ -1,12 +1,13 @@
 name: CRAN submission
 
+# CRAN submission is intentionally manual-only. GitHub (pre-)releases are used
+# to mint Zenodo DOIs and must NOT auto-submit to CRAN (see #68). Trigger this
+# workflow deliberately via the Actions tab / `gh workflow run`.
 on:
-  release:
-    types: [prereleased]
   workflow_dispatch:
     inputs:
       confirmation:
-        description: 'Type "CONFIRM" to submit manually (skip via release: prereleased otherwise)'
+        description: 'Type "CONFIRM" to submit to CRAN'
         required: true
         default: ''
 
