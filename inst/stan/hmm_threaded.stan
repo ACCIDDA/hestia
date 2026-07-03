@@ -39,25 +39,43 @@ functions {
   // slice_hh is required by reduce_sum's signature but unused; households are
   // indexed directly via start:end (hh_indices[h] == h).
   real partial_log_lik(
-    array[] int slice_hh, int start, int end,
+    array[] int slice_hh, 
+    int start, 
+    int end,
     // household layout
-    array[] int hh_size, array[] int obs_per_hh,
-    array[] int hh_start_ind, array[] int hh_end_ind,
-    array[] int hh_tmin, array[] int hh_tmax,
+    array[] int hh_size, 
+    array[] int obs_per_hh,
+    array[] int hh_start_ind, 
+    array[] int hh_end_ind,
+    array[] int hh_tmin, 
+    array[] int hh_tmax,
     // observation data
-    int n_obs_type, array[, ] int y, array[] int part_id, array[] int t_day,
+    int n_obs_type, 
+    array[, ] int y, 
+    array[] int part_id, 
+    array[] int t_day,
     // transition structure
-    int n_states, array[] int inf_states,
-    int n_trans_fit, array[] int param_index,
-    array[, ] int trans_index, array[, ] int source_states,
-    int n_mult_fit, array[] int mult_param_index, array[, ] int mult_index,
+    int n_states, 
+    array[] int inf_states,
+    int n_trans_fit, 
+    array[] int param_index,
+    array[, ] int trans_index, 
+    array[, ] int source_states,
+    int n_mult_fit, 
+    array[] int mult_param_index,
+    array[, ] int mult_index,
     int n_inf_prob,
-    matrix trans, matrix transition_multiplier,
+    matrix trans, 
+    matrix transition_multiplier,
     // fitted quantities (probability scale)
-    array[] real params, array[] real mult_params,
-    array[] real ih_prob, real eh_prob,
+    array[] real params, 
+    array[] real mult_params,
+    array[] real ih_prob, 
+    real eh_prob,
     // observation model + initialisation
-    array[] matrix obs_prob, vector init_probs, real epsilon
+    array[] matrix obs_prob, 
+    vector init_probs, 
+    real epsilon
   ) {
 
     real llik_sum = 0;
