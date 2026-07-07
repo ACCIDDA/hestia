@@ -1026,7 +1026,7 @@ rename_chains <- function(inf_model, model_output) {
   )
 
   # Extract chains
-  draws_full <- posterior::as_draws_array(model_output$stan_fit)
+  draws_full <- posterior::as_draws_array(as.array(model_output$stan_fit))
 
   # Get variable names and subset to parameters of interest
   var_names <- posterior::variables(draws_full)
