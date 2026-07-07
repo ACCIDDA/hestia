@@ -4,14 +4,16 @@
 #' Collects and validates the arguments passed through to the Stan sampler.
 #'
 #' Any argument accepted by [rstan::sampling()] may be supplied, with the
-#' exception of `object` and `data` (which [run_model()] constructs internally)
-#' and `init` (which is passed to [run_model()] directly, as its defaults
-#' depend on the model structure).
-#' Sampler controls such as `adapt_delta` and `max_treedepth` are set through
-#' `control = list(...)`, exactly as in [rstan::sampling()].
+#' exception of the arguments [run_model()] manages itself: `object` and `data`
+#' (constructed internally), `init` (passed to [run_model()] directly, as its
+#' defaults depend on the model structure), and the parallelism controls `cores`,
+#' `parallel_chains`, and `threads_per_chain` (owned by [run_model()]'s
+#' `threading` argument, which splits the available cores between chains and
+#' threads). Sampler controls such as `adapt_delta` and `max_treedepth` are set
+#' through `control = list(...)`, exactly as in [rstan::sampling()].
 #'
 #' @param ... arguments forwarded to [rstan::sampling()], for example `iter`,
-#'   `chains`, `cores`, `seed`, or
+#'   `chains`, `seed`, or
 #'   `control = list(adapt_delta = 0.95, max_treedepth = 12)`.
 #'
 #' @returns a named list of validated arguments for [rstan::sampling()].
@@ -49,11 +51,25 @@ stan_options <- function(...) {
     )
   }
 
+  # Parallelism is owned by run_model(): it splits the available cores between
+  # chains and threads for the active backend (see its `threading` argument), so
+  # these must not be set here.
+  parallel_args <- c("cores", "parallel_chains", "threads_per_chain")
+  bad <- intersect(names(res), parallel_args)
+  if (length(bad) > 0) {
+    stop(
+      "Passing ", paste0("'", bad, "'", collapse = ", "),
+      " in stan_options() is not allowed; parallelism is managed by ",
+      "run_model() -- use its `threading` argument.",
+      call. = FALSE
+    )
+  }
+
   if (is.null(res$chains)) {
     res$chains <- 4L
   }
 
-  int_args <- c("iter", "chains", "warmup", "cores")
+  int_args <- c("iter", "chains", "warmup")
   for (arg in intersect(names(res), int_args)) {
     res[[arg]] <- check_positive_int(res[[arg]], arg)
   }

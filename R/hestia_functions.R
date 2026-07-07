@@ -829,9 +829,15 @@ make_stan_data <- function(
 #' @param eh_cov NULL for run without covariates, otherwise data frame with
 #'   extra-household covariates for each participant
 #' @param init initial conditions for MCMC chains
-#' @param save_states indicator for whether to save state probabilities
+#' @param threading control of within-chain threading via Stan's `reduce_sum`.
+#'   `TRUE` (default) splits the cores available to the process between running
+#'   chains in parallel and threading each chain (see [optimal_alloc()]); `FALSE`
+#'   runs each chain single-threaded; a positive integer sets that many threads
+#'   per chain explicitly. Chains always run in parallel across cores. Parallelism
+#'   is controlled here, not in [stan_options()]. See the "Parallel and threaded
+#'   fitting" vignette.
 #' @param stan_opts a named list of Stan sampler options, as produced by
-#'   [stan_options()] (for example `stan_options(iter = 1000, cores = 4)`).
+#'   [stan_options()] (for example `stan_options(iter = 1000)`).
 #' @returns `draws_array` object with chains for each model parameter
 #'
 #' @examples
@@ -867,13 +873,19 @@ run_model <- function(
   ih_cov = NULL,
   eh_cov = NULL,
   init = NULL,
-  save_states = FALSE,
+  threading = TRUE,
   stan_opts = stan_options()
 ) {
   # Entry-level input validation
   check_models(inf_model, obs_model)
   check_run_data(data, obs_model)
   check_init_probs(init_probs)
+  # threading is TRUE/FALSE (auto/off) or a positive integer (threads per chain).
+  checkmate::assert(
+    checkmate::check_flag(threading),
+    checkmate::check_count(threading, positive = TRUE),
+    .var.name = "threading"
+  )
   checkmate::assert_list(stan_opts, .var.name = "stan_opts")
   if (length(stan_opts) > 0 && is.null(names(stan_opts))) {
     stop(
@@ -936,17 +948,35 @@ run_model <- function(
 
   model <- if (is_cov) stanmodels$hmm_cov else stanmodels$hmm
 
+  # Split the available cores between running chains in parallel and threading
+  # each chain's likelihood (reduce_sum). threading = FALSE forces one thread per
+  # chain; a positive integer sets the threads per chain explicitly; chains still
+  # run in parallel across cores either way.
+  alloc <- optimal_alloc(chains)
+  if (isFALSE(threading)) {
+    alloc$threads_per_chain <- 1L
+  } else if (is.numeric(threading)) {
+    alloc$threads_per_chain <- as.integer(threading)
+  }
+  # configure_threading() sets STAN_NUM_THREADS for rstan; restore it on exit so
+  # a fit does not leak its thread count into the rest of the session.
+  old_threads <- Sys.getenv("STAN_NUM_THREADS", unset = NA_character_)
+  on.exit(
+    if (is.na(old_threads)) {
+      Sys.unsetenv("STAN_NUM_THREADS")
+    } else {
+      Sys.setenv(STAN_NUM_THREADS = old_threads)
+    },
+    add = TRUE
+  )
+  stan_opts <- configure_threading(stan_opts, alloc)
+
   # Build the rstan::sampling() call from the user's sampler options, then set
   # the arguments run_model() owns (these overwrite any colliding entry).
   args <- stan_opts
   args$object <- model
   args$data <- dat_stan
   args$init <- init
-  if (!save_states) {
-    # Drop the per-timestep state probabilities from the saved output.
-    args$pars <- "logalpha"
-    args$include <- FALSE
-  }
   stan_fit <- do.call(rstan::sampling, args)
 
   stan_out <- list(

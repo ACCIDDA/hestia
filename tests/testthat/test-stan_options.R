@@ -4,12 +4,12 @@ test_that("stan_options() defaults chains and is otherwise empty", {
 })
 
 test_that("stan_options() passes through and coerces sampler arguments", {
-  opts <- stan_options(iter = 500, chains = 2, cores = 4)
+  opts <- stan_options(iter = 500, chains = 2, thin = 3)
 
   expect_type(opts, "list")
   expect_identical(opts$iter, 500L)
   expect_identical(opts$chains, 2L)
-  expect_identical(opts$cores, 4L)
+  expect_identical(opts$thin, 3)
 })
 
 test_that("stan_options() forwards arbitrary sampling() arguments untouched", {
@@ -24,10 +24,16 @@ test_that("stan_options() rejects internally-managed arguments", {
   expect_error(stan_options(init = list()), "init")
 })
 
+test_that("stan_options() rejects parallelism arguments (owned by run_model)", {
+  expect_error(stan_options(cores = 4), "threading")
+  expect_error(stan_options(parallel_chains = 4), "threading")
+  expect_error(stan_options(threads_per_chain = 2), "threading")
+})
+
 test_that("stan_options() rejects non-positive or non-scalar integer arguments", {
   expect_error(stan_options(iter = 0), "iter")
   expect_error(stan_options(chains = -1), "chains")
-  expect_error(stan_options(cores = c(1, 2)), "cores")
+  expect_error(stan_options(warmup = c(1, 2)), "warmup")
 })
 
 test_that("stan_options() validates seed", {
