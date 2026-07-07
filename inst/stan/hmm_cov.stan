@@ -328,6 +328,8 @@ data {
 
   real epsilon; // small number to avoid log(0) issues
   int n_inf_prob; // number of infection probabilties to fit, either 1 or equal to the number of infectious compartments
+
+  int<lower=0, upper=1> save_llik; // if 1, write per-household log-likelihood (llik_final) in generated quantities
 }
 
 parameters {
@@ -378,9 +380,10 @@ model {
 }
 
 generated quantities {
-  // Per-household log-likelihood, exposed as hmm_cov.stan did via llik_final.
-  vector[n_hh] llik_final;
-  for(h in 1:n_hh) {
+  // Per-household log-likelihood for loo/waic; empty (length 0) unless save_llik = 1.
+  vector[save_llik ? n_hh : 0] llik_final;
+  if(save_llik) {
+   for(h in 1:n_hh) {
     llik_final[h] = partial_log_lik({h}, h, h,
                                     hh_size,
                                     n_obs_type, n_states,
@@ -392,5 +395,6 @@ generated quantities {
                                     trans, transition_multiplier,
                                     params, mult_params, ih_prob, eh_prob,
                                     obs_prob, init_probs, epsilon);
+   }
   }
 }

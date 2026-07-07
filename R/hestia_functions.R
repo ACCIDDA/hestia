@@ -836,6 +836,10 @@ make_stan_data <- function(
 #'   per chain explicitly. Chains always run in parallel across cores. Parallelism
 #'   is controlled here, not in [stan_options()]. See the "Parallel and threaded
 #'   fitting" vignette.
+#' @param save_llik whether to write the per-household log-likelihood
+#'   (`llik_final`) in the model's generated quantities, for use with
+#'   `loo`/`waic` (default `FALSE`). When `FALSE`, `llik_final` is length 0 and
+#'   the extra per-household forward pass is skipped.
 #' @param stan_opts a named list of Stan sampler options, as produced by
 #'   [stan_options()] (for example `stan_options(iter = 1000)`).
 #' @returns `draws_array` object with chains for each model parameter
@@ -874,6 +878,7 @@ run_model <- function(
   eh_cov = NULL,
   init = NULL,
   threading = TRUE,
+  save_llik = FALSE,
   stan_opts = stan_options()
 ) {
   # Entry-level input validation
@@ -886,6 +891,7 @@ run_model <- function(
     checkmate::check_count(threading, positive = TRUE),
     .var.name = "threading"
   )
+  checkmate::assert_flag(save_llik)
   checkmate::assert_list(stan_opts, .var.name = "stan_opts")
   if (length(stan_opts) > 0 && is.null(names(stan_opts))) {
     stop(
@@ -903,6 +909,11 @@ run_model <- function(
     ih_cov,
     eh_cov
   )
+
+  # Whether the generated-quantities block writes the per-household
+  # log-likelihood (llik_final, for loo/waic). Off by default keeps it out of the
+  # saved draws and skips the extra forward pass.
+  dat_stan$save_llik <- as.integer(save_llik)
 
   is_cov <- !is.null(eh_cov) && !is.null(ih_cov)
 
