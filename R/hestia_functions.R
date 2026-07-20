@@ -1034,8 +1034,10 @@ rename_chains <- function(inf_model, model_output) {
     length(inf_details$inf_states)
   )
 
-  # Extract chains
-  draws_full <- posterior::as_draws_array(as.array(model_output$stan_fit))
+  # Extract chains via rstan's own generic. 
+  draws_full <- posterior::as_draws_array(
+    rstan::extract(model_output$stan_fit, permuted = FALSE)
+  )
 
   # Get variable names and subset to parameters of interest
   var_names <- posterior::variables(draws_full)
