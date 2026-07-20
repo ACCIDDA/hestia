@@ -1034,7 +1034,7 @@ rename_chains <- function(inf_model, model_output) {
     length(inf_details$inf_states)
   )
 
-  # Extract chains via rstan's own generic. 
+  # Extract chains via rstan's own generic.
   draws_full <- posterior::as_draws_array(
     rstan::extract(model_output$stan_fit, permuted = FALSE)
   )
