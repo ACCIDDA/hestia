@@ -58,55 +58,47 @@ functions {
     return(out);
 }
 
-  // Summed forward-algorithm log-likelihood for households start:end. Body is
-  // hmm.stan's transformed-parameters household loop; slice_hh is required by
-  // the reduce_sum signature but unused (households indexed via start:end).
-  real partial_log_lik(array[] int slice_hh, int start, int end,
-                       array[] int hh_size,
-                       int n_obs_type, 
-                       int n_states,
-                       array[,] int y, 
-                       array[] int part_id, 
-                       array[] int t_day,
-                       array[] int obs_per_hh,
-                       array[] int hh_start_ind, 
-                       array[] int hh_end_ind,
-                       array[] int hh_tmin, 
-                       array[] int hh_tmax,
-                       array[] int inf_states, 
-                       int n_inf_prob,
-                       int n_trans_fit, 
-                       array[] int param_index,
-                       array[,] int trans_index, 
-                       array[,] int source_states,
-                       int n_mult_fit, 
-                       array[] int mult_param_index,
-                       array[,] int mult_index,
-                       matrix trans, 
-                       matrix transition_multiplier,
-                       array[] real params, 
-                       array[] real mult_params,
-                       array[] real ih_prob, 
-                       real eh_prob,
-                       array[] matrix obs_prob, 
-                       vector init_probs, 
-                       real epsilon) {
-
-  real llik_sum = 0;
-
-  for(h in start:end) { // loop through household
+  // Per-household forward algorithm returning the log forward-probability matrix
+  // (logalpha) for household h.
+  matrix hh_logalpha(int h,
+                     array[] int hh_size,
+                     int n_obs_type,
+                     int n_states,
+                     array[,] int y,
+                     array[] int part_id,
+                     array[] int t_day,
+                     array[] int obs_per_hh,
+                     array[] int hh_start_ind,
+                     array[] int hh_end_ind,
+                     array[] int hh_tmin,
+                     array[] int hh_tmax,
+                     array[] int inf_states,
+                     int n_inf_prob,
+                     int n_trans_fit,
+                     array[] int param_index,
+                     array[,] int trans_index,
+                     array[,] int source_states,
+                     int n_mult_fit,
+                     array[] int mult_param_index,
+                     array[,] int mult_index,
+                     matrix trans,
+                     matrix transition_multiplier,
+                     array[] real params,
+                     array[] real mult_params,
+                     array[] real ih_prob,
+                     real eh_prob,
+                     array[] matrix obs_prob,
+                     vector init_probs,
+                     real epsilon) {
 
     matrix[hh_size[h]*n_states, max(hh_tmax)-min(hh_tmin) + 1] alpha; // forward prob, normalized
-    matrix[hh_size[h]*n_states, max(hh_tmax)-min(hh_tmin) + 1] logalpha; // log forward probability (local to this household)
-    matrix[hh_size[h], max(hh_tmax)-min(hh_tmin) + 1] llik; // lik contribution for enrolled per participant and time
+    matrix[hh_size[h]*n_states, max(hh_tmax)-min(hh_tmin) + 1] logalpha; // log forward probability
     array[obs_per_hh[h], n_obs_type] int y_hh;
     array[obs_per_hh[h]] int part_id_hh;
     array[obs_per_hh[h]] int t_day_hh;
     int index; // index for next observation
     array[hh_size[h], n_states] int i_rows; // rows in alpha corresponding to infectious states
     int obs_switch; // indicator for whether there is an observation corresponding to this time step
-
-    llik = rep_matrix(0, hh_size[h], max(hh_tmax)-min(hh_tmin) + 1);
 
     // subset to data only for the given HH
     y_hh = y[(hh_start_ind[h]):(hh_end_ind[h]),];
@@ -156,8 +148,6 @@ functions {
       for(s in inf_states) {
         i_rows[i, s] = n_states*(i-1)+s;
       }
-
-      llik[i, 1] = log_sum_exp(logalpha[ref,1]);
 
       // normalize and convert to the probability scale
       alpha[(n_states*(i-1)+1):(n_states*(i-1)+n_states), 1] = softmax(logalpha[ref,1]);
@@ -264,18 +254,71 @@ functions {
         // normalize and convert to probability scale
         alpha[(n_states*(p-1)+1):(n_states*(p-1)+n_states), tt] = softmax(logalpha[ref,tt]);
 
-        llik[p, tt] = log_sum_exp(logalpha[ref,tt]);
-
       } // end participant loop - update logalpha with observation probability
-
-      if(tt == (hh_tmax[h] - hh_tmin[h] + 1)) {
-        llik_sum += sum(llik[,tt]);
-      }
 
     } // end time loop
     } // END FORWARD ALGORITHM
 
-  } // end household loop
+    return logalpha;
+  }
+
+  // Household log-likelihood: sum over participants of the final-column
+  // log_sum_exp of logalpha (household h's forward-algorithm contribution).
+  real hh_llik(matrix logalpha, int hh_size_h, int n_states, int Th) {
+    real s = 0;
+    for(p in 1:hh_size_h) {
+      array[n_states] int ref = linspaced_int_array(n_states, n_states*(p-1)+1, n_states*(p-1)+n_states);
+      s += log_sum_exp(logalpha[ref, Th]);
+    }
+    return s;
+  }
+
+  // Summed forward-algorithm log-likelihood for households start:end. Body is
+  // hmm.stan's transformed-parameters household loop; slice_hh is required by
+  // the reduce_sum signature but unused (households indexed via start:end).
+  real partial_log_lik(array[] int slice_hh, int start, int end,
+                       array[] int hh_size,
+                       int n_obs_type, 
+                       int n_states,
+                       array[,] int y, 
+                       array[] int part_id, 
+                       array[] int t_day,
+                       array[] int obs_per_hh,
+                       array[] int hh_start_ind, 
+                       array[] int hh_end_ind,
+                       array[] int hh_tmin, 
+                       array[] int hh_tmax,
+                       array[] int inf_states, 
+                       int n_inf_prob,
+                       int n_trans_fit, 
+                       array[] int param_index,
+                       array[,] int trans_index, 
+                       array[,] int source_states,
+                       int n_mult_fit, 
+                       array[] int mult_param_index,
+                       array[,] int mult_index,
+                       matrix trans, 
+                       matrix transition_multiplier,
+                       array[] real params, 
+                       array[] real mult_params,
+                       array[] real ih_prob, 
+                       real eh_prob,
+                       array[] matrix obs_prob, 
+                       vector init_probs, 
+                       real epsilon) {
+
+  real llik_sum = 0;
+
+  for(h in start:end) {
+    matrix[hh_size[h]*n_states, max(hh_tmax)-min(hh_tmin) + 1] logalpha =
+      hh_logalpha(h, hh_size, n_obs_type, n_states, y, part_id, t_day,
+                  obs_per_hh, hh_start_ind, hh_end_ind, hh_tmin, hh_tmax,
+                  inf_states, n_inf_prob, n_trans_fit, param_index, trans_index,
+                  source_states, n_mult_fit, mult_param_index, mult_index,
+                  trans, transition_multiplier, params, mult_params,
+                  ih_prob, eh_prob, obs_prob, init_probs, epsilon);
+    llik_sum += hh_llik(logalpha, hh_size[h], n_states, hh_tmax[h] - hh_tmin[h] + 1);
+  }
 
   return llik_sum;
   }
@@ -328,6 +371,7 @@ data {
   int n_inf_prob; // number of infection probabilties to fit, either 1 or equal to the number of infectious compartments
 
   int<lower=0, upper=1> save_llik; // if 1, write per-household log-likelihood (llik_final) in generated quantities
+  int<lower=0, upper=1> save_states; // if 1, write per-participant log forward probabilities (logalpha) in generated quantities
 }
 
 parameters {
@@ -376,19 +420,25 @@ model {
 generated quantities {
   // Per-household log-likelihood for loo/waic; empty (length 0) unless save_llik = 1.
   vector[save_llik ? n_hh : 0] llik_final;
-  if(save_llik) {
-   for(h in 1:n_hh) {
-    llik_final[h] = partial_log_lik({h}, h, h,
-                                    hh_size,
-                                    n_obs_type, n_states,
-                                    y, part_id, t_day,
-                                    obs_per_hh, hh_start_ind, hh_end_ind, hh_tmin, hh_tmax,
-                                    inf_states, n_inf_prob,
-                                    n_trans_fit, param_index, trans_index, source_states,
-                                    n_mult_fit, mult_param_index, mult_index,
-                                    trans, transition_multiplier,
-                                    params, mult_params, ih_prob, eh_prob,
-                                    obs_prob, init_probs, epsilon);
-   }
+  
+  // Per-participant log forward probabilities; empty (0x0) unless save_states = 1.
+  matrix[save_states ? sum(hh_size)*n_states : 0, save_states ? max(hh_tmax)-min(hh_tmin)+1 : 0] logalpha;
+  
+  if(save_llik || save_states) {
+    int row_offset = 0;
+    if(save_states) logalpha = rep_matrix(0, rows(logalpha), cols(logalpha));
+    for(h in 1:n_hh) {
+      int Th = hh_tmax[h] - hh_tmin[h] + 1;
+      matrix[hh_size[h]*n_states, max(hh_tmax)-min(hh_tmin)+1] la =
+        hh_logalpha(h, hh_size, n_obs_type, n_states, y, part_id, t_day,
+                    obs_per_hh, hh_start_ind, hh_end_ind, hh_tmin, hh_tmax,
+                    inf_states, n_inf_prob, n_trans_fit, param_index, trans_index,
+                    source_states, n_mult_fit, mult_param_index, mult_index,
+                    trans, transition_multiplier, params, mult_params,
+                    ih_prob, eh_prob, obs_prob, init_probs, epsilon);
+      if(save_llik) llik_final[h] = hh_llik(la, hh_size[h], n_states, Th);
+      if(save_states) logalpha[(row_offset+1):(row_offset+hh_size[h]*n_states), 1:Th] = la[, 1:Th];
+      row_offset += hh_size[h]*n_states;
+    }
   }
 }

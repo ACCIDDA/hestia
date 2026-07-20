@@ -840,6 +840,10 @@ make_stan_data <- function(
 #'   (`llik_final`) in the model's generated quantities, for use with
 #'   `loo`/`waic` (default `FALSE`). When `FALSE`, `llik_final` is length 0 and
 #'   the extra per-household forward pass is skipped.
+#' @param save_states whether to write the per-participant log forward
+#'   probabilities (`logalpha`) in the model's generated quantities, for
+#'   reconstructing latent state probabilities (default `FALSE`). When
+#'   `FALSE`, `logalpha` is a 0x0 matrix.
 #' @param stan_opts a named list of Stan sampler options, as produced by
 #'   [stan_options()] (for example `stan_options(iter = 1000)`).
 #' @returns `draws_array` object with chains for each model parameter
@@ -879,6 +883,7 @@ run_model <- function(
   init = NULL,
   threading = TRUE,
   save_llik = FALSE,
+  save_states = FALSE,
   stan_opts = stan_options()
 ) {
   # Entry-level input validation
@@ -892,6 +897,7 @@ run_model <- function(
     .var.name = "threading"
   )
   checkmate::assert_flag(save_llik)
+  checkmate::assert_flag(save_states)
   checkmate::assert_list(stan_opts, .var.name = "stan_opts")
   if (length(stan_opts) > 0 && is.null(names(stan_opts))) {
     stop(
@@ -914,6 +920,9 @@ run_model <- function(
   # log-likelihood (llik_final, for loo/waic). Off by default keeps it out of the
   # saved draws and skips the extra forward pass.
   dat_stan$save_llik <- as.integer(save_llik)
+  # Whether to write the per-participant log forward probabilities (logalpha,
+  # for reconstructing latent states). Off by default (empty 0x0 output).
+  dat_stan$save_states <- as.integer(save_states)
 
   is_cov <- !is.null(eh_cov) && !is.null(ih_cov)
 
