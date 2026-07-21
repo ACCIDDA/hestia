@@ -21,6 +21,7 @@ Imports:
     checkmate,
     dplyr,
     methods,
+    parallelly,
     posterior,
     Rcpp (>= 0.12.0),
     RcppParallel (>= 5.0.1),
@@ -44,7 +45,8 @@ Suggests:
     knitr,
     rmarkdown,
     roxyglobals,
-    testthat (>= 3.0.0)
+    testthat (>= 3.0.0),
+    withr
 VignetteBuilder: knitr
 Config/roxyglobals/filename: globals.R
 Config/roxyglobals/unique: FALSE

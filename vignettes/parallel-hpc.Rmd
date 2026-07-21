@@ -1,0 +1,172 @@
+---
+title: "Parallel and threaded fitting (including HPC)"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Parallel and threaded fitting (including HPC)}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Fitting a `hestia` model is the expensive part of most analyses. This article
+explains how `hestia` uses your available cores, and how to run it efficiently
+on a laptop and on a scheduled HPC cluster.
+
+## Two levels of parallelism
+
+A `hestia` fit can use cores in two ways at once:
+
+1. **Across chains.** The MCMC chains are independent, so they run in parallel
+   with near-linear speedup and no coordination overhead.
+2. **Within a chain (threading).** The likelihood sums over households, which are
+   conditionally independent, so each chain can split that sum across threads
+   using Stan's `reduce_sum`.
+
+Because chain-parallelism is "free" (no threading overhead) while within-chain
+threading scales sub-linearly, `hestia` **fills chain-parallelism first and
+gives any leftover cores to threads**. With `threading = TRUE` (the default)
+this split is chosen for you from the cores available:
+
+| chains | cores | chains in parallel | threads per chain |
+|:------:|:-----:|:------------------:|:-----------------:|
+|   4    |   4   |         4          |     1 (no spare)  |
+|   4    |   8   |         4          |         2         |
+|   4    |  16   |         4          |         4         |
+|   2    |   8   |         2          |         4         |
+
+So threading only "switches on" when you have more cores than chains — otherwise
+every core is spent running chains.
+
+```{r, eval=FALSE}
+# Default: threading = TRUE, cores detected automatically
+fit <- run_model(
+  inf_model  = inf_process,
+  obs_model  = obs_process,
+  data       = sir,
+  init_probs = c(1 - 2 * 1e-10, 1e-10, 1e-10),
+  stan_opts  = stan_options(iter = 1000)
+)
+```
+
+## How `hestia` decides how many cores to use
+
+When you don't specify cores, `hestia` asks
+[`parallelly::availableCores()`](https://parallelly.futureverse.org/) for the
+number of cores the *process is allowed to use*. Crucially, this is **not**
+`parallel::detectCores()`: it respects
+
+- your HPC scheduler's allocation (`SLURM_CPUS_PER_TASK`, PBS, SGE, LSF),
+- cgroup CPU quotas (containers, `cpuset`),
+- `options(mc.cores = ...)`,
+
+and returns 2 under `R CMD check`. This is what makes the automatic split safe
+on a shared cluster (see below).
+
+You can always take control explicitly — an explicit core count is used exactly
+as given.
+
+## On a laptop or workstation
+
+Nothing to do: the default detects your cores and splits them. To cap usage (for
+example, to keep some cores free), set `mc.cores`:
+
+```{r, eval=FALSE}
+options(mc.cores = 6)
+fit <- run_model(..., stan_opts = stan_options(chains = 4))
+# -> 4 chains in parallel, 1 thread each (6 %/% 4 = 1); 2 cores left free
+```
+
+## On an HPC cluster
+
+### The trap to avoid
+
+`parallel::detectCores()` reports **every core on the compute node** — often 64,
+128, or more — regardless of how many your job was actually allocated. If a fit
+sized itself from that, it would launch dozens of threads inside a job pinned to
+a handful of cores, and the scheduler's cgroup would throttle it to a crawl (or
+you would trample other users sharing the node). `hestia` avoids this by using
+`parallelly::availableCores()`, which reads your *allocation*.
+
+### Single node: let `hestia` split your allocation
+
+Request one task with several CPUs, and let the automatic split divide them
+between chains and threads. For 4 chains with 2 threads each (8 cores):
+
+```bash
+#!/bin/bash
+#SBATCH --job-name=hestia-fit
+#SBATCH --nodes=1
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=8      # availableCores() will report 8
+#SBATCH --mem=16G
+#SBATCH --time=04:00:00
+
+Rscript fit.R
+```
+
+```r
+# fit.R
+library(hestia)
+
+fit <- run_model(
+  inf_model  = inf_process,
+  obs_model  = obs_process,
+  data       = my_data,
+  init_probs = init_probs,
+  stan_opts  = stan_options(chains = 4, iter = 2000)
+)
+saveRDS(fit, "fit.rds")
+```
+
+No core arithmetic in your script: `availableCores()` picks up
+`SLURM_CPUS_PER_TASK = 8`, and `hestia` runs 4 chains × 2 threads.
+
+### Many chains across nodes: one chain per array task
+
+Chain-parallelism and threads are **shared-memory**: they cannot span nodes. To
+scale beyond a single node, run **one chain per job** with a SLURM array, give
+each job all its cores for threading, then combine the single-chain fits
+afterwards.
+
+```bash
+#SBATCH --array=1-4            # one task per chain
+#SBATCH --nodes=1
+#SBATCH --cpus-per-task=8      # all 8 cores -> threads for this one chain
+```
+
+```r
+# each array task fits a single chain with a distinct seed
+fit <- run_model(
+  ...,
+  stan_opts = stan_options(chains = 1, seed = Sys.getenv("SLURM_ARRAY_TASK_ID"))
+)
+saveRDS(fit, sprintf("chain-%s.rds", Sys.getenv("SLURM_ARRAY_TASK_ID")))
+```
+
+## Choosing the thread count yourself
+
+`threading` accepts three forms:
+
+- `TRUE` (default) — auto-split the available cores between chains and threads.
+- `FALSE` — one thread per chain (chains still run in parallel). Useful for
+  debugging or exact reproducibility comparisons.
+- a **positive integer** — that many threads per chain, explicitly.
+
+```{r, eval=FALSE}
+# Exactly 2 threads per chain, whatever the machine reports
+fit <- run_model(..., threading = 2)
+
+# Single-threaded
+fit <- run_model(..., threading = FALSE)
+```
+
+Parallelism lives on `run_model()`, not in `stan_options()`: `cores`,
+`parallel_chains`, and `threads_per_chain` are rejected there, because
+`run_model()` owns the split and translates it to whichever backend is in use.
+`stan_options()` is for how the sampler explores (`iter`, `warmup`, `seed`,
+`control = list(adapt_delta = ...)`, ...). Note that `threading = n` on a machine
+with fewer than `n` free cores per chain will oversubscribe — that is your
+explicit choice, and `hestia` honours it rather than clamping.

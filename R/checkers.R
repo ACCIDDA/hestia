@@ -188,7 +188,7 @@ check_init_probs <- function(init_probs) {
 #' Validate a positive-integer sampler argument
 #'
 #' Used by [stan_options()] to coerce and check scalar count arguments such as
-#' `iter`, `chains`, and `cores`.
+#' `iter`, `chains`, and `warmup`.
 #'
 #' @param x the value to validate.
 #' @param name the argument name, used in the error message.

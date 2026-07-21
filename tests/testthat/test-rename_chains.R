@@ -30,6 +30,9 @@ test_that("rename_chains covers the covariate path on a minimal live fit", {
     inf_model, obs_model, data_sub, init_probs,
     epsilon = 1e-10, ih_cov = cov_sub, eh_cov = cov_sub
   )
+  # run_model() sets these; mirror it here since we sample hmm_cov directly.
+  dat_stan$save_llik <- 0L
+  dat_stan$save_states <- 0L
 
   # One-chain init mirroring run_model()'s covariate inner list, sized from the
   # stan data so the dimensions match. Reuses the package's internal logit().
@@ -49,9 +52,7 @@ test_that("rename_chains covers the covariate path on a minimal live fit", {
     chains = 1,
     init = init,
     refresh = 0,
-    seed = 1L,
-    pars = "logalpha",
-    include = FALSE
+    seed = 1L
   ))
 
   stan_out <- list(
