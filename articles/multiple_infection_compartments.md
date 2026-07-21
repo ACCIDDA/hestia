@@ -101,7 +101,7 @@ siir_res <- run_model(inf_model = inf_process,
                       obs_model = obs_process,
                       data = siir, 
                       init_probs = c(1-3*1e-10, 1e-10, 1e-10, 1e-10),
-                      stan_opts = stan_options(iter = 1000, cores = 4))
+                      stan_opts = stan_options(iter = 1000))
 ```
 
 Now let’s look at the model results using the `posterior` package.

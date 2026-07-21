@@ -4,13 +4,18 @@ Collects and validates the arguments passed through to the Stan sampler.
 
 Any argument accepted by
 [`rstan::sampling()`](https://mc-stan.org/rstan/reference/stanmodel-method-sampling.html)
-may be supplied, with the exception of `object` and `data` (which
+may be supplied, with the exception of the arguments
 [`run_model()`](https://accidda.github.io/hestia/reference/run_model.md)
-constructs internally) and `init` (which is passed to
+manages itself: `object` and `data` (constructed internally), `init`
+(passed to
 [`run_model()`](https://accidda.github.io/hestia/reference/run_model.md)
-directly, as its defaults depend on the model structure). Sampler
-controls such as `adapt_delta` and `max_treedepth` are set through
-`control = list(...)`, exactly as in
+directly, as its defaults depend on the model structure), and the
+parallelism controls `cores`, `parallel_chains`, and `threads_per_chain`
+(owned by
+[`run_model()`](https://accidda.github.io/hestia/reference/run_model.md)'s
+`threading` argument, which splits the available cores between chains
+and threads). Sampler controls such as `adapt_delta` and `max_treedepth`
+are set through `control = list(...)`, exactly as in
 [`rstan::sampling()`](https://mc-stan.org/rstan/reference/stanmodel-method-sampling.html).
 
 ## Usage
@@ -25,7 +30,7 @@ stan_options(...)
 
   arguments forwarded to
   [`rstan::sampling()`](https://mc-stan.org/rstan/reference/stanmodel-method-sampling.html),
-  for example `iter`, `chains`, `cores`, `seed`, or
+  for example `iter`, `chains`, `seed`, or
   `control = list(adapt_delta = 0.95, max_treedepth = 12)`.
 
 ## Value

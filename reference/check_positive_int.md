@@ -3,7 +3,7 @@
 Used by
 [`stan_options()`](https://accidda.github.io/hestia/reference/stan_options.md)
 to coerce and check scalar count arguments such as `iter`, `chains`, and
-`cores`.
+`warmup`.
 
 ## Usage
 

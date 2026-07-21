@@ -6,6 +6,7 @@
 <url><loc>https://accidda.github.io/hestia/articles/SIR.html</loc></url>
 <url><loc>https://accidda.github.io/hestia/articles/index.html</loc></url>
 <url><loc>https://accidda.github.io/hestia/articles/multiple_infection_compartments.html</loc></url>
+<url><loc>https://accidda.github.io/hestia/articles/parallel-hpc.html</loc></url>
 <url><loc>https://accidda.github.io/hestia/authors.html</loc></url>
 <url><loc>https://accidda.github.io/hestia/index.html</loc></url>
 <url><loc>https://accidda.github.io/hestia/news/index.html</loc></url>
@@ -18,6 +19,7 @@
 <url><loc>https://accidda.github.io/hestia/reference/check_seed.html</loc></url>
 <url><loc>https://accidda.github.io/hestia/reference/check_split.html</loc></url>
 <url><loc>https://accidda.github.io/hestia/reference/check_to_from.html</loc></url>
+<url><loc>https://accidda.github.io/hestia/reference/configure_threading.html</loc></url>
 <url><loc>https://accidda.github.io/hestia/reference/get_transmission_details.html</loc></url>
 <url><loc>https://accidda.github.io/hestia/reference/graph_connected.html</loc></url>
 <url><loc>https://accidda.github.io/hestia/reference/hestia-package.html</loc></url>
@@ -27,6 +29,7 @@
 <url><loc>https://accidda.github.io/hestia/reference/make_infection_model.html</loc></url>
 <url><loc>https://accidda.github.io/hestia/reference/make_observation_model.html</loc></url>
 <url><loc>https://accidda.github.io/hestia/reference/make_stan_data.html</loc></url>
+<url><loc>https://accidda.github.io/hestia/reference/optimal_alloc.html</loc></url>
 <url><loc>https://accidda.github.io/hestia/reference/progress.html</loc></url>
 <url><loc>https://accidda.github.io/hestia/reference/rename_chains.html</loc></url>
 <url><loc>https://accidda.github.io/hestia/reference/run_model.html</loc></url>
