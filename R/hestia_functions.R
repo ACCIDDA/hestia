@@ -955,8 +955,8 @@ run_model <- function(
               logit(0.5),
               dat_stan$n_mult_params
             )),
-            beta_eh = logit(0.02),
-            beta_ih = array(rep(logit(0.02), dat_stan$n_inf_prob))
+            beta0_eh = logit(0.02),
+            beta0_ih = array(rep(logit(0.02), dat_stan$n_inf_prob))
           )
         ),
         chains
@@ -1042,17 +1042,11 @@ rename_chains <- function(inf_model, model_output) {
   # Get variable names and subset to parameters of interest
   var_names <- posterior::variables(draws_full)
 
-  if (length(grep("beta0", var_names)) > 0) {
-    var_names_sub <- c(
-      grep("beta0_eh", var_names, value = TRUE),
-      grep("beta0_ih", var_names, value = TRUE)
-    )
-  } else {
-    var_names_sub <- c(
-      grep("beta_eh", var_names, value = TRUE),
-      grep("beta_ih", var_names, value = TRUE)
-    )
-  }
+  # PUll out infection probability intercepts
+  var_names_sub <- c(
+    grep("beta0_eh", var_names, value = TRUE),
+    grep("beta0_ih", var_names, value = TRUE)
+  )
 
   if (length(trans_names) > 0) {
     var_names_sub <- c(
@@ -1069,7 +1063,7 @@ rename_chains <- function(inf_model, model_output) {
   }
 
   # Pull covariate coefficients if covariate run
-  if (length(grep("beta0", var_names)) > 0) {
+  if (length(grep("beta_", var_names)) > 0) {
     var_names_sub <- c(
       var_names_sub,
       grep("beta_eh", var_names, value = TRUE),
@@ -1086,7 +1080,7 @@ rename_chains <- function(inf_model, model_output) {
 
   var_names_new <- c("eh_prob", ih_names, trans_names, mult_names)
 
-  if (length(grep("beta0", var_names)) > 0) {
+  if (length(grep("beta_", var_names)) > 0) {
     var_names_new <- c(
       var_names_new,
       paste0(model_output$eh_cov_names, "_eh"),
@@ -1105,7 +1099,7 @@ rename_chains <- function(inf_model, model_output) {
   # dimensions [iteration, chain, variable], so we transform variable slices in
   # place by name.
   coef_names <- character(0)
-  if (length(grep("beta0", var_names)) > 0) {
+  if (length(grep("beta_", var_names)) > 0) {
     coef_names <- c(
       paste0(model_output$eh_cov_names, "_eh"),
       paste0(model_output$ih_cov_names, "_ih")
@@ -1114,10 +1108,10 @@ rename_chains <- function(inf_model, model_output) {
   prob_names <- setdiff(var_names_new, coef_names)
 
   for (nm in prob_names) {
-    draws[, , nm] <- inv_logit(draws[, , nm])
+    draws[,, nm] <- inv_logit(draws[,, nm])
   }
   for (nm in coef_names) {
-    draws[, , nm] <- exp(draws[, , nm])
+    draws[,, nm] <- exp(draws[,, nm])
   }
 
   draws

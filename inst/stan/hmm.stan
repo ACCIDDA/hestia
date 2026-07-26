@@ -195,13 +195,11 @@ functions {
         int ct = 1;
         for(s in 1:n_states) {
           if(is_in(s, inf_states)) {
-            if(n_inf_prob == 1) {
-              no_hh_inf_prob[,s] = to_vector(alpha[i_rows[, s], tt-1])*(1-ih_prob[1]) + (1 - to_vector(alpha[i_rows[,s], tt-1])); // Pr of avoiding infection from each household member
-            } else {
-              no_hh_inf_prob[,s] = to_vector(alpha[i_rows[, s], tt-1])*(1-ih_prob[ct]) + (1 - to_vector(alpha[i_rows[,s], tt-1])); // Pr of avoiding infection from each household member
-              ct += 1;
-            }
+
+            no_hh_inf_prob[,s] = to_vector(alpha[i_rows[, s], tt-1])*(1-ih_prob[ct]) + (1 - to_vector(alpha[i_rows[,s], tt-1])); // Pr of avoiding infection from each household member
+            ct += 1;
             no_hh_inf_prob[p, s] = 1; // Particpant can't infect themselves
+            
           } else {
             no_hh_inf_prob[,s] = rep_vector(1, hh_size[h]);
           }
@@ -377,8 +375,8 @@ data {
 parameters {
   array[n_params] real logit_params;
   array[n_mult_params] real logit_mult_params;
-  real beta_eh; // monthly intercepts for extra-household probabilities
-  array[n_inf_prob] real beta_ih; // intra-household probability
+  real beta0_eh; // monthly intercepts for extra-household probabilities
+  array[n_inf_prob] real beta0_ih; // intra-household probability
 
 }
 
@@ -390,14 +388,14 @@ transformed parameters {
 
   params = inv_logit(logit_params);
   mult_params = inv_logit(logit_mult_params);
-  ih_prob = inv_logit(beta_ih);
-  eh_prob = inv_logit(beta_eh);
+  ih_prob = inv_logit(beta0_ih);
+  eh_prob = inv_logit(beta0_eh);
 }
 
 model {
 
-  beta_eh ~ normal(-3,3);
-  beta_ih ~ normal(-3,3);
+  beta0_eh ~ normal(-3,3);
+  beta0_ih ~ normal(-3,3);
 
   // Parallelised forward algorithm (households are independent given params)
   array[n_hh] int hh_indices;
