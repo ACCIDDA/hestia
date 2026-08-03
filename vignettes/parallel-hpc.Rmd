@@ -26,9 +26,10 @@ A `hestia` fit can use cores in two ways at once:
    using Stan's `reduce_sum`.
 
 Because chain-parallelism is "free" (no threading overhead) while within-chain
-threading scales sub-linearly, `hestia` **fills chain-parallelism first and
-gives any leftover cores to threads**. With `threading = TRUE` (the default)
-this split is chosen for you from the cores available:
+threading scales sub-linearly, `flexstanr` **fills chain-parallelism first and
+gives any leftover cores to threads**. With
+`stan_options(threading = TRUE)`, this split is chosen for you from the cores
+available:
 
 | chains | cores | chains in parallel | threads per chain |
 |:------:|:-----:|:------------------:|:-----------------:|
@@ -41,19 +42,19 @@ So threading only "switches on" when you have more cores than chains — otherwi
 every core is spent running chains.
 
 ```{r, eval=FALSE}
-# Default: threading = TRUE, cores detected automatically
+# Enable scheduler-aware threading; cores are detected automatically
 fit <- run_model(
   inf_model  = inf_process,
   obs_model  = obs_process,
   data       = sir,
   init_probs = c(1 - 2 * 1e-10, 1e-10, 1e-10),
-  stan_opts  = stan_options(iter = 1000)
+  stan_opts  = stan_options(iter = 1000, threading = TRUE)
 )
 ```
 
 ## How `hestia` decides how many cores to use
 
-When you don't specify cores, `hestia` asks
+When threading is enabled, `flexstanr` asks
 [`parallelly::availableCores()`](https://parallelly.futureverse.org/) for the
 number of cores the *process is allowed to use*. Crucially, this is **not**
 `parallel::detectCores()`: it respects
@@ -70,12 +71,14 @@ as given.
 
 ## On a laptop or workstation
 
-Nothing to do: the default detects your cores and splits them. To cap usage (for
-example, to keep some cores free), set `mc.cores`:
+Pass `threading = TRUE` to `stan_options()` to detect and split your cores. To
+cap usage (for example, to keep some cores free), use `max_cores`:
 
 ```{r, eval=FALSE}
-options(mc.cores = 6)
-fit <- run_model(..., stan_opts = stan_options(chains = 4))
+fit <- run_model(
+  ...,
+  stan_opts = stan_options(chains = 4, threading = TRUE, max_cores = 6)
+)
 # -> 4 chains in parallel, 1 thread each (6 %/% 4 = 1); 2 cores left free
 ```
 
@@ -116,7 +119,7 @@ fit <- run_model(
   obs_model  = obs_process,
   data       = my_data,
   init_probs = init_probs,
-  stan_opts  = stan_options(chains = 4, iter = 2000)
+  stan_opts  = stan_options(chains = 4, iter = 2000, threading = TRUE)
 )
 saveRDS(fit, "fit.rds")
 ```
@@ -141,32 +144,30 @@ afterwards.
 # each array task fits a single chain with a distinct seed
 fit <- run_model(
   ...,
-  stan_opts = stan_options(chains = 1, seed = Sys.getenv("SLURM_ARRAY_TASK_ID"))
+  stan_opts = stan_options(
+    chains = 1,
+    seed = Sys.getenv("SLURM_ARRAY_TASK_ID"),
+    threading = TRUE
+  )
 )
 saveRDS(fit, sprintf("chain-%s.rds", Sys.getenv("SLURM_ARRAY_TASK_ID")))
 ```
 
-## Choosing the thread count yourself
+## Controlling threading
 
-`threading` accepts three forms:
-
-- `TRUE` (default) — auto-split the available cores between chains and threads.
-- `FALSE` — one thread per chain (chains still run in parallel). Useful for
-  debugging or exact reproducibility comparisons.
-- a **positive integer** — that many threads per chain, explicitly.
+Threading is off unless requested in `stan_options()`:
 
 ```{r, eval=FALSE}
-# Exactly 2 threads per chain, whatever the machine reports
-fit <- run_model(..., threading = 2)
+# Automatically split at most 8 available cores
+fit <- run_model(
+  ...,
+  stan_opts = stan_options(threading = TRUE, max_cores = 8)
+)
 
 # Single-threaded
-fit <- run_model(..., threading = FALSE)
+fit <- run_model(..., stan_opts = stan_options(threading = FALSE))
 ```
 
-Parallelism lives on `run_model()`, not in `stan_options()`: `cores`,
-`parallel_chains`, and `threads_per_chain` are rejected there, because
-`run_model()` owns the split and translates it to whichever backend is in use.
-`stan_options()` is for how the sampler explores (`iter`, `warmup`, `seed`,
-`control = list(adapt_delta = ...)`, ...). Note that `threading = n` on a machine
-with fewer than `n` free cores per chain will oversubscribe — that is your
-explicit choice, and `hestia` honours it rather than clamping.
+`stan_options()` translates the allocation into the selected backend's native
+parallelism settings. Leave `threading = FALSE` (the default) to manage native
+backend parallelism options yourself.
