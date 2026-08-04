@@ -91,8 +91,8 @@ functions {
                      vector init_probs,
                      real epsilon) {
 
-    matrix[hh_size[h]*n_states, max(hh_tmax)-min(hh_tmin) + 1] alpha; // forward prob, normalized
-    matrix[hh_size[h]*n_states, max(hh_tmax)-min(hh_tmin) + 1] logalpha; // log forward probability
+    matrix[hh_size[h]*n_states, max(hh_tmax)] alpha; // forward prob, normalized
+    matrix[hh_size[h]*n_states, max(hh_tmax)] logalpha; // log forward probability
     array[obs_per_hh[h], n_obs_type] int y_hh;
     array[obs_per_hh[h]] int part_id_hh;
     array[obs_per_hh[h]] int t_day_hh;
@@ -153,7 +153,7 @@ functions {
       alpha[(n_states*(i-1)+1):(n_states*(i-1)+n_states), 1] = softmax(logalpha[ref,1]);
 
     } // end participant loop - t=1, update logalpha with observation probability
-    for (tt in 2:(hh_tmax[h] - hh_tmin[h] + 1)) {
+    for (tt in 2:(hh_tmax[h])) {
 
       for(p in 1:hh_size[h]) {
         array[n_states] real no_inf_prob; // probability of avoiding all infections
@@ -308,14 +308,14 @@ functions {
   real llik_sum = 0;
 
   for(h in start:end) {
-    matrix[hh_size[h]*n_states, max(hh_tmax)-min(hh_tmin) + 1] logalpha =
+    matrix[hh_size[h]*n_states, max(hh_tmax)] logalpha =
       hh_logalpha(h, hh_size, n_obs_type, n_states, y, part_id, t_day,
                   obs_per_hh, hh_start_ind, hh_end_ind, hh_tmin, hh_tmax,
                   inf_states, n_inf_prob, n_trans_fit, param_index, trans_index,
                   source_states, n_mult_fit, mult_param_index, mult_index,
                   trans, transition_multiplier, params, mult_params,
                   ih_prob, eh_prob, obs_prob, init_probs, epsilon);
-    llik_sum += hh_llik(logalpha, hh_size[h], n_states, hh_tmax[h] - hh_tmin[h] + 1);
+    llik_sum += hh_llik(logalpha, hh_size[h], n_states, hh_tmax[h]);
   }
 
   return llik_sum;
@@ -420,14 +420,14 @@ generated quantities {
   vector[save_llik ? n_hh : 0] llik_final;
   
   // Per-participant log forward probabilities; empty (0x0) unless save_states = 1.
-  matrix[save_states ? sum(hh_size)*n_states : 0, save_states ? max(hh_tmax)-min(hh_tmin)+1 : 0] logalpha;
+  matrix[save_states ? sum(hh_size)*n_states : 0, save_states ? max(hh_tmax) : 0] logalpha;
   
   if(save_llik || save_states) {
     int row_offset = 0;
     if(save_states) logalpha = rep_matrix(0, rows(logalpha), cols(logalpha));
     for(h in 1:n_hh) {
-      int Th = hh_tmax[h] - hh_tmin[h] + 1;
-      matrix[hh_size[h]*n_states, max(hh_tmax)-min(hh_tmin)+1] la =
+      int Th = hh_tmax[h];
+      matrix[hh_size[h]*n_states, max(hh_tmax)] la =
         hh_logalpha(h, hh_size, n_obs_type, n_states, y, part_id, t_day,
                     obs_per_hh, hh_start_ind, hh_end_ind, hh_tmin, hh_tmax,
                     inf_states, n_inf_prob, n_trans_fit, param_index, trans_index,

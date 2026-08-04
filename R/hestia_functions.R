@@ -768,7 +768,6 @@ make_stan_data <- function(
     hh_tmax = hh_sum$hh_tmax,
     obs_prob = obs_array,
     init_probs = init_probs,
-    #TODO: Toggle to fit
     epsilon = epsilon,
     n_inf_prob = ifelse(
       inf_details$mult_inf_probs,
@@ -1006,7 +1005,7 @@ run_model <- function(
     ih_cov_names = colnames(ih_cov)
   )
 
-  rename_chains(inf_model, stan_out)
+  rename_chains(inf_model, stan_out, save_llik, save_states)
 }
 
 #' @title Extract chains and renames with user-provided parameter names
@@ -1015,11 +1014,19 @@ run_model <- function(
 #'   \link{make_infection_model}
 #' @param model_output A list generated within \link{run_model} which contains
 #'   the stanfit, the stan input data, and covariate names
+#' @param save_llik whether to write the per-household log-likelihood
+#'   (`llik_final`) in the model's generated quantities, for use with
+#'   `loo`/`waic` (default `FALSE`). When `FALSE`, `llik_final` is length 0 and
+#'   the extra per-household forward pass is skipped.
+#' @param save_states whether to write the per-participant log forward
+#'   probabilities (`logalpha`) in the model's generated quantities, for
+#'   reconstructing latent state probabilities (default `FALSE`). When
+#'   `FALSE`, `logalpha` is a 0x0 matrix.
 #' @returns A `draws_array` object with chains for each model parameter
 #'
 #' @importFrom posterior as_draws_array variables subset_draws
 #' @keywords internal
-rename_chains <- function(inf_model, model_output) {
+rename_chains <- function(inf_model, model_output, save_llik, save_states) {
   # Get parameter information
   inf_details <- get_transmission_details(inf_model)
   mult_names <- unique(inf_details$mult_to_fit$mult_name[
@@ -1112,6 +1119,20 @@ rename_chains <- function(inf_model, model_output) {
   }
   for (nm in coef_names) {
     draws[,, nm] <- exp(draws[,, nm])
+  }
+
+  if (save_llik) {
+    draws <- posterior::bind_draws(
+      draws,
+      posterior::subset_draws(draws_full, variable = "llik_final")
+    )
+  }
+
+  if (save_states) {
+    draws <- posterior::bind_draws(
+      draws,
+      posterior::subset_draws(draws_full, variable = "logalpha")
+    )
   }
 
   draws
