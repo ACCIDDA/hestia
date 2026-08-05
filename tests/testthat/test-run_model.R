@@ -114,7 +114,6 @@ test_that("entry validation rejects bad run_model inputs before sampling", {
 # Integration test
 test_that("State probabilities match expectation for toy examples", {
   # Some utility functions
-
   softmax <- function(x) {
     exp(x) / sum(exp(x))
   }
@@ -374,15 +373,15 @@ test_that("State probabilities match expectation for toy examples", {
   init_probs <- c(1 - 2 * 1e-10, 1e-10, 1e-10)
 
   ######## 2 HH, all observations for first 10 days ###################
-  sir_sub <- sir %>%
-    filter(t <= 10, hh_id <= 2)
+  sir_sub1 <- sir |>
+    dplyr::filter(t <= 10, hh_id <= 2)
 
-  np <- nrow(unique(sir_sub %>% dplyr::select(hh_id, part_id)))
+  np <- nrow(unique(sir_sub1 |> dplyr::select(hh_id, part_id)))
 
   dat_stan <- hestia:::make_stan_data(
     inf_model = inf_process,
     obs_model = obs_process,
-    data = sir_sub,
+    data = sir_sub1,
     init_probs = init_probs,
     epsilon = 1e-10,
     ih_cov = NULL,
@@ -393,7 +392,7 @@ test_that("State probabilities match expectation for toy examples", {
   test_res <- run_model(
     inf_model = inf_process,
     obs_model = obs_process,
-    data = sir_sub,
+    data = sir_sub1,
     init_probs = init_probs,
     stan_opts = stan_options(iter = 50),
     save_states = TRUE
@@ -404,9 +403,13 @@ test_that("State probabilities match expectation for toy examples", {
   it <- 13
 
   # extract all logalpha variables at iteration i, chain c
-  vals <- test_res[it, ch, grepl("^logalpha\\[", variables(test_res))]
+  vals <- test_res[
+    it,
+    ch,
+    grepl("^logalpha\\[", posterior::variables(test_res))
+  ]
   # reshape to 24 x 10
-  logalpha_mat <- matrix(vals, nrow = np * 3, ncol = 10, byrow = FALSE)
+  logalpha_mat_sir1 <- matrix(vals, nrow = np * 3, ncol = 10, byrow = FALSE)
 
   ih_prob <- as.numeric(test_res[it, ch, "ih_prob"])
   eh_prob <- as.numeric(test_res[it, ch, "eh_prob"])
@@ -416,18 +419,43 @@ test_that("State probabilities match expectation for toy examples", {
   test_la <- gen_la(dat_stan, ih_prob, eh_prob, params, mult_params)
 
   # Test that values are equal
-  expect_equal(logalpha_mat, test_la)
+  expect_equal(logalpha_mat_sir1, test_la)
+
+  ######## 2 HH, observations for first 10 days, start at t=2 #################
+
+  sir_sub2 <- sir |>
+    dplyr::filter(t <= 10, hh_id <= 2) |>
+    dplyr::mutate(t = t + 1)
+
+  np <- nrow(unique(sir_sub2 |> dplyr::select(hh_id, part_id)))
+
+  dat_stan <- hestia:::make_stan_data(
+    inf_model = inf_process,
+    obs_model = obs_process,
+    data = sir_sub2,
+    init_probs = init_probs,
+    t_start = 2,
+    epsilon = 1e-10,
+    ih_cov = NULL,
+    eh_cov = NULL
+  )
+
+  # Use same parameter values above
+  test_la2 <- gen_la(dat_stan, ih_prob, eh_prob, params, mult_params)
+
+  # Test that values are equal
+  expect_equal(test_la2, test_la)
 
   ######## 2 HH, observations for days 6-10 ###################
-  sir_sub <- sir %>%
-    filter(t <= 10, t > 5, hh_id <= 2)
+  sir_sub3 <- sir |>
+    dplyr::filter(t <= 10, t > 5, hh_id <= 2)
 
-  np <- nrow(unique(sir_sub %>% dplyr::select(hh_id, part_id)))
+  np <- nrow(unique(sir_sub3 |> dplyr::select(hh_id, part_id)))
 
   dat_stan <- hestia:::make_stan_data(
     inf_model = inf_process,
     obs_model = obs_process,
-    data = sir_sub,
+    data = sir_sub3,
     init_probs = init_probs,
     epsilon = 1e-10,
     ih_cov = NULL,
@@ -438,7 +466,7 @@ test_that("State probabilities match expectation for toy examples", {
   test_res <- run_model(
     inf_model = inf_process,
     obs_model = obs_process,
-    data = sir_sub,
+    data = sir_sub3,
     init_probs = init_probs,
     stan_opts = stan_options(iter = 50),
     save_states = TRUE
@@ -449,9 +477,13 @@ test_that("State probabilities match expectation for toy examples", {
   it <- 13
 
   # extract all logalpha variables at iteration i, chain c
-  vals <- test_res[it, ch, grepl("^logalpha\\[", variables(test_res))]
+  vals <- test_res[
+    it,
+    ch,
+    grepl("^logalpha\\[", posterior::variables(test_res))
+  ]
   # reshape to 24 x 10
-  logalpha_mat <- matrix(vals, nrow = np * 3, ncol = 10, byrow = FALSE)
+  logalpha_mat_sir3 <- matrix(vals, nrow = np * 3, ncol = 10, byrow = FALSE)
 
   ih_prob <- as.numeric(test_res[it, ch, "ih_prob"])
   eh_prob <- as.numeric(test_res[it, ch, "eh_prob"])
@@ -461,7 +493,7 @@ test_that("State probabilities match expectation for toy examples", {
   test_la <- gen_la(dat_stan, ih_prob, eh_prob, params, mult_params)
 
   # Test that values are equal
-  expect_equal(logalpha_mat, test_la)
+  expect_equal(logalpha_mat_sir3, test_la)
 
   ######## 2 HH, observations for first 10 days, SIIR ###################
 
@@ -484,7 +516,7 @@ test_that("State probabilities match expectation for toy examples", {
   )
 
   siir_sub <- siir %>%
-    filter(hh_id <= 2, t <= 10)
+    dplyr::filter(hh_id <= 2, t <= 10)
 
   init_probs <- c(1 - 3 * 1e-10, 1e-10, 1e-10, 1e-10)
 
@@ -514,7 +546,11 @@ test_that("State probabilities match expectation for toy examples", {
   it <- 13
 
   # extract all logalpha variables at iteration i, chain c
-  vals <- test_res[it, ch, grepl("^logalpha\\[", variables(test_res))]
+  vals <- test_res[
+    it,
+    ch,
+    grepl("^logalpha\\[", posterior::variables(test_res))
+  ]
   # reshape to 24 x 10
   logalpha_mat <- matrix(vals, nrow = np * 4, ncol = 10, byrow = FALSE)
 

@@ -677,12 +677,14 @@ make_stan_data <- function(
   obs_model,
   data,
   init_probs,
+  t_start = 1,
   epsilon = 1e-10,
   ih_cov = NULL,
   eh_cov = NULL
 ) {
   inf_details <- get_transmission_details(inf_model)
   dat <- data |>
+    dplyr::mutate(t = t - t_start + 1) |>
     dplyr::arrange(hh_id, t, part_id)
 
   dat$row_id <- seq_len(nrow(dat))
@@ -876,6 +878,7 @@ run_model <- function(
   obs_model,
   data,
   init_probs,
+  t_start = 1,
   epsilon = 1e-10,
   ih_cov = NULL,
   eh_cov = NULL,
@@ -910,6 +913,7 @@ run_model <- function(
     obs_model,
     data,
     init_probs,
+    t_start,
     epsilon,
     ih_cov,
     eh_cov
