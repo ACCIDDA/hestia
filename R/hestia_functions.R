@@ -565,8 +565,60 @@ get_transmission_details <- function(inf_model) {
       if (grepl("1-", mult_to_fit$mult_name[i])) {
         to_match <- strsplit(mult_to_fit$mult_name[i], "-")[[1]]
         to_match <- to_match[to_match != "1"]
-        matches <- mult_to_fit$param[mult_to_fit$mult_name %in% to_match]
+        matches <- unlist(mult_to_fit$param[
+          mult_to_fit$mult_name %in% to_match
+        ])
         mult_to_fit$param[i] <- list(-1 * matches)
+      }
+    }
+  }
+
+  # Check for competing transmission probabilities
+  compete <- numeric(length = length(states))
+  for (i in seq_along(states)) {
+    temp <- inf_model %>%
+      dplyr::filter(from == states[i])
+
+    if (nrow(temp) <= 1) {
+      # Does not appear as an origin multiple times
+      compete[i] <- 0
+    } else {
+      # Appears as an origin multiple times
+      temp <- temp %>%
+        dplyr::mutate(
+          both_na = ifelse(is.na(split_value) & is.na(split_name), 1, 0)
+        )
+      if (sum(temp$both_na == 1) > 0) {
+        # at least one undefined split
+        compete[i] <- 1
+      } else {
+        # No undefined splits
+        if (sum(is.na(temp$split_name)) == 0) {
+          # Only split names defined
+          if (length(grep("1-", temp$split_name)) == 1) {
+            # Only one "1-"
+            compete[i] <- 0
+          } else {
+            # Multiple "1-"
+            compete[i] <- 1
+          }
+        } else {
+          # Not only split names defined
+          if (sum(is.na(temp$split_value)) == 0) {
+            # Only values defined
+            if (sum(temp$split_value) == 1) {
+              # Values sum to 1
+              compete[i] <- 0
+            } else {
+              # Values doesn't sum to one
+              checkmate::assert_count(sum(temp$split_value))
+              compete[i] <- 1
+            }
+          } else {
+            # Values and names defined
+            compete[i] <- 1
+          }
+        }
       }
     }
   }
@@ -580,7 +632,8 @@ get_transmission_details <- function(inf_model) {
     inf_states = unique(
       unlist(trans_to_fit$source[is.na(trans_to_fit$rate_name)])
     ),
-    mult_inf_probs = inf_model$mult_inf_probs[1]
+    mult_inf_probs = inf_model$mult_inf_probs[1],
+    compete = compete
   )
 }
 
