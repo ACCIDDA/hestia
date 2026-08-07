@@ -829,13 +829,6 @@ make_stan_data <- function(
 #' @param eh_cov NULL for run without covariates, otherwise data frame with
 #'   extra-household covariates for each participant
 #' @param init initial conditions for MCMC chains
-#' @param threading control of within-chain threading via Stan's `reduce_sum`.
-#'   `TRUE` (default) splits the cores available to the process between running
-#'   chains in parallel and threading each chain (see [optimal_alloc()]); `FALSE`
-#'   runs each chain single-threaded; a positive integer sets that many threads
-#'   per chain explicitly. Chains always run in parallel across cores. Parallelism
-#'   is controlled here, not in [stan_options()]. See the "Parallel and threaded
-#'   fitting" vignette.
 #' @param save_llik whether to write the per-household log-likelihood
 #'   (`llik_final`) in the model's generated quantities, for use with
 #'   `loo`/`waic` (default `FALSE`). When `FALSE`, `llik_final` is length 0 and
@@ -870,7 +863,6 @@ make_stan_data <- function(
 #'           init_probs = c(1 - 2 * 1e-10, 1e-10, 1e-10))
 #' }
 #'
-#' @importFrom rstan sampling
 #' @export
 run_model <- function(
   inf_model,
@@ -881,7 +873,6 @@ run_model <- function(
   ih_cov = NULL,
   eh_cov = NULL,
   init = NULL,
-  threading = TRUE,
   save_llik = FALSE,
   save_states = FALSE,
   stan_opts = stan_options()
@@ -890,12 +881,6 @@ run_model <- function(
   check_models(inf_model, obs_model)
   check_run_data(data, obs_model)
   check_init_probs(init_probs)
-  # threading is TRUE/FALSE (auto/off) or a positive integer (threads per chain).
-  checkmate::assert(
-    checkmate::check_flag(threading),
-    checkmate::check_count(threading, positive = TRUE),
-    .var.name = "threading"
-  )
   checkmate::assert_flag(save_llik)
   checkmate::assert_flag(save_states)
   checkmate::assert_list(stan_opts, .var.name = "stan_opts")
@@ -966,38 +951,17 @@ run_model <- function(
     init <- rep(list(init), chains)
   }
 
-  model <- if (is_cov) stanmodels$hmm_cov else stanmodels$hmm
-
-  # Split the available cores between running chains in parallel and threading
-  # each chain's likelihood (reduce_sum). threading = FALSE forces one thread per
-  # chain; a positive integer sets the threads per chain explicitly; chains still
-  # run in parallel across cores either way.
-  alloc <- optimal_alloc(chains)
-  if (isFALSE(threading)) {
-    alloc$threads_per_chain <- 1L
-  } else if (is.numeric(threading)) {
-    alloc$threads_per_chain <- as.integer(threading)
-  }
-  # configure_threading() sets STAN_NUM_THREADS for rstan; restore it on exit so
-  # a fit does not leak its thread count into the rest of the session.
-  old_threads <- Sys.getenv("STAN_NUM_THREADS", unset = NA_character_)
-  on.exit(
-    if (is.na(old_threads)) {
-      Sys.unsetenv("STAN_NUM_THREADS")
-    } else {
-      Sys.setenv(STAN_NUM_THREADS = old_threads)
-    },
-    add = TRUE
+  model_name <- if (is_cov) "hmm_cov" else "hmm"
+  drop_pars <- if (save_states) NULL else "logalpha"
+  # `package` is left unset: fit_model() resolves the host package from the
+  # calling frame, which is hestia's namespace here.
+  stan_fit <- fit_model(
+    model_name,
+    dat_stan = dat_stan,
+    init = init,
+    stan_opts = stan_opts,
+    drop_pars = drop_pars
   )
-  stan_opts <- configure_threading(stan_opts, alloc)
-
-  # Build the rstan::sampling() call from the user's sampler options, then set
-  # the arguments run_model() owns (these overwrite any colliding entry).
-  args <- stan_opts
-  args$object <- model
-  args$data <- dat_stan
-  args$init <- init
-  stan_fit <- do.call(rstan::sampling, args)
 
   stan_out <- list(
     stan_fit = stan_fit,
@@ -1017,7 +981,7 @@ run_model <- function(
 #'   the stanfit, the stan input data, and covariate names
 #' @returns A `draws_array` object with chains for each model parameter
 #'
-#' @importFrom posterior as_draws_array variables subset_draws
+#' @importFrom posterior variables subset_draws
 #' @keywords internal
 rename_chains <- function(inf_model, model_output) {
   # Get parameter information
@@ -1034,10 +998,10 @@ rename_chains <- function(inf_model, model_output) {
     length(inf_details$inf_states)
   )
 
-  # Extract chains via rstan's own generic.
-  draws_full <- posterior::as_draws_array(
-    rstan::extract(model_output$stan_fit, permuted = FALSE)
-  )
+  # Extract chains. format = "draws" hands back a posterior draws_array with the
+  # chain structure intact, whichever backend produced the fit, so this needs no
+  # normalization step of its own.
+  draws_full <- backend_extract(model_output$stan_fit, format = "draws")
 
   # Get variable names and subset to parameters of interest
   var_names <- posterior::variables(draws_full)

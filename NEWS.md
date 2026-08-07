@@ -1,5 +1,8 @@
 # hestia 0.1.0
 
+* Stan fitting and draw extraction now use `flexstanr`. Configure automatic,
+  scheduler-aware within-chain threading with
+  `stan_options(threading = TRUE)`.
 * First release.
 * Fit Bayesian compartmental infection models from individual-level outcome
   data, using Stan via 'rstan'. Models are composed from an infection process
