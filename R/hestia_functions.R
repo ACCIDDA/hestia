@@ -953,13 +953,14 @@ run_model <- function(
 
   model_name <- if (is_cov) "hmm_cov" else "hmm"
   drop_pars <- if (save_states) NULL else "logalpha"
+  # `package` is left unset: fit_model() resolves the host package from the
+  # calling frame, which is hestia's namespace here.
   stan_fit <- fit_model(
     model_name,
     dat_stan = dat_stan,
     init = init,
     stan_opts = stan_opts,
-    drop_pars = drop_pars,
-    package = "hestia"
+    drop_pars = drop_pars
   )
 
   stan_out <- list(
