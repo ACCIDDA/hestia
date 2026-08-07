@@ -13,13 +13,10 @@
 <url><loc>https://accidda.github.io/hestia/reference/check_init_probs.html</loc></url>
 <url><loc>https://accidda.github.io/hestia/reference/check_models.html</loc></url>
 <url><loc>https://accidda.github.io/hestia/reference/check_observation.html</loc></url>
-<url><loc>https://accidda.github.io/hestia/reference/check_positive_int.html</loc></url>
 <url><loc>https://accidda.github.io/hestia/reference/check_rate_dots.html</loc></url>
 <url><loc>https://accidda.github.io/hestia/reference/check_run_data.html</loc></url>
-<url><loc>https://accidda.github.io/hestia/reference/check_seed.html</loc></url>
 <url><loc>https://accidda.github.io/hestia/reference/check_split.html</loc></url>
 <url><loc>https://accidda.github.io/hestia/reference/check_to_from.html</loc></url>
-<url><loc>https://accidda.github.io/hestia/reference/configure_threading.html</loc></url>
 <url><loc>https://accidda.github.io/hestia/reference/get_transmission_details.html</loc></url>
 <url><loc>https://accidda.github.io/hestia/reference/graph_connected.html</loc></url>
 <url><loc>https://accidda.github.io/hestia/reference/hestia-package.html</loc></url>
@@ -29,8 +26,8 @@
 <url><loc>https://accidda.github.io/hestia/reference/make_infection_model.html</loc></url>
 <url><loc>https://accidda.github.io/hestia/reference/make_observation_model.html</loc></url>
 <url><loc>https://accidda.github.io/hestia/reference/make_stan_data.html</loc></url>
-<url><loc>https://accidda.github.io/hestia/reference/optimal_alloc.html</loc></url>
 <url><loc>https://accidda.github.io/hestia/reference/progress.html</loc></url>
+<url><loc>https://accidda.github.io/hestia/reference/reexports.html</loc></url>
 <url><loc>https://accidda.github.io/hestia/reference/rename_chains.html</loc></url>
 <url><loc>https://accidda.github.io/hestia/reference/run_model.html</loc></url>
 <url><loc>https://accidda.github.io/hestia/reference/siir.html</loc></url>
@@ -40,7 +37,6 @@
 <url><loc>https://accidda.github.io/hestia/reference/sir_cov_res.html</loc></url>
 <url><loc>https://accidda.github.io/hestia/reference/sir_res.html</loc></url>
 <url><loc>https://accidda.github.io/hestia/reference/split_check.html</loc></url>
-<url><loc>https://accidda.github.io/hestia/reference/stan_options.html</loc></url>
 <url><loc>https://accidda.github.io/hestia/reference/to_from_check.html</loc></url>
 <url><loc>https://accidda.github.io/hestia/reference/transmit.html</loc></url>
 </urlset>

@@ -162,7 +162,7 @@ recovered and immune to infection (e.g. IgG antibody).</p>
 <span>  obs_model <span class="op">=</span> <span class="va">obs_process</span>,</span>
 <span>  data <span class="op">=</span> <span class="va">sir</span>,</span>
 <span>  init_probs <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span> <span class="op">-</span> <span class="fl">2</span> <span class="op">*</span> <span class="fl">1e-10</span>, <span class="fl">1e-10</span>, <span class="fl">1e-10</span><span class="op">)</span>,</span>
-<span>  stan_opts <span class="op">=</span> <span class="fu"><a href="../reference/stan_options.html">stan_options</a></span><span class="op">(</span>iter <span class="op">=</span> <span class="fl">1000</span><span class="op">)</span></span>
+<span>  stan_opts <span class="op">=</span> <span class="fu">stan_options</span><span class="op">(</span>iter <span class="op">=</span> <span class="fl">1000</span><span class="op">)</span></span>
 <span><span class="op">)</span></span></code></pre></div>
 <p>Now let’s look at the model results using the <code>posterior</code>
 package.</p>
@@ -206,7 +206,7 @@ risk by including the optional <code>ih_cov</code> and
 <span>  ih_cov <span class="op">=</span> <span class="va">sir_cov</span><span class="op">$</span><span class="va">covariates</span>,</span>
 <span>  eh_cov <span class="op">=</span> <span class="va">sir_cov</span><span class="op">$</span><span class="va">covariates</span>,</span>
 <span>  init_probs <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span> <span class="op">-</span> <span class="fl">2</span> <span class="op">*</span> <span class="fl">1e-10</span>, <span class="fl">1e-10</span>, <span class="fl">1e-10</span><span class="op">)</span>,</span>
-<span>  stan_opts <span class="op">=</span> <span class="fu"><a href="../reference/stan_options.html">stan_options</a></span><span class="op">(</span>iter <span class="op">=</span> <span class="fl">1000</span><span class="op">)</span></span>
+<span>  stan_opts <span class="op">=</span> <span class="fu">stan_options</span><span class="op">(</span>iter <span class="op">=</span> <span class="fl">1000</span><span class="op">)</span></span>
 <span><span class="op">)</span></span></code></pre></div>
 <p>Let’s take a look at the results once more.</p>
 <div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">

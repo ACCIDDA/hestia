@@ -76,201 +76,64 @@
     
     
 <p>Fitting a <code>hestia</code> model is the expensive part of most
-analyses. This article explains how <code>hestia</code> uses your
-available cores, and how to run it efficiently on a laptop and on a
-scheduled HPC cluster.</p>
+analyses. <code>hestia</code> fits through <a href="https://accidda.github.io/flexstanr/" class="external-link"><code>flexstanr</code></a>,
+which owns the parallelism: how cores are detected, how they are split
+between chains and threads, and how that behaves under an HPC scheduler
+are all <code>flexstanr</code> behavior and are documented once,
+there:</p>
+<ul>
+<li>
+<a href="https://accidda.github.io/flexstanr/articles/parallel-hpc.html" class="external-link">Parallel
+and threaded fitting</a> – the core-allocation rules, capping with
+<code>max_cores</code>, and the SLURM recipes (single node, and one
+chain per array task).</li>
+</ul>
+<p>This article covers only what is specific to <code>hestia</code>.</p>
 <div class="section level2">
-<h2 id="two-levels-of-parallelism">Two levels of parallelism<a class="anchor" aria-label="anchor" href="#two-levels-of-parallelism"></a>
+<h2 id="why-threading-helps-a-hestia-fit">Why threading helps a <code>hestia</code> fit<a class="anchor" aria-label="anchor" href="#why-threading-helps-a-hestia-fit"></a>
 </h2>
-<p>A <code>hestia</code> fit can use cores in two ways at once:</p>
-<ol style="list-style-type: decimal">
-<li>
-<strong>Across chains.</strong> The MCMC chains are independent, so
-they run in parallel with near-linear speedup and no coordination
-overhead.</li>
-<li>
-<strong>Within a chain (threading).</strong> The likelihood sums
-over households, which are conditionally independent, so each chain can
-split that sum across threads using Stan’s <code>reduce_sum</code>.</li>
-</ol>
-<p>Because chain-parallelism is “free” (no threading overhead) while
-within-chain threading scales sub-linearly, <code>hestia</code>
-<strong>fills chain-parallelism first and gives any leftover cores to
-threads</strong>. With <code>threading = TRUE</code> (the default) this
-split is chosen for you from the cores available:</p>
-<table class="table">
-<thead><tr class="header">
-<th align="center">chains</th>
-<th align="center">cores</th>
-<th align="center">chains in parallel</th>
-<th align="center">threads per chain</th>
-</tr></thead>
-<tbody>
-<tr class="odd">
-<td align="center">4</td>
-<td align="center">4</td>
-<td align="center">4</td>
-<td align="center">1 (no spare)</td>
-</tr>
-<tr class="even">
-<td align="center">4</td>
-<td align="center">8</td>
-<td align="center">4</td>
-<td align="center">2</td>
-</tr>
-<tr class="odd">
-<td align="center">4</td>
-<td align="center">16</td>
-<td align="center">4</td>
-<td align="center">4</td>
-</tr>
-<tr class="even">
-<td align="center">2</td>
-<td align="center">8</td>
-<td align="center">2</td>
-<td align="center">4</td>
-</tr>
-</tbody>
-</table>
-<p>So threading only “switches on” when you have more cores than chains
-— otherwise every core is spent running chains.</p>
+<p>A fit can use cores in two ways at once: across chains, which are
+independent and so scale near-linearly, and within a chain. The
+within-chain half is the model-specific part. <code>hestia</code>’s
+likelihood sums over households, which are conditionally independent
+given the parameters, so that sum splits across threads with Stan’s
+<code>reduce_sum</code>. Both <code>hmm</code> and <code>hmm_cov</code>
+are compiled for threading, so a <code>hestia</code> fit can always use
+within-chain threads when there are spare cores to give them.</p>
+<p><code>flexstanr</code> fills chain-parallelism first and gives any
+leftover cores to threads, so threading only switches on when you have
+more cores than chains.</p>
+</div>
+<div class="section level2">
+<h2 id="turning-it-on">Turning it on<a class="anchor" aria-label="anchor" href="#turning-it-on"></a>
+</h2>
+<p>Threading is off unless you ask for it, and you ask for it through
+the same <code>stan_options()</code> you already pass to
+<code><a href="../reference/run_model.html">run_model()</a></code>:</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Default: threading = TRUE, cores detected automatically</span></span>
+<code class="sourceCode R"><span><span class="co"># detect the cores this process is allowed to use and split them automatically</span></span>
 <span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/run_model.html">run_model</a></span><span class="op">(</span></span>
 <span>  inf_model  <span class="op">=</span> <span class="va">inf_process</span>,</span>
 <span>  obs_model  <span class="op">=</span> <span class="va">obs_process</span>,</span>
 <span>  data       <span class="op">=</span> <span class="va">sir</span>,</span>
 <span>  init_probs <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span> <span class="op">-</span> <span class="fl">2</span> <span class="op">*</span> <span class="fl">1e-10</span>, <span class="fl">1e-10</span>, <span class="fl">1e-10</span><span class="op">)</span>,</span>
-<span>  stan_opts  <span class="op">=</span> <span class="fu"><a href="../reference/stan_options.html">stan_options</a></span><span class="op">(</span>iter <span class="op">=</span> <span class="fl">1000</span><span class="op">)</span></span>
-<span><span class="op">)</span></span></code></pre></div>
-</div>
-<div class="section level2">
-<h2 id="how-hestia-decides-how-many-cores-to-use">How <code>hestia</code> decides how many cores to use<a class="anchor" aria-label="anchor" href="#how-hestia-decides-how-many-cores-to-use"></a>
-</h2>
-<p>When you don’t specify cores, <code>hestia</code> asks <a href="https://parallelly.futureverse.org/" class="external-link"><code>parallelly::availableCores()</code></a>
-for the number of cores the <em>process is allowed to use</em>.
-Crucially, this is <strong>not</strong>
-<code><a href="https://rdrr.io/r/parallel/detectCores.html" class="external-link">parallel::detectCores()</a></code>: it respects</p>
-<ul>
-<li>your HPC scheduler’s allocation (<code>SLURM_CPUS_PER_TASK</code>,
-PBS, SGE, LSF),</li>
-<li>cgroup CPU quotas (containers, <code>cpuset</code>),</li>
-<li>
-<code>options(mc.cores = ...)</code>,</li>
-</ul>
-<p>and returns 2 under <code>R CMD check</code>. This is what makes the
-automatic split safe on a shared cluster (see below).</p>
-<p>You can always take control explicitly — an explicit core count is
-used exactly as given.</p>
-</div>
-<div class="section level2">
-<h2 id="on-a-laptop-or-workstation">On a laptop or workstation<a class="anchor" aria-label="anchor" href="#on-a-laptop-or-workstation"></a>
-</h2>
-<p>Nothing to do: the default detects your cores and splits them. To cap
-usage (for example, to keep some cores free), set
-<code>mc.cores</code>:</p>
-<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">options</a></span><span class="op">(</span>mc.cores <span class="op">=</span> <span class="fl">6</span><span class="op">)</span></span>
-<span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/run_model.html">run_model</a></span><span class="op">(</span><span class="va">...</span>, stan_opts <span class="op">=</span> <span class="fu"><a href="../reference/stan_options.html">stan_options</a></span><span class="op">(</span>chains <span class="op">=</span> <span class="fl">4</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="co"># -&gt; 4 chains in parallel, 1 thread each (6 %/% 4 = 1); 2 cores left free</span></span></code></pre></div>
-</div>
-<div class="section level2">
-<h2 id="on-an-hpc-cluster">On an HPC cluster<a class="anchor" aria-label="anchor" href="#on-an-hpc-cluster"></a>
-</h2>
-<div class="section level3">
-<h3 id="the-trap-to-avoid">The trap to avoid<a class="anchor" aria-label="anchor" href="#the-trap-to-avoid"></a>
-</h3>
-<p><code><a href="https://rdrr.io/r/parallel/detectCores.html" class="external-link">parallel::detectCores()</a></code> reports <strong>every core on
-the compute node</strong> — often 64, 128, or more — regardless of how
-many your job was actually allocated. If a fit sized itself from that,
-it would launch dozens of threads inside a job pinned to a handful of
-cores, and the scheduler’s cgroup would throttle it to a crawl (or you
-would trample other users sharing the node). <code>hestia</code> avoids
-this by using <code><a href="https://parallelly.futureverse.org/reference/availableCores.html" class="external-link">parallelly::availableCores()</a></code>, which reads
-your <em>allocation</em>.</p>
-</div>
-<div class="section level3">
-<h3 id="single-node-let-hestia-split-your-allocation">Single node: let <code>hestia</code> split your allocation<a class="anchor" aria-label="anchor" href="#single-node-let-hestia-split-your-allocation"></a>
-</h3>
-<p>Request one task with several CPUs, and let the automatic split
-divide them between chains and threads. For 4 chains with 2 threads each
-(8 cores):</p>
-<div class="sourceCode" id="cb3"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" tabindex="-1"></a><span class="co">#!/bin/bash</span></span>
-<span id="cb3-2"><a href="#cb3-2" tabindex="-1"></a><span class="co">#SBATCH --job-name=hestia-fit</span></span>
-<span id="cb3-3"><a href="#cb3-3" tabindex="-1"></a><span class="co">#SBATCH --nodes=1</span></span>
-<span id="cb3-4"><a href="#cb3-4" tabindex="-1"></a><span class="co">#SBATCH --ntasks=1</span></span>
-<span id="cb3-5"><a href="#cb3-5" tabindex="-1"></a><span class="co">#SBATCH --cpus-per-task=8      # availableCores() will report 8</span></span>
-<span id="cb3-6"><a href="#cb3-6" tabindex="-1"></a><span class="co">#SBATCH --mem=16G</span></span>
-<span id="cb3-7"><a href="#cb3-7" tabindex="-1"></a><span class="co">#SBATCH --time=04:00:00</span></span>
-<span id="cb3-8"><a href="#cb3-8" tabindex="-1"></a></span>
-<span id="cb3-9"><a href="#cb3-9" tabindex="-1"></a><span class="ex">Rscript</span> fit.R</span></code></pre></div>
-<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># fit.R</span></span>
-<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va">hestia</span><span class="op">)</span></span>
-<span></span>
-<span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/run_model.html">run_model</a></span><span class="op">(</span></span>
-<span>  inf_model  <span class="op">=</span> <span class="va">inf_process</span>,</span>
-<span>  obs_model  <span class="op">=</span> <span class="va">obs_process</span>,</span>
-<span>  data       <span class="op">=</span> <span class="va">my_data</span>,</span>
-<span>  init_probs <span class="op">=</span> <span class="va">init_probs</span>,</span>
-<span>  stan_opts  <span class="op">=</span> <span class="fu"><a href="../reference/stan_options.html">stan_options</a></span><span class="op">(</span>chains <span class="op">=</span> <span class="fl">4</span>, iter <span class="op">=</span> <span class="fl">2000</span><span class="op">)</span></span>
+<span>  stan_opts  <span class="op">=</span> <span class="fu">stan_options</span><span class="op">(</span>chains <span class="op">=</span> <span class="fl">4</span>, iter <span class="op">=</span> <span class="fl">1000</span>, threading <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
 <span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/readRDS.html" class="external-link">saveRDS</a></span><span class="op">(</span><span class="va">fit</span>, <span class="st">"fit.rds"</span><span class="op">)</span></span></code></pre></div>
-<p>No core arithmetic in your script: <code>availableCores()</code>
-picks up <code>SLURM_CPUS_PER_TASK = 8</code>, and <code>hestia</code>
-runs 4 chains × 2 threads.</p>
-</div>
-<div class="section level3">
-<h3 id="many-chains-across-nodes-one-chain-per-array-task">Many chains across nodes: one chain per array task<a class="anchor" aria-label="anchor" href="#many-chains-across-nodes-one-chain-per-array-task"></a>
-</h3>
-<p>Chain-parallelism and threads are <strong>shared-memory</strong>:
-they cannot span nodes. To scale beyond a single node, run <strong>one
-chain per job</strong> with a SLURM array, give each job all its cores
-for threading, then combine the single-chain fits afterwards.</p>
-<div class="sourceCode" id="cb5"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" tabindex="-1"></a><span class="co">#SBATCH --array=1-4            # one task per chain</span></span>
-<span id="cb5-2"><a href="#cb5-2" tabindex="-1"></a><span class="co">#SBATCH --nodes=1</span></span>
-<span id="cb5-3"><a href="#cb5-3" tabindex="-1"></a><span class="co">#SBATCH --cpus-per-task=8      # all 8 cores -&gt; threads for this one chain</span></span></code></pre></div>
-<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># each array task fits a single chain with a distinct seed</span></span>
+<span></span>
+<span><span class="co"># cap the pool, for example to keep some cores free</span></span>
 <span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/run_model.html">run_model</a></span><span class="op">(</span></span>
 <span>  <span class="va">...</span>,</span>
-<span>  stan_opts <span class="op">=</span> <span class="fu"><a href="../reference/stan_options.html">stan_options</a></span><span class="op">(</span>chains <span class="op">=</span> <span class="fl">1</span>, seed <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Sys.getenv.html" class="external-link">Sys.getenv</a></span><span class="op">(</span><span class="st">"SLURM_ARRAY_TASK_ID"</span><span class="op">)</span><span class="op">)</span></span>
+<span>  stan_opts <span class="op">=</span> <span class="fu">stan_options</span><span class="op">(</span>chains <span class="op">=</span> <span class="fl">4</span>, threading <span class="op">=</span> <span class="cn">TRUE</span>, max_cores <span class="op">=</span> <span class="fl">6</span><span class="op">)</span></span>
 <span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/readRDS.html" class="external-link">saveRDS</a></span><span class="op">(</span><span class="va">fit</span>, <span class="fu"><a href="https://rdrr.io/r/base/sprintf.html" class="external-link">sprintf</a></span><span class="op">(</span><span class="st">"chain-%s.rds"</span>, <span class="fu"><a href="https://rdrr.io/r/base/Sys.getenv.html" class="external-link">Sys.getenv</a></span><span class="op">(</span><span class="st">"SLURM_ARRAY_TASK_ID"</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
-</div>
-</div>
-<div class="section level2">
-<h2 id="choosing-the-thread-count-yourself">Choosing the thread count yourself<a class="anchor" aria-label="anchor" href="#choosing-the-thread-count-yourself"></a>
-</h2>
-<p><code>threading</code> accepts three forms:</p>
-<ul>
-<li>
-<code>TRUE</code> (default) — auto-split the available cores between
-chains and threads.</li>
-<li>
-<code>FALSE</code> — one thread per chain (chains still run in
-parallel). Useful for debugging or exact reproducibility
-comparisons.</li>
-<li>a <strong>positive integer</strong> — that many threads per chain,
-explicitly.</li>
-</ul>
-<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Exactly 2 threads per chain, whatever the machine reports</span></span>
-<span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/run_model.html">run_model</a></span><span class="op">(</span><span class="va">...</span>, threading <span class="op">=</span> <span class="fl">2</span><span class="op">)</span></span>
 <span></span>
-<span><span class="co"># Single-threaded</span></span>
-<span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/run_model.html">run_model</a></span><span class="op">(</span><span class="va">...</span>, threading <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></code></pre></div>
-<p>Parallelism lives on <code><a href="../reference/run_model.html">run_model()</a></code>, not in
-<code><a href="../reference/stan_options.html">stan_options()</a></code>: <code>cores</code>,
-<code>parallel_chains</code>, and <code>threads_per_chain</code> are
-rejected there, because <code><a href="../reference/run_model.html">run_model()</a></code> owns the split and
-translates it to whichever backend is in use.
-<code><a href="../reference/stan_options.html">stan_options()</a></code> is for how the sampler explores
-(<code>iter</code>, <code>warmup</code>, <code>seed</code>,
-<code>control = list(adapt_delta = ...)</code>, …). Note that
-<code>threading = n</code> on a machine with fewer than <code>n</code>
-free cores per chain will oversubscribe — that is your explicit choice,
-and <code>hestia</code> honours it rather than clamping.</p>
+<span><span class="co"># single-threaded (the default): manage backend parallelism yourself</span></span>
+<span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/run_model.html">run_model</a></span><span class="op">(</span><span class="va">...</span>, stan_opts <span class="op">=</span> <span class="fu">stan_options</span><span class="op">(</span>threading <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+<p>The same <code>stan_opts</code> works on a laptop and inside a
+scheduled job: <code>flexstanr</code> sizes the fit from the allocation
+the process actually has, not from the machine’s total core count. See
+the <a href="https://accidda.github.io/flexstanr/articles/parallel-hpc.html" class="external-link">flexstanr
+article</a> for the allocation rules and job-script templates,
+substituting <code><a href="../reference/run_model.html">run_model()</a></code> for the fit call shown there.</p>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside>

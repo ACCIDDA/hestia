@@ -45,7 +45,8 @@
 
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.1.0" id="hestia-010">hestia 0.1.0<a class="anchor" aria-label="anchor" href="#hestia-010"></a></h2>
-<ul><li>First release.</li>
+<ul><li>Stan fitting and draw extraction now use <code>flexstanr</code>. Configure automatic, scheduler-aware within-chain threading with <code>stan_options(threading = TRUE)</code>.</li>
+<li>First release.</li>
 <li>Fit Bayesian compartmental infection models from individual-level outcome data, using Stan via ‘rstan’. Models are composed from an infection process and an observation process and fit with a single call.</li>
 <li>Infection-process building blocks: <code><a href="../reference/transmit.html">transmit()</a></code> and <code><a href="../reference/progress.html">progress()</a></code> define transitions, assembled with <code><a href="../reference/make_infection_model.html">make_infection_model()</a></code>. Susceptible-infected- recovered (SIR), split symptomatic/asymptomatic (SIIR), and similar multi-compartment structures are supported.</li>
 <li>

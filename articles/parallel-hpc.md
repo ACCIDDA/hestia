@@ -1,182 +1,65 @@
 # Parallel and threaded fitting (including HPC)
 
-Fitting a `hestia` model is the expensive part of most analyses. This
-article explains how `hestia` uses your available cores, and how to run
-it efficiently on a laptop and on a scheduled HPC cluster.
+Fitting a `hestia` model is the expensive part of most analyses.
+`hestia` fits through
+[`flexstanr`](https://accidda.github.io/flexstanr/), which owns the
+parallelism: how cores are detected, how they are split between chains
+and threads, and how that behaves under an HPC scheduler are all
+`flexstanr` behavior and are documented once, there:
 
-## Two levels of parallelism
+- [Parallel and threaded
+  fitting](https://accidda.github.io/flexstanr/articles/parallel-hpc.html)
+  – the core-allocation rules, capping with `max_cores`, and the SLURM
+  recipes (single node, and one chain per array task).
 
-A `hestia` fit can use cores in two ways at once:
+This article covers only what is specific to `hestia`.
 
-1.  **Across chains.** The MCMC chains are independent, so they run in
-    parallel with near-linear speedup and no coordination overhead.
-2.  **Within a chain (threading).** The likelihood sums over households,
-    which are conditionally independent, so each chain can split that
-    sum across threads using Stan’s `reduce_sum`.
+## Why threading helps a `hestia` fit
 
-Because chain-parallelism is “free” (no threading overhead) while
-within-chain threading scales sub-linearly, `hestia` **fills
-chain-parallelism first and gives any leftover cores to threads**. With
-`threading = TRUE` (the default) this split is chosen for you from the
-cores available:
+A fit can use cores in two ways at once: across chains, which are
+independent and so scale near-linearly, and within a chain. The
+within-chain half is the model-specific part. `hestia`’s likelihood sums
+over households, which are conditionally independent given the
+parameters, so that sum splits across threads with Stan’s `reduce_sum`.
+Both `hmm` and `hmm_cov` are compiled for threading, so a `hestia` fit
+can always use within-chain threads when there are spare cores to give
+them.
 
-| chains | cores | chains in parallel | threads per chain |
-|:------:|:-----:|:------------------:|:-----------------:|
-|   4    |   4   |         4          |   1 (no spare)    |
-|   4    |   8   |         4          |         2         |
-|   4    |  16   |         4          |         4         |
-|   2    |   8   |         2          |         4         |
+`flexstanr` fills chain-parallelism first and gives any leftover cores
+to threads, so threading only switches on when you have more cores than
+chains.
 
-So threading only “switches on” when you have more cores than chains —
-otherwise every core is spent running chains.
+## Turning it on
+
+Threading is off unless you ask for it, and you ask for it through the
+same `stan_options()` you already pass to
+[`run_model()`](https://accidda.github.io/hestia/reference/run_model.md):
 
 ``` r
 
-# Default: threading = TRUE, cores detected automatically
+# detect the cores this process is allowed to use and split them automatically
 fit <- run_model(
   inf_model  = inf_process,
   obs_model  = obs_process,
   data       = sir,
   init_probs = c(1 - 2 * 1e-10, 1e-10, 1e-10),
-  stan_opts  = stan_options(iter = 1000)
+  stan_opts  = stan_options(chains = 4, iter = 1000, threading = TRUE)
 )
-```
 
-## How `hestia` decides how many cores to use
-
-When you don’t specify cores, `hestia` asks
-[`parallelly::availableCores()`](https://parallelly.futureverse.org/)
-for the number of cores the *process is allowed to use*. Crucially, this
-is **not**
-[`parallel::detectCores()`](https://rdrr.io/r/parallel/detectCores.html):
-it respects
-
-- your HPC scheduler’s allocation (`SLURM_CPUS_PER_TASK`, PBS, SGE,
-  LSF),
-- cgroup CPU quotas (containers, `cpuset`),
-- `options(mc.cores = ...)`,
-
-and returns 2 under `R CMD check`. This is what makes the automatic
-split safe on a shared cluster (see below).
-
-You can always take control explicitly — an explicit core count is used
-exactly as given.
-
-## On a laptop or workstation
-
-Nothing to do: the default detects your cores and splits them. To cap
-usage (for example, to keep some cores free), set `mc.cores`:
-
-``` r
-
-options(mc.cores = 6)
-fit <- run_model(..., stan_opts = stan_options(chains = 4))
-# -> 4 chains in parallel, 1 thread each (6 %/% 4 = 1); 2 cores left free
-```
-
-## On an HPC cluster
-
-### The trap to avoid
-
-[`parallel::detectCores()`](https://rdrr.io/r/parallel/detectCores.html)
-reports **every core on the compute node** — often 64, 128, or more —
-regardless of how many your job was actually allocated. If a fit sized
-itself from that, it would launch dozens of threads inside a job pinned
-to a handful of cores, and the scheduler’s cgroup would throttle it to a
-crawl (or you would trample other users sharing the node). `hestia`
-avoids this by using
-[`parallelly::availableCores()`](https://parallelly.futureverse.org/reference/availableCores.html),
-which reads your *allocation*.
-
-### Single node: let `hestia` split your allocation
-
-Request one task with several CPUs, and let the automatic split divide
-them between chains and threads. For 4 chains with 2 threads each (8
-cores):
-
-``` bash
-#!/bin/bash
-#SBATCH --job-name=hestia-fit
-#SBATCH --nodes=1
-#SBATCH --ntasks=1
-#SBATCH --cpus-per-task=8      # availableCores() will report 8
-#SBATCH --mem=16G
-#SBATCH --time=04:00:00
-
-Rscript fit.R
-```
-
-``` r
-
-# fit.R
-library(hestia)
-
-fit <- run_model(
-  inf_model  = inf_process,
-  obs_model  = obs_process,
-  data       = my_data,
-  init_probs = init_probs,
-  stan_opts  = stan_options(chains = 4, iter = 2000)
-)
-saveRDS(fit, "fit.rds")
-```
-
-No core arithmetic in your script: `availableCores()` picks up
-`SLURM_CPUS_PER_TASK = 8`, and `hestia` runs 4 chains × 2 threads.
-
-### Many chains across nodes: one chain per array task
-
-Chain-parallelism and threads are **shared-memory**: they cannot span
-nodes. To scale beyond a single node, run **one chain per job** with a
-SLURM array, give each job all its cores for threading, then combine the
-single-chain fits afterwards.
-
-``` bash
-#SBATCH --array=1-4            # one task per chain
-#SBATCH --nodes=1
-#SBATCH --cpus-per-task=8      # all 8 cores -> threads for this one chain
-```
-
-``` r
-
-# each array task fits a single chain with a distinct seed
+# cap the pool, for example to keep some cores free
 fit <- run_model(
   ...,
-  stan_opts = stan_options(chains = 1, seed = Sys.getenv("SLURM_ARRAY_TASK_ID"))
+  stan_opts = stan_options(chains = 4, threading = TRUE, max_cores = 6)
 )
-saveRDS(fit, sprintf("chain-%s.rds", Sys.getenv("SLURM_ARRAY_TASK_ID")))
+
+# single-threaded (the default): manage backend parallelism yourself
+fit <- run_model(..., stan_opts = stan_options(threading = FALSE))
 ```
 
-## Choosing the thread count yourself
-
-`threading` accepts three forms:
-
-- `TRUE` (default) — auto-split the available cores between chains and
-  threads.
-- `FALSE` — one thread per chain (chains still run in parallel). Useful
-  for debugging or exact reproducibility comparisons.
-- a **positive integer** — that many threads per chain, explicitly.
-
-``` r
-
-# Exactly 2 threads per chain, whatever the machine reports
-fit <- run_model(..., threading = 2)
-
-# Single-threaded
-fit <- run_model(..., threading = FALSE)
-```
-
-Parallelism lives on
-[`run_model()`](https://accidda.github.io/hestia/reference/run_model.md),
-not in
-[`stan_options()`](https://accidda.github.io/hestia/reference/stan_options.md):
-`cores`, `parallel_chains`, and `threads_per_chain` are rejected there,
-because
+The same `stan_opts` works on a laptop and inside a scheduled job:
+`flexstanr` sizes the fit from the allocation the process actually has,
+not from the machine’s total core count. See the [flexstanr
+article](https://accidda.github.io/flexstanr/articles/parallel-hpc.html)
+for the allocation rules and job-script templates, substituting
 [`run_model()`](https://accidda.github.io/hestia/reference/run_model.md)
-owns the split and translates it to whichever backend is in use.
-[`stan_options()`](https://accidda.github.io/hestia/reference/stan_options.md)
-is for how the sampler explores (`iter`, `warmup`, `seed`,
-`control = list(adapt_delta = ...)`, …). Note that `threading = n` on a
-machine with fewer than `n` free cores per chain will oversubscribe —
-that is your explicit choice, and `hestia` honours it rather than
-clamping.
+for the fit call shown there.
