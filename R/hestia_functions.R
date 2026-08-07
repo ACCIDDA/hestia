@@ -981,7 +981,7 @@ run_model <- function(
 #'   the stanfit, the stan input data, and covariate names
 #' @returns A `draws_array` object with chains for each model parameter
 #'
-#' @importFrom posterior as_draws_array variables subset_draws
+#' @importFrom posterior variables subset_draws
 #' @keywords internal
 rename_chains <- function(inf_model, model_output) {
   # Get parameter information
@@ -998,10 +998,10 @@ rename_chains <- function(inf_model, model_output) {
     length(inf_details$inf_states)
   )
 
-  # Extract chains
-  draws_full <- posterior::as_draws_array(
-    backend_draws_array(model_output$stan_fit)
-  )
+  # Extract chains. format = "draws" hands back a posterior draws_array with the
+  # chain structure intact, whichever backend produced the fit, so this needs no
+  # normalization step of its own.
+  draws_full <- backend_extract(model_output$stan_fit, format = "draws")
 
   # Get variable names and subset to parameters of interest
   var_names <- posterior::variables(draws_full)
