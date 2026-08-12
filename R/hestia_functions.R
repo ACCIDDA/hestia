@@ -313,7 +313,7 @@ transmit <- function(from, to, source = NA, split = NA) {
 #'  - "split_name", name of split parameter if fitting
 #'  - "split_value", numeric value of split if not fitting
 #'  - "source", names of compartment(s) that are the source of new infections
-#'  - "mult_inf_probs", a logical indicator for whether infectious compartments
+#'  - "mult_ih_inf_probs", a logical indicator for whether infectious compartments
 #'  have separate (`true`) or shared (`FALSE`) intra-household infection
 #'  probabilities
 #'
@@ -337,11 +337,16 @@ transmit <- function(from, to, source = NA, split = NA) {
 #' @importFrom dplyr bind_rows
 #' @importFrom checkmate assert_data_frame assert_flag
 #' @export
-make_infection_model <- function(..., mult_ih_inf_probs = FALSE) {
+make_infection_model <- function(
+  ...,
+  mult_ih_inf_probs = FALSE,
+  mult_eh_inf_probs = FALSE
+) {
   .dots <- list(...)
 
   # Entry-level input validation
-  checkmate::assert_flag(mult_inf_probs, .var.name = "mult_inf_probs")
+  checkmate::assert_flag(mult_ih_inf_probs, .var.name = "mult_ih_inf_probs")
+  checkmate::assert_flag(mult_eh_inf_probs, .var.name = "mult_eh_inf_probs")
   if (length(.dots) == 0) {
     stop(
       "At least one transmit() or progress() transition must be supplied."
@@ -357,6 +362,7 @@ make_infection_model <- function(..., mult_ih_inf_probs = FALSE) {
 
   out <- dplyr::bind_rows(.dots)
   out$mult_ih_inf_probs <- mult_ih_inf_probs
+  out$mult_eh_inf_probs <- mult_eh_inf_probs
 
   # Check that there is at least one transmit input
   if (!("source" %in% names(out))) {
@@ -633,6 +639,7 @@ get_transmission_details <- function(inf_model) {
       unlist(trans_to_fit$source[is.na(trans_to_fit$rate_name)])
     ),
     mult_ih_inf_probs = inf_model$mult_ih_inf_probs[1],
+    mult_eh_inf_probs = inf_model$mult_eh_inf_probs[1],
     compete = compete
   )
 }
@@ -827,6 +834,11 @@ make_stan_data <- function(
     epsilon = epsilon,
     n_ih_inf_prob = ifelse(
       inf_details$mult_ih_inf_probs,
+      length(inf_details$inf_states),
+      1
+    ),
+    n_eh_inf_prob = ifelse(
+      inf_details$mult_eh_inf_probs,
       length(inf_details$inf_states),
       1
     )
@@ -1098,6 +1110,11 @@ rename_chains <- function(inf_model, model_output, save_llik, save_states) {
     1,
     length(inf_details$inf_states)
   )
+  n_eh <- ifelse(
+    inf_details$mult_eh_inf_probs == FALSE,
+    1,
+    length(inf_details$inf_states)
+  )
 
   # Extract chains via rstan's own generic.
   draws_full <- posterior::as_draws_array(
@@ -1143,7 +1160,13 @@ rename_chains <- function(inf_model, model_output, save_llik, save_states) {
     ih_names <- paste0("ih_prob_", inf_details$states[inf_details$inf_states])
   }
 
-  var_names_new <- c("eh_prob", ih_names, trans_names, mult_names)
+  if (n_eh == 1) {
+    ih_names <- "eh_prob"
+  } else {
+    ih_names <- paste0("eh_prob_", inf_details$states[inf_details$inf_states])
+  }
+
+  var_names_new <- c(eh_names, ih_names, trans_names, mult_names)
 
   if (length(grep("beta_", var_names)) > 0) {
     var_names_new <- c(
