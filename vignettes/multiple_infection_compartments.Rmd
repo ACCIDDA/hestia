@@ -52,7 +52,7 @@ inf_process <- make_infection_model(
            split = "phi"),
   progress(from = "Is", to = "R", gamma_s = NA),
   progress(from = "Ia", to = "R", gamma_a = NA),
-  mult_inf_probs = TRUE)
+  mult_ih_inf_probs = TRUE)
 
 
 ```

@@ -301,8 +301,8 @@ transmit <- function(from, to, source = NA, split = NA) {
 #' @title Build Infection Process Model
 #'
 #' @param ... a series of \link{progress} or \link{transmit} function calls
-#' @param mult_inf_probs If FALSE then all infection probabilities are shared
-#' across infectious compartments
+#' @param mult_ih_inf_probs If FALSE then all intra-household infection
+#' probabilities are shared across infectious compartments
 #' @returns A data frame with a row for each unique transition in the infection
 #' process model and the following columns:
 #'  - "from", the name of the origin compartment
@@ -332,12 +332,12 @@ transmit <- function(from, to, source = NA, split = NA) {
 #'            split = "phi"),
 #'   progress(from = "I_s", to = "R", gamma_s = NA),
 #'   progress(from = "I_a", to = "R", gamma_a = NA),
-#'   mult_inf_probs = TRUE)
+#'   mult_ih_inf_probs = TRUE)
 #'
 #' @importFrom dplyr bind_rows
 #' @importFrom checkmate assert_data_frame assert_flag
 #' @export
-make_infection_model <- function(..., mult_inf_probs = FALSE) {
+make_infection_model <- function(..., mult_ih_inf_probs = FALSE) {
   .dots <- list(...)
 
   # Entry-level input validation
@@ -356,7 +356,7 @@ make_infection_model <- function(..., mult_inf_probs = FALSE) {
   }
 
   out <- dplyr::bind_rows(.dots)
-  out$mult_inf_probs <- mult_inf_probs
+  out$mult_ih_inf_probs <- mult_ih_inf_probs
 
   # Check that there is at least one transmit input
   if (!("source" %in% names(out))) {
@@ -434,7 +434,7 @@ graph_connected <- function(graph) {
 #'  the model, with parameter indexing details if the split is being fit
 #'  - "inf_states", numeric values corresponding to the indices in "states"
 #'  which are the infectious states
-#'  - "mult_inf_probs", indicator for whether infectious states have shared or
+#'  - "mult_ih_inf_probs", indicator for whether infectious states have shared or
 #'  separate inta-household infection probabilities. If FALSE then all infection
 #'  probabilities are shared across infectious compartments.
 #'
@@ -448,7 +448,7 @@ graph_connected <- function(graph) {
 #'            split = "phi"),
 #'   progress(from = "I_s", to = "R", gamma_s = NA),
 #'   progress(from = "I_a", to = "R", gamma_a = NA),
-#'   mult_inf_probs = TRUE)
+#'   mult_ih_inf_probs = TRUE)
 #'
 #' get_transmission_details(inf_model)
 #'
@@ -632,7 +632,7 @@ get_transmission_details <- function(inf_model) {
     inf_states = unique(
       unlist(trans_to_fit$source[is.na(trans_to_fit$rate_name)])
     ),
-    mult_inf_probs = inf_model$mult_inf_probs[1],
+    mult_ih_inf_probs = inf_model$mult_ih_inf_probs[1],
     compete = compete
   )
 }
@@ -803,6 +803,7 @@ make_stan_data <- function(
     transition_multiplier = inf_details$mult_matrix,
     n_mult_fit = nrow(mult_info),
     n_mult_params = length(unique(abs(unlist(mult_info$param)))),
+    compete = inf_details$compete,
     mult_param_index = unlist(mult_info$param),
     mult_index = mult_info |> dplyr::select(mult_row, mult_col),
     n_params = length(unique(
@@ -824,8 +825,8 @@ make_stan_data <- function(
     obs_prob = obs_array,
     init_probs = init_probs,
     epsilon = epsilon,
-    n_inf_prob = ifelse(
-      inf_details$mult_inf_probs,
+    n_ih_inf_prob = ifelse(
+      inf_details$mult_ih_inf_probs,
       length(inf_details$inf_states),
       1
     )
@@ -1093,7 +1094,7 @@ rename_chains <- function(inf_model, model_output, save_llik, save_states) {
     inf_details$trans_to_fit$param >= 1
   ])
   n_ih <- ifelse(
-    inf_details$mult_inf_probs == FALSE,
+    inf_details$mult_ih_inf_probs == FALSE,
     1,
     length(inf_details$inf_states)
   )

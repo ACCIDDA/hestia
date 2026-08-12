@@ -79,6 +79,7 @@ functions {
                      array[,] int trans_index,
                      array[,] int source_states,
                      int n_mult_fit,
+                     array[] int compete,
                      array[] int mult_param_index,
                      array[,] int mult_index,
                      matrix trans,
@@ -243,6 +244,26 @@ functions {
         trans_temp = replace_zeroes(trans_temp, epsilon);
         trans_temp = normalize_cols(trans_temp);
 
+        // If competing transitions adjust
+        if(sum(compete) > 0) {
+          for(i in 1:n_states) {
+            if(compete[i] == 1) {
+              real total;
+              vector[n_states] partition;
+              vector[n_states] new_probs;
+              
+              total = 1-(prod(rep_vector(1, n_states) - trans_temp[,i]))/(1-trans_temp[i,i]);
+              partition = trans_temp[,i]/(sum(trans_temp[,i])-trans_temp[i,i]);
+              partition[i] = 1;
+              new_probs = total*partition;
+              new_probs[i] = 1-total;
+              trans_temp[,i] = new_probs;
+              
+            }
+          }
+        }
+        
+
         // Compute the probability of each epidemiological state
         logalpha[ref, tt] = log(trans_temp*exp(logalpha_temp));
         for(k in 1:n_obs_type) {
@@ -292,7 +313,8 @@ functions {
                        array[] int param_index,
                        array[,] int trans_index, 
                        array[,] int source_states,
-                       int n_mult_fit, 
+                       int n_mult_fit,
+                       array[] int compete,
                        array[] int mult_param_index,
                        array[,] int mult_index,
                        matrix trans, 
@@ -312,8 +334,8 @@ functions {
       hh_logalpha(h, hh_size, n_obs_type, n_states, y, part_id, t_day,
                   obs_per_hh, hh_start_ind, hh_end_ind, hh_tmin, hh_tmax,
                   inf_states, n_inf_prob, n_trans_fit, param_index, trans_index,
-                  source_states, n_mult_fit, mult_param_index, mult_index,
-                  trans, transition_multiplier, params, mult_params,
+                  source_states, n_mult_fit, compete, mult_param_index, 
+                  mult_index, trans, transition_multiplier, params, mult_params,
                   ih_prob, eh_prob, obs_prob, init_probs, epsilon);
     llik_sum += hh_llik(logalpha, hh_size[h], n_states, hh_tmax[h]);
   }
@@ -336,6 +358,7 @@ data {
   array[n_trans_fit, 2] int trans_index; // row/col indices of transition matrix corresponding to each parameter to be fit
   array[n_trans_fit, n_states] int source_states; // states that are the source of infecetion of the transition (0 if non-infection transition)
   int n_params; // number of additional (non-infection) parameters to fit
+  array[n_states] int<lower=0, upper=1> compete; // competing transition indicator
 
   // Multipliers
   matrix[n_states, n_states] transition_multiplier; // transition multiplier - allows for transition splits
@@ -408,7 +431,7 @@ model {
                        obs_per_hh, hh_start_ind, hh_end_ind, hh_tmin, hh_tmax,
                        inf_states, n_inf_prob,
                        n_trans_fit, param_index, trans_index, source_states,
-                       n_mult_fit, mult_param_index, mult_index,
+                       n_mult_fit, compete, mult_param_index, mult_index,
                        trans, transition_multiplier,
                        params, mult_params, ih_prob, eh_prob,
                        obs_prob, init_probs, epsilon);
@@ -431,8 +454,8 @@ generated quantities {
         hh_logalpha(h, hh_size, n_obs_type, n_states, y, part_id, t_day,
                     obs_per_hh, hh_start_ind, hh_end_ind, hh_tmin, hh_tmax,
                     inf_states, n_inf_prob, n_trans_fit, param_index, trans_index,
-                    source_states, n_mult_fit, mult_param_index, mult_index,
-                    trans, transition_multiplier, params, mult_params,
+                    source_states, n_mult_fit, compete, mult_param_index,
+                    mult_index, trans, transition_multiplier, params, mult_params,
                     ih_prob, eh_prob, obs_prob, init_probs, epsilon);
       if(save_llik) llik_final[h] = hh_llik(la, hh_size[h], n_states, Th);
       if(save_states) logalpha[(row_offset+1):(row_offset+hh_size[h]*n_states), 1:Th] = la[, 1:Th];
