@@ -1,3 +1,5 @@
+library(tidyverse)
+
 #' @title Build one time step of household observations
 #'
 #' @description Helper used by the simulation functions to assemble the rows for
@@ -732,6 +734,9 @@ sim_siir_compete <- function(
 ) {
   if (length(ih_prob) == 1) {
     ih_prob <- rep(ih_prob, 2)
+  }
+  if (length(eh_prob) == 1) {
+    eh_prob <- rep(eh_prob, 2)
   }
 
   hh_size <- sample(hh_size, n_hh, replace = TRUE) # household sizes

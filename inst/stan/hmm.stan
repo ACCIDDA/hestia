@@ -73,7 +73,8 @@ functions {
                      array[] int hh_tmin,
                      array[] int hh_tmax,
                      array[] int inf_states,
-                     int n_inf_prob,
+                     int n_ih_inf_prob,
+                     int n_eh_inf_prob,
                      int n_trans_fit,
                      array[] int param_index,
                      array[,] int trans_index,
@@ -87,7 +88,7 @@ functions {
                      array[] real params,
                      array[] real mult_params,
                      array[] real ih_prob,
-                     real eh_prob,
+                     array[] real eh_prob,
                      array[] matrix obs_prob,
                      vector init_probs,
                      real epsilon) {
@@ -196,9 +197,12 @@ functions {
         int ct = 1;
         for(s in 1:n_states) {
           if(is_in(s, inf_states)) {
-
-            no_hh_inf_prob[,s] = to_vector(alpha[i_rows[, s], tt-1])*(1-ih_prob[ct]) + (1 - to_vector(alpha[i_rows[,s], tt-1])); // Pr of avoiding infection from each household member
-            ct += 1;
+            if(n_ih_inf_prob == 1) {
+              no_hh_inf_prob[,s] = to_vector(alpha[i_rows[, s], tt-1])*(1-ih_prob[1]) + (1 - to_vector(alpha[i_rows[,s], tt-1])); // Pr of avoiding infection from each household member  
+            } else {
+              no_hh_inf_prob[,s] = to_vector(alpha[i_rows[, s], tt-1])*(1-ih_prob[ct]) + (1 - to_vector(alpha[i_rows[,s], tt-1]));
+              ct += 1;  
+            }
             no_hh_inf_prob[p, s] = 1; // Particpant can't infect themselves
             
           } else {
@@ -208,6 +212,7 @@ functions {
         }
 
         // fill in tranistions that are being fit
+        ct = 1;
         for(m in 1:n_trans_fit) {
           if(sum(source_states[m,]) == 0) {
             trans_temp[trans_index[m, 1],trans_index[m, 2]] = params[param_index[m]];
@@ -218,7 +223,13 @@ functions {
                 no_inf = no_inf*no_inf_prob[s];
               }
             }
-            trans_temp[trans_index[m, 1],trans_index[m, 2]] = 1-(no_inf*(1-eh_prob));
+            if(n_eh_inf_prob == 1) {
+              trans_temp[trans_index[m, 1],trans_index[m, 2]] = 1-(no_inf*(1-eh_prob[1]));
+            } else{
+              trans_temp[trans_index[m, 1],trans_index[m, 2]] = 1-(no_inf*(1-eh_prob[ct]));
+              ct += 1;
+            }
+            
           }
         }
 
@@ -308,7 +319,8 @@ functions {
                        array[] int hh_tmin, 
                        array[] int hh_tmax,
                        array[] int inf_states, 
-                       int n_inf_prob,
+                       int n_ih_inf_prob,
+                       int n_eh_inf_prob,
                        int n_trans_fit, 
                        array[] int param_index,
                        array[,] int trans_index, 
@@ -322,7 +334,7 @@ functions {
                        array[] real params, 
                        array[] real mult_params,
                        array[] real ih_prob, 
-                       real eh_prob,
+                       array[] real eh_prob,
                        array[] matrix obs_prob, 
                        vector init_probs, 
                        real epsilon) {
@@ -333,10 +345,11 @@ functions {
     matrix[hh_size[h]*n_states, max(hh_tmax)] logalpha =
       hh_logalpha(h, hh_size, n_obs_type, n_states, y, part_id, t_day,
                   obs_per_hh, hh_start_ind, hh_end_ind, hh_tmin, hh_tmax,
-                  inf_states, n_inf_prob, n_trans_fit, param_index, trans_index,
-                  source_states, n_mult_fit, compete, mult_param_index, 
-                  mult_index, trans, transition_multiplier, params, mult_params,
-                  ih_prob, eh_prob, obs_prob, init_probs, epsilon);
+                  inf_states, n_ih_inf_prob, n_eh_inf_prob, n_trans_fit, 
+                  param_index, trans_index, source_states, n_mult_fit, compete,
+                  mult_param_index, mult_index, trans, transition_multiplier, 
+                  params, mult_params, ih_prob, eh_prob, obs_prob, init_probs,
+                  epsilon);
     llik_sum += hh_llik(logalpha, hh_size[h], n_states, hh_tmax[h]);
   }
 
@@ -389,7 +402,8 @@ data {
   vector[n_states] init_probs; // starting state probabilities
 
   real epsilon; // small number to avoid log(0) issues
-  int n_inf_prob; // number of infection probabilties to fit, either 1 or equal to the number of infectious compartments
+  int n_ih_inf_prob; // number of intra-household infection probabilties to fit, either 1 or equal to the number of infectious compartments
+  int n_eh_inf_prob; // number of extra-household infection probabilties to fit, either 1 or equal to the number of infectious compartments
 
   int<lower=0, upper=1> save_llik; // if 1, write per-household log-likelihood (llik_final) in generated quantities
   int<lower=0, upper=1> save_states; // if 1, write per-participant log forward probabilities (logalpha) in generated quantities
@@ -398,14 +412,14 @@ data {
 parameters {
   array[n_params] real logit_params;
   array[n_mult_params] real logit_mult_params;
-  real beta0_eh; // monthly intercepts for extra-household probabilities
-  array[n_inf_prob] real beta0_ih; // intra-household probability
+  array[n_eh_inf_prob] real beta0_eh; // extra-household probability
+  array[n_ih_inf_prob] real beta0_ih; // intra-household probability
 
 }
 
 transformed parameters {
-  array[n_inf_prob] real ih_prob;
-  real eh_prob;
+  array[n_ih_inf_prob] real ih_prob;
+  array[n_eh_inf_prob] real eh_prob;
   array[n_params] real params;
   array[n_mult_params] real mult_params;
 
@@ -429,7 +443,7 @@ model {
                        n_obs_type, n_states,
                        y, part_id, t_day,
                        obs_per_hh, hh_start_ind, hh_end_ind, hh_tmin, hh_tmax,
-                       inf_states, n_inf_prob,
+                       inf_states, n_ih_inf_prob, n_eh_inf_prob,
                        n_trans_fit, param_index, trans_index, source_states,
                        n_mult_fit, compete, mult_param_index, mult_index,
                        trans, transition_multiplier,
@@ -453,7 +467,7 @@ generated quantities {
       matrix[hh_size[h]*n_states, max(hh_tmax)] la =
         hh_logalpha(h, hh_size, n_obs_type, n_states, y, part_id, t_day,
                     obs_per_hh, hh_start_ind, hh_end_ind, hh_tmin, hh_tmax,
-                    inf_states, n_inf_prob, n_trans_fit, param_index, trans_index,
+                    inf_states, n_ih_inf_prob, n_eh_inf_prob, n_trans_fit, param_index, trans_index,
                     source_states, n_mult_fit, compete, mult_param_index,
                     mult_index, trans, transition_multiplier, params, mult_params,
                     ih_prob, eh_prob, obs_prob, init_probs, epsilon);

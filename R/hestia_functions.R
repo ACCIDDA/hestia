@@ -1009,8 +1009,8 @@ run_model <- function(
             )),
             beta_eh = rep(0, dat_stan$k_eh),
             beta_ih = rep(0, dat_stan$k_ih),
-            beta0_eh = logit(0.02),
-            beta0_ih = array(rep(logit(0.02), dat_stan$n_inf_prob))
+            beta0_eh = array(rep(logit(0.02), dat_stan$n_eh_inf_prob)),
+            beta0_ih = array(rep(logit(0.02), dat_stan$n_ih_inf_prob))
           )
         ),
         chains
@@ -1024,8 +1024,8 @@ run_model <- function(
               logit(0.5),
               dat_stan$n_mult_params
             )),
-            beta0_eh = logit(0.02),
-            beta0_ih = array(rep(logit(0.02), dat_stan$n_inf_prob))
+            beta0_eh = array(rep(logit(0.02), dat_stan$n_eh_inf_prob)),
+            beta0_ih = array(rep(logit(0.02), dat_stan$n_ih_inf_prob))
           )
         ),
         chains
@@ -1161,9 +1161,9 @@ rename_chains <- function(inf_model, model_output, save_llik, save_states) {
   }
 
   if (n_eh == 1) {
-    ih_names <- "eh_prob"
+    eh_names <- "eh_prob"
   } else {
-    ih_names <- paste0("eh_prob_", inf_details$states[inf_details$inf_states])
+    eh_names <- paste0("eh_prob_", inf_details$states[inf_details$inf_states])
   }
 
   var_names_new <- c(eh_names, ih_names, trans_names, mult_names)
