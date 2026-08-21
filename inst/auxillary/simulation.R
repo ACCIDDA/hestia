@@ -873,11 +873,21 @@ sim_siir_compete <- function(
   complete_obs <- complete_obs |>
     bind_cols(as.data.frame(outcome))
 
+  if (ncol(x) > 0) {
+    colnames(x) <- paste0("x", seq_along(covs_ih))
+  }
+
   if (!complete_enroll) {
     obs <- complete_obs[complete_obs$enroll == 1, ]
   } else {
     obs <- complete_obs
   }
 
-  list(obs = obs, complete_obs = complete_obs)
+  out <- list(obs = obs, complete_obs = complete_obs)
+
+  if (!all(c(covs_eh, covs_ih) == 0)) {
+    out <- append(out, list(x = x))
+  }
+
+  out
 }

@@ -1007,8 +1007,8 @@ run_model <- function(
               logit(0.5),
               dat_stan$n_mult_params
             )),
-            beta_eh = rep(0, dat_stan$k_eh),
-            beta_ih = rep(0, dat_stan$k_ih),
+            beta_eh = array(rep(0, dat_stan$k_eh)),
+            beta_ih = array(rep(0, dat_stan$k_ih)),
             beta0_eh = array(rep(logit(0.02), dat_stan$n_eh_inf_prob)),
             beta0_ih = array(rep(logit(0.02), dat_stan$n_ih_inf_prob))
           )
