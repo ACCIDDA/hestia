@@ -15,7 +15,7 @@ sir_cov_res <- run_model(
   ih_cov = spec$ih_cov,
   eh_cov = spec$eh_cov,
   init_probs = spec$init_probs,
-  stan_opts = stan_options(iter = 1000, cores = 4)
+  stan_opts = stan_options(iter = 1000)
 )
 
 usethis::use_data(sir_cov_res, overwrite = TRUE)

@@ -13,7 +13,7 @@ siir_res <- run_model(
   obs_model = spec$obs_model,
   data = spec$data,
   init_probs = spec$init_probs,
-  stan_opts = stan_options(iter = 1000, cores = 4)
+  stan_opts = stan_options(iter = 1000)
 )
 
 usethis::use_data(siir_res, overwrite = TRUE)
