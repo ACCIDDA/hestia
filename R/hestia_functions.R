@@ -314,7 +314,7 @@ transmit <- function(from, to, source = NA, split = NA) {
 #'  - "split_value", numeric value of split if not fitting
 #'  - "source", names of compartment(s) that are the source of new infections
 #'  - "mult_ih_inf_probs", a logical indicator for whether infectious compartments
-#'  have separate (`true`) or shared (`FALSE`) intra-household infection
+#'  have separate (`TRUE`) or shared (`FALSE`) intra-household infection
 #'  probabilities
 #'
 #' @examples
