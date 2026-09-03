@@ -667,7 +667,7 @@ sim_seir <- function(
 #' @title Simulate SIIR household data with competing infections
 #'
 #' @description Simulate longitudinal household outcome data for a pathogen with
-#'   two competing infectious compartments, for example tweo strains of an
+#'   two competing infectious compartments, for example two strains of an
 #'   infection where infection with one confers immunity against the other.
 #'   Members move through four states (1 = susceptible, 2 = first infectious
 #'   compartment, 3 = second infectious compartment, 4 = recovered).
