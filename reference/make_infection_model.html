@@ -50,7 +50,7 @@
 
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">make_infection_model</span><span class="op">(</span><span class="va">...</span>, mult_inf_probs <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">make_infection_model</span><span class="op">(</span><span class="va">...</span>, mult_ih_inf_probs <span class="op">=</span> <span class="cn">FALSE</span>, mult_eh_inf_probs <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
@@ -61,9 +61,16 @@
 <dd><p>a series of <a href="progress.html">progress</a> or <a href="transmit.html">transmit</a> function calls</p></dd>
 
 
-<dt id="arg-mult-inf-probs">mult_inf_probs<a class="anchor" aria-label="anchor" href="#arg-mult-inf-probs"></a></dt>
-<dd><p>If FALSE then all infection probabilities are shared
-across infectious compartments</p></dd>
+<dt id="arg-mult-ih-inf-probs">mult_ih_inf_probs<a class="anchor" aria-label="anchor" href="#arg-mult-ih-inf-probs"></a></dt>
+<dd><p>If FALSE then all intra-household infection
+probabilities are shared across infectious compartments. If TRUE, each
+infection compartment has a distinct probability.</p></dd>
+
+
+<dt id="arg-mult-eh-inf-probs">mult_eh_inf_probs<a class="anchor" aria-label="anchor" href="#arg-mult-eh-inf-probs"></a></dt>
+<dd><p>If FALSE then all extra-household infection
+probabilities are shared across infectious compartments. If TRUE, each
+infection compartment has a distinct probability.</p></dd>
 
 </dl></div>
     <div class="section level2">
@@ -77,8 +84,8 @@ process model and the following columns:</p><ul><li><p>"from", the name of the o
 <li><p>"split_name", name of split parameter if fitting</p></li>
 <li><p>"split_value", numeric value of split if not fitting</p></li>
 <li><p>"source", names of compartment(s) that are the source of new infections</p></li>
-<li><p>"mult_inf_probs", a logical indicator for whether infectious compartments
-have separate (<code>true</code>) or shared (<code>FALSE</code>) intra-household infection
+<li><p>"mult_ih_inf_probs", a logical indicator for whether infectious compartments
+have separate (<code>TRUE</code>) or shared (<code>FALSE</code>) intra-household infection
 probabilities</p></li>
 </ul></div>
 
@@ -87,9 +94,12 @@ probabilities</p></li>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># Basic SIR model with recovery rate gamma to be fit</span></span></span>
 <span class="r-in"><span><span class="fu">make_infection_model</span><span class="op">(</span><span class="fu"><a href="transmit.html">transmit</a></span><span class="op">(</span>from <span class="op">=</span> <span class="st">"S"</span>, to <span class="op">=</span> <span class="st">"I"</span><span class="op">)</span>,</span></span>
 <span class="r-in"><span>                     <span class="fu"><a href="progress.html">progress</a></span><span class="op">(</span>from <span class="op">=</span> <span class="st">"I"</span>, to <span class="op">=</span> <span class="st">"R"</span>, gamma <span class="op">=</span> <span class="cn">NA</span><span class="op">)</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   from to split_name split_value source rate_name rate_value mult_inf_probs</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1    S  I         NA          NA      I      &lt;NA&gt;         NA          FALSE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2    I  R         NA          NA   NULL     gamma         NA          FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   from to split_name split_value source rate_name rate_value mult_ih_inf_probs</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1    S  I         NA          NA      I      &lt;NA&gt;         NA             FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2    I  R         NA          NA   NULL     gamma         NA             FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   mult_eh_inf_probs</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1             FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2             FALSE</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Split the infectious compartment into symptomatic (I_s) and asymptomatic</span></span></span>
 <span class="r-in"><span><span class="co"># (I_a) infections, with separate intra-household infection probabilities.</span></span></span>
@@ -100,12 +110,17 @@ probabilities</p></li>
 <span class="r-in"><span>           split <span class="op">=</span> <span class="st">"phi"</span><span class="op">)</span>,</span></span>
 <span class="r-in"><span>  <span class="fu"><a href="progress.html">progress</a></span><span class="op">(</span>from <span class="op">=</span> <span class="st">"I_s"</span>, to <span class="op">=</span> <span class="st">"R"</span>, gamma_s <span class="op">=</span> <span class="cn">NA</span><span class="op">)</span>,</span></span>
 <span class="r-in"><span>  <span class="fu"><a href="progress.html">progress</a></span><span class="op">(</span>from <span class="op">=</span> <span class="st">"I_a"</span>, to <span class="op">=</span> <span class="st">"R"</span>, gamma_a <span class="op">=</span> <span class="cn">NA</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>  mult_inf_probs <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   from  to split_name split_value   source rate_name rate_value mult_inf_probs</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1    S I_s        phi          NA I_s, I_a      &lt;NA&gt;         NA           TRUE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2    S I_a      1-phi          NA I_s, I_a      &lt;NA&gt;         NA           TRUE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3  I_s   R       &lt;NA&gt;          NA     NULL   gamma_s         NA           TRUE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4  I_a   R       &lt;NA&gt;          NA     NULL   gamma_a         NA           TRUE</span>
+<span class="r-in"><span>  mult_ih_inf_probs <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   from  to split_name split_value   source rate_name rate_value</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1    S I_s        phi          NA I_s, I_a      &lt;NA&gt;         NA</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2    S I_a      1-phi          NA I_s, I_a      &lt;NA&gt;         NA</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3  I_s   R       &lt;NA&gt;          NA     NULL   gamma_s         NA</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4  I_a   R       &lt;NA&gt;          NA     NULL   gamma_a         NA</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   mult_ih_inf_probs mult_eh_inf_probs</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1              TRUE             FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2              TRUE             FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3              TRUE             FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4              TRUE             FALSE</span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
     </div>

@@ -136,7 +136,7 @@ single shared) intra-household infection probability.</p>
 <span>           split <span class="op">=</span> <span class="st">"phi"</span><span class="op">)</span>,</span>
 <span>  <span class="fu"><a href="../reference/progress.html">progress</a></span><span class="op">(</span>from <span class="op">=</span> <span class="st">"Is"</span>, to <span class="op">=</span> <span class="st">"R"</span>, gamma_s <span class="op">=</span> <span class="cn">NA</span><span class="op">)</span>,</span>
 <span>  <span class="fu"><a href="../reference/progress.html">progress</a></span><span class="op">(</span>from <span class="op">=</span> <span class="st">"Ia"</span>, to <span class="op">=</span> <span class="st">"R"</span>, gamma_a <span class="op">=</span> <span class="cn">NA</span><span class="op">)</span>,</span>
-<span>  mult_inf_probs <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
+<span>  mult_ih_inf_probs <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level4">
 <h4 id="observation-process-model">Observation process model<a class="anchor" aria-label="anchor" href="#observation-process-model"></a>
@@ -190,14 +190,14 @@ package.</p>
 <span></span>
 <span><span class="va">draws_sum</span></span></code></pre></div>
 <pre><code><span><span class="co">## <span style="color: #949494;"># A tibble: 6 × 7</span></span></span>
-<span><span class="co">##   variable     mean median   q2.5  q97.5 var_type               true_value</span></span>
-<span><span class="co">##   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>                       <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">1</span> eh_prob    -<span style="color: #BB0000;">4.67</span>  -<span style="color: #BB0000;">4.67</span>  -<span style="color: #BB0000;">4.75</span>  -<span style="color: #BB0000;">4.60</span>  Infection probability       0.01 </span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">2</span> ih_prob_Is -<span style="color: #BB0000;">3.08</span>  -<span style="color: #BB0000;">3.08</span>  -<span style="color: #BB0000;">3.23</span>  -<span style="color: #BB0000;">2.92</span>  Infection probability       0.05 </span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">3</span> ih_prob_Ia -<span style="color: #BB0000;">3.77</span>  -<span style="color: #BB0000;">3.74</span>  -<span style="color: #BB0000;">4.37</span>  -<span style="color: #BB0000;">3.28</span>  Infection probability       0.025</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">4</span> gamma_s    -<span style="color: #BB0000;">1.43</span>  -<span style="color: #BB0000;">1.43</span>  -<span style="color: #BB0000;">1.51</span>  -<span style="color: #BB0000;">1.35</span>  Recovery rate               0.2  </span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">5</span> gamma_a    -<span style="color: #BB0000;">0.748</span> -<span style="color: #BB0000;">0.747</span> -<span style="color: #BB0000;">0.897</span> -<span style="color: #BB0000;">0.610</span> Recovery rate               0.333</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">6</span> phi         0.864  0.862  0.727  0.996 Symptomatic proportion      0.7</span></span></code></pre>
+<span><span class="co">##   variable      mean  median    q2.5  q97.5 var_type               true_value</span></span>
+<span><span class="co">##   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>        <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>                       <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
+<span><span class="co">## <span style="color: #BCBCBC;">1</span> eh_prob    0.009<span style="text-decoration: underline;">43</span> 0.009<span style="text-decoration: underline;">43</span> 0.008<span style="text-decoration: underline;">76</span> 0.010<span style="text-decoration: underline;">2</span> Infection probability       0.01 </span></span>
+<span><span class="co">## <span style="color: #BCBCBC;">2</span> ih_prob_Is 0.052<span style="text-decoration: underline;">6</span>  0.052<span style="text-decoration: underline;">6</span>  0.046<span style="text-decoration: underline;">1</span>  0.059<span style="text-decoration: underline;">3</span> Infection probability       0.05 </span></span>
+<span><span class="co">## <span style="color: #BCBCBC;">3</span> ih_prob_Ia 0.025<span style="text-decoration: underline;">8</span>  0.025<span style="text-decoration: underline;">5</span>  0.014<span style="text-decoration: underline;">5</span>  0.039<span style="text-decoration: underline;">8</span> Infection probability       0.025</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;">4</span> gamma_s    0.204   0.204   0.191   0.217  Recovery rate               0.2  </span></span>
+<span><span class="co">## <span style="color: #BCBCBC;">5</span> gamma_a    0.339   0.339   0.311   0.369  Recovery rate               0.333</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;">6</span> phi        0.688   0.688   0.660   0.715  Symptomatic proportion      0.7</span></span></code></pre>
 </div>
 </div>
 </div>

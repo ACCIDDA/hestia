@@ -50,7 +50,7 @@
 
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">rename_chains</span><span class="op">(</span><span class="va">inf_model</span>, <span class="va">model_output</span><span class="op">)</span></span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">rename_chains</span><span class="op">(</span><span class="va">inf_model</span>, <span class="va">model_output</span>, <span class="va">save_llik</span>, <span class="va">save_states</span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
@@ -65,6 +65,20 @@
 <dt id="arg-model-output">model_output<a class="anchor" aria-label="anchor" href="#arg-model-output"></a></dt>
 <dd><p>A list generated within <a href="run_model.html">run_model</a> which contains
 the stanfit, the stan input data, and covariate names</p></dd>
+
+
+<dt id="arg-save-llik">save_llik<a class="anchor" aria-label="anchor" href="#arg-save-llik"></a></dt>
+<dd><p>whether to write the per-household log-likelihood
+(<code>llik_final</code>) in the model's generated quantities, for use with
+<code>loo</code>/<code>waic</code> (default <code>FALSE</code>). When <code>FALSE</code>, <code>llik_final</code> is length 0 and
+the extra per-household forward pass is skipped.</p></dd>
+
+
+<dt id="arg-save-states">save_states<a class="anchor" aria-label="anchor" href="#arg-save-states"></a></dt>
+<dd><p>whether to write the per-participant log forward
+probabilities (<code>logalpha</code>) in the model's generated quantities, for
+reconstructing latent state probabilities (default <code>FALSE</code>). When
+<code>FALSE</code>, <code>logalpha</code> is a 0x0 matrix.</p></dd>
 
 </dl></div>
     <div class="section level2">

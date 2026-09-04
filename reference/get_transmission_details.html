@@ -78,7 +78,7 @@ fit</p></li>
 the model, with parameter indexing details if the split is being fit</p></li>
 <li><p>"inf_states", numeric values corresponding to the indices in "states"
 which are the infectious states</p></li>
-<li><p>"mult_inf_probs", indicator for whether infectious states have shared or
+<li><p>"mult_ih_inf_probs", indicator for whether infectious states have shared or
 separate inta-household infection probabilities. If FALSE then all infection
 probabilities are shared across infectious compartments.</p></li>
 </ul></div>
@@ -94,7 +94,7 @@ probabilities are shared across infectious compartments.</p></li>
 <span class="r-in"><span>           split <span class="op">=</span> <span class="st">"phi"</span><span class="op">)</span>,</span></span>
 <span class="r-in"><span>  <span class="fu"><a href="progress.html">progress</a></span><span class="op">(</span>from <span class="op">=</span> <span class="st">"I_s"</span>, to <span class="op">=</span> <span class="st">"R"</span>, gamma_s <span class="op">=</span> <span class="cn">NA</span><span class="op">)</span>,</span></span>
 <span class="r-in"><span>  <span class="fu"><a href="progress.html">progress</a></span><span class="op">(</span>from <span class="op">=</span> <span class="st">"I_a"</span>, to <span class="op">=</span> <span class="st">"R"</span>, gamma_a <span class="op">=</span> <span class="cn">NA</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>  mult_inf_probs <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></span>
+<span class="r-in"><span>  mult_ih_inf_probs <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="fu">get_transmission_details</span><span class="op">(</span><span class="va">inf_model</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $states</span>
@@ -129,8 +129,14 @@ probabilities are shared across infectious compartments.</p></li>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $inf_states</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] 2 3</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> $mult_inf_probs</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $mult_ih_inf_probs</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] TRUE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $mult_eh_inf_probs</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $compete</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 0 0 0 0</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span></span></span>

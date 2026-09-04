@@ -180,11 +180,11 @@ package.</p>
 <span></span>
 <span><span class="va">draws_sum</span></span></code></pre></div>
 <pre><code><span><span class="co">## <span style="color: #949494;"># A tibble: 3 × 7</span></span></span>
-<span><span class="co">##   variable  mean median  q2.5 q97.5 var_type              true_value</span></span>
-<span><span class="co">##   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>                      <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">1</span> eh_prob  -<span style="color: #BB0000;">4.61</span>  -<span style="color: #BB0000;">4.61</span> -<span style="color: #BB0000;">4.68</span> -<span style="color: #BB0000;">4.54</span> Infection probability       0.01</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">2</span> ih_prob  -<span style="color: #BB0000;">2.85</span>  -<span style="color: #BB0000;">2.85</span> -<span style="color: #BB0000;">2.96</span> -<span style="color: #BB0000;">2.74</span> Infection probability       0.05</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">3</span> gamma    -<span style="color: #BB0000;">1.37</span>  -<span style="color: #BB0000;">1.37</span> -<span style="color: #BB0000;">1.44</span> -<span style="color: #BB0000;">1.31</span> Recovery rate               0.2</span></span></code></pre>
+<span><span class="co">##   variable    mean  median    q2.5  q97.5 var_type              true_value</span></span>
+<span><span class="co">##   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>                      <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
+<span><span class="co">## <span style="color: #BCBCBC;">1</span> eh_prob  0.009<span style="text-decoration: underline;">84</span> 0.009<span style="text-decoration: underline;">84</span> 0.009<span style="text-decoration: underline;">11</span> 0.010<span style="text-decoration: underline;">5</span> Infection probability       0.01</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;">2</span> ih_prob  0.054<span style="text-decoration: underline;">5</span>  0.054<span style="text-decoration: underline;">5</span>  0.048<span style="text-decoration: underline;">6</span>  0.060<span style="text-decoration: underline;">7</span> Infection probability       0.05</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;">3</span> gamma    0.203   0.203   0.192   0.213  Recovery rate               0.2</span></span></code></pre>
 </div>
 </div>
 <div class="section level3">
@@ -225,15 +225,15 @@ risk by including the optional <code>ih_cov</code> and
 <span></span>
 <span><span class="va">draws_sum</span></span></code></pre></div>
 <pre><code><span><span class="co">## <span style="color: #949494;"># A tibble: 7 × 7</span></span></span>
-<span><span class="co">##   variable   mean median   q2.5   q97.5 var_type              true_vals</span></span>
-<span><span class="co">##   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>                     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">1</span> eh_prob  -<span style="color: #BB0000;">4.64</span>  -<span style="color: #BB0000;">4.64</span>  -<span style="color: #BB0000;">4.75</span>  -<span style="color: #BB0000;">4.52</span>   Infection probability     0.01 </span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">2</span> ih_prob  -<span style="color: #BB0000;">2.92</span>  -<span style="color: #BB0000;">2.92</span>  -<span style="color: #BB0000;">3.09</span>  -<span style="color: #BB0000;">2.75</span>   Infection probability     0.05 </span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">3</span> gamma    -<span style="color: #BB0000;">1.40</span>  -<span style="color: #BB0000;">1.41</span>  -<span style="color: #BB0000;">1.47</span>  -<span style="color: #BB0000;">1.34</span>   Recovery rate             0.2  </span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">4</span> x1_eh    -<span style="color: #BB0000;">0.460</span> -<span style="color: #BB0000;">0.458</span> -<span style="color: #BB0000;">0.620</span> -<span style="color: #BB0000;">0.295</span>  Coefficient               0.670</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">5</span> x2_eh     0.709  0.708  0.562  0.859  Coefficient               2.01 </span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">6</span> x1_ih     0.778  0.782  0.558  0.990  Coefficient               2.23 </span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">7</span> x2_ih    -<span style="color: #BB0000;">0.170</span> -<span style="color: #BB0000;">0.169</span> -<span style="color: #BB0000;">0.420</span>  0.077<span style="text-decoration: underline;">2</span> Coefficient               1.11</span></span></code></pre>
+<span><span class="co">##   variable    mean  median    q2.5  q97.5 var_type              true_vals</span></span>
+<span><span class="co">##   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>                     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
+<span><span class="co">## <span style="color: #BCBCBC;">1</span> eh_prob  0.009<span style="text-decoration: underline;">61</span> 0.009<span style="text-decoration: underline;">60</span> 0.008<span style="text-decoration: underline;">53</span> 0.010<span style="text-decoration: underline;">8</span> Infection probability     0.01 </span></span>
+<span><span class="co">## <span style="color: #BCBCBC;">2</span> ih_prob  0.050<span style="text-decoration: underline;">9</span>  0.050<span style="text-decoration: underline;">9</span>  0.042<span style="text-decoration: underline;">5</span>  0.059<span style="text-decoration: underline;">4</span> Infection probability     0.05 </span></span>
+<span><span class="co">## <span style="color: #BCBCBC;">3</span> gamma    0.197   0.197   0.187   0.208  Recovery rate             0.2  </span></span>
+<span><span class="co">## <span style="color: #BCBCBC;">4</span> x1_eh    0.636   0.634   0.538   0.746  Coefficient               0.670</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;">5</span> x2_eh    2.03    2.03    1.75    2.37   Coefficient               2.01 </span></span>
+<span><span class="co">## <span style="color: #BCBCBC;">6</span> x1_ih    2.22    2.20    1.77    2.74   Coefficient               2.23 </span></span>
+<span><span class="co">## <span style="color: #BCBCBC;">7</span> x2_ih    0.857   0.851   0.659   1.10   Coefficient               1.11</span></span></code></pre>
 </div>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

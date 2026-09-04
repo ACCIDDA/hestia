@@ -5,7 +5,7 @@ Extract chains and renames with user-provided parameter names
 ## Usage
 
 ``` r
-rename_chains(inf_model, model_output)
+rename_chains(inf_model, model_output, save_llik, save_states)
 ```
 
 ## Arguments
@@ -20,6 +20,20 @@ rename_chains(inf_model, model_output)
   A list generated within
   [run_model](https://accidda.github.io/hestia/reference/run_model.md)
   which contains the stanfit, the stan input data, and covariate names
+
+- save_llik:
+
+  whether to write the per-household log-likelihood (`llik_final`) in
+  the model's generated quantities, for use with `loo`/`waic` (default
+  `FALSE`). When `FALSE`, `llik_final` is length 0 and the extra
+  per-household forward pass is skipped.
+
+- save_states:
+
+  whether to write the per-participant log forward probabilities
+  (`logalpha`) in the model's generated quantities, for reconstructing
+  latent state probabilities (default `FALSE`). When `FALSE`, `logalpha`
+  is a 0x0 matrix.
 
 ## Value
 

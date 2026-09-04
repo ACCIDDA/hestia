@@ -61,7 +61,7 @@ inf_process <- make_infection_model(
            split = "phi"),
   progress(from = "Is", to = "R", gamma_s = NA),
   progress(from = "Ia", to = "R", gamma_a = NA),
-  mult_inf_probs = TRUE)
+  mult_ih_inf_probs = TRUE)
 ```
 
 #### Observation process model
@@ -126,11 +126,11 @@ draws_sum
 ```
 
     ## # A tibble: 6 × 7
-    ##   variable     mean median   q2.5  q97.5 var_type               true_value
-    ##   <chr>       <dbl>  <dbl>  <dbl>  <dbl> <chr>                       <dbl>
-    ## 1 eh_prob    -4.67  -4.67  -4.75  -4.60  Infection probability       0.01 
-    ## 2 ih_prob_Is -3.08  -3.08  -3.23  -2.92  Infection probability       0.05 
-    ## 3 ih_prob_Ia -3.77  -3.74  -4.37  -3.28  Infection probability       0.025
-    ## 4 gamma_s    -1.43  -1.43  -1.51  -1.35  Recovery rate               0.2  
-    ## 5 gamma_a    -0.748 -0.747 -0.897 -0.610 Recovery rate               0.333
-    ## 6 phi         0.864  0.862  0.727  0.996 Symptomatic proportion      0.7
+    ##   variable      mean  median    q2.5  q97.5 var_type               true_value
+    ##   <chr>        <dbl>   <dbl>   <dbl>  <dbl> <chr>                       <dbl>
+    ## 1 eh_prob    0.00943 0.00943 0.00876 0.0102 Infection probability       0.01 
+    ## 2 ih_prob_Is 0.0526  0.0526  0.0461  0.0593 Infection probability       0.05 
+    ## 3 ih_prob_Ia 0.0258  0.0255  0.0145  0.0398 Infection probability       0.025
+    ## 4 gamma_s    0.204   0.204   0.191   0.217  Recovery rate               0.2  
+    ## 5 gamma_a    0.339   0.339   0.311   0.369  Recovery rate               0.333
+    ## 6 phi        0.688   0.688   0.660   0.715  Symptomatic proportion      0.7

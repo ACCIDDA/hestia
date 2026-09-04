@@ -121,11 +121,11 @@ draws_sum
 ```
 
     ## # A tibble: 3 × 7
-    ##   variable  mean median  q2.5 q97.5 var_type              true_value
-    ##   <chr>    <dbl>  <dbl> <dbl> <dbl> <chr>                      <dbl>
-    ## 1 eh_prob  -4.61  -4.61 -4.68 -4.54 Infection probability       0.01
-    ## 2 ih_prob  -2.85  -2.85 -2.96 -2.74 Infection probability       0.05
-    ## 3 gamma    -1.37  -1.37 -1.44 -1.31 Recovery rate               0.2
+    ##   variable    mean  median    q2.5  q97.5 var_type              true_value
+    ##   <chr>      <dbl>   <dbl>   <dbl>  <dbl> <chr>                      <dbl>
+    ## 1 eh_prob  0.00984 0.00984 0.00911 0.0105 Infection probability       0.01
+    ## 2 ih_prob  0.0545  0.0545  0.0486  0.0607 Infection probability       0.05
+    ## 3 gamma    0.203   0.203   0.192   0.213  Recovery rate               0.2
 
 ### Add in covariates
 
@@ -172,12 +172,12 @@ draws_sum
 ```
 
     ## # A tibble: 7 × 7
-    ##   variable   mean median   q2.5   q97.5 var_type              true_vals
-    ##   <chr>     <dbl>  <dbl>  <dbl>   <dbl> <chr>                     <dbl>
-    ## 1 eh_prob  -4.64  -4.64  -4.75  -4.52   Infection probability     0.01 
-    ## 2 ih_prob  -2.92  -2.92  -3.09  -2.75   Infection probability     0.05 
-    ## 3 gamma    -1.40  -1.41  -1.47  -1.34   Recovery rate             0.2  
-    ## 4 x1_eh    -0.460 -0.458 -0.620 -0.295  Coefficient               0.670
-    ## 5 x2_eh     0.709  0.708  0.562  0.859  Coefficient               2.01 
-    ## 6 x1_ih     0.778  0.782  0.558  0.990  Coefficient               2.23 
-    ## 7 x2_ih    -0.170 -0.169 -0.420  0.0772 Coefficient               1.11
+    ##   variable    mean  median    q2.5  q97.5 var_type              true_vals
+    ##   <chr>      <dbl>   <dbl>   <dbl>  <dbl> <chr>                     <dbl>
+    ## 1 eh_prob  0.00961 0.00960 0.00853 0.0108 Infection probability     0.01 
+    ## 2 ih_prob  0.0509  0.0509  0.0425  0.0594 Infection probability     0.05 
+    ## 3 gamma    0.197   0.197   0.187   0.208  Recovery rate             0.2  
+    ## 4 x1_eh    0.636   0.634   0.538   0.746  Coefficient               0.670
+    ## 5 x2_eh    2.03    2.03    1.75    2.37   Coefficient               2.01 
+    ## 6 x1_ih    2.22    2.20    1.77    2.74   Coefficient               2.23 
+    ## 7 x2_ih    0.857   0.851   0.659   1.10   Coefficient               1.11

@@ -10,6 +10,7 @@ make_stan_data(
   obs_model,
   data,
   init_probs,
+  t_start = 1,
   epsilon = 1e-10,
   ih_cov = NULL,
   eh_cov = NULL

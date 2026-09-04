@@ -40,9 +40,10 @@ A list with the following entries:
 - "inf_states", numeric values corresponding to the indices in "states"
   which are the infectious states
 
-- "mult_inf_probs", indicator for whether infectious states have shared
-  or separate inta-household infection probabilities. If FALSE then all
-  infection probabilities are shared across infectious compartments.
+- "mult_ih_inf_probs", indicator for whether infectious states have
+  shared or separate inta-household infection probabilities. If FALSE
+  then all infection probabilities are shared across infectious
+  compartments.
 
 ## Examples
 
@@ -56,7 +57,7 @@ inf_model <- make_infection_model(
            split = "phi"),
   progress(from = "I_s", to = "R", gamma_s = NA),
   progress(from = "I_a", to = "R", gamma_a = NA),
-  mult_inf_probs = TRUE)
+  mult_ih_inf_probs = TRUE)
 
 get_transmission_details(inf_model)
 #> $states
@@ -91,8 +92,14 @@ get_transmission_details(inf_model)
 #> $inf_states
 #> [1] 2 3
 #> 
-#> $mult_inf_probs
+#> $mult_ih_inf_probs
 #> [1] TRUE
+#> 
+#> $mult_eh_inf_probs
+#> [1] FALSE
+#> 
+#> $compete
+#> [1] 0 0 0 0
 #> 
 
 ```
