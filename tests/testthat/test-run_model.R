@@ -152,108 +152,38 @@ test_that("State probabilities match expectation for toy examples", {
 
   # R function to generate logalpha
   gen_la <- function(dat_stan, ih_prob, eh_prob, params, mult_params) {
-    logalpha <- list()
-    hh_size <- dat_stan$hh_size
-    n_states <- dat_stan$n_states
-    hh_tmax <- dat_stan$hh_tmax
-    y <- dat_stan$y
-    t_day <- dat_stan$t_day
-    hh_start_ind <- dat_stan$hh_start_ind
-    hh_end_ind <- dat_stan$hh_end_ind
-    part_id <- dat_stan$part_id
-    n_obs_type <- dat_stan$n_obs_type
-    inf_states <- dat_stan$inf_states
-    trans <- dat_stan$trans
-    trans_index <- dat_stan$trans_index
-    param_index <- dat_stan$param_index
-    n_trans_fit <- dat_stan$n_trans_fit
-    source_states <- dat_stan$source_states
-    n_mult_fit <- dat_stan$n_mult_fit
-    mult_index <- dat_stan$mult_index
-    transition_multiplier <- dat_stan$transition_multiplier
-    mult_param_index <- dat_stan$mult_param_index
-    obs_prob <- dat_stan$obs_prob
-    n_hh <- dat_stan$n_hh
-    epsilon <- dat_stan$epsilon
+    with(dat_stan, {
+      logalpha <- list()
 
-    for (h in 1:n_hh) {
-      alpha <- matrix(NA, nrow = hh_size[h] * n_states, ncol = max(hh_tmax))
-      logalpha[[h]] <- matrix(
-        NA,
-        nrow = hh_size[h] * n_states,
-        ncol = max(hh_tmax)
-      )
-      i_rows <- matrix(NA, nrow = hh_size[h], ncol = n_states) # rows in alpha corresponding to infectious states
+      for (h in 1:n_hh) {
+        alpha <- matrix(NA, nrow = hh_size[h] * n_states, ncol = max(hh_tmax))
+        logalpha[[h]] <- matrix(
+          NA,
+          nrow = hh_size[h] * n_states,
+          ncol = max(hh_tmax)
+        )
+        i_rows <- matrix(NA, nrow = hh_size[h], ncol = n_states) # rows in alpha corresponding to infectious states
 
-      # subset to data only for the given HH
-      y_hh = y[(hh_start_ind[h]):(hh_end_ind[h]), ]
-      t_day_hh = t_day[(hh_start_ind[h]):(hh_end_ind[h])]
-      part_id_hh = part_id[(hh_start_ind[h]):(hh_end_ind[h])]
+        # subset to data only for the given HH
+        y_hh = y[(hh_start_ind[h]):(hh_end_ind[h]), ]
+        t_day_hh = t_day[(hh_start_ind[h]):(hh_end_ind[h])]
+        part_id_hh = part_id[(hh_start_ind[h]):(hh_end_ind[h])]
 
-      index = 1
+        index = 1
 
-      {
-        # START FORWARD ALGORITHM
+        {
+          # START FORWARD ALGORITHM
 
-        # fill first column of alpha using starting probabilities
-        for (i in 1:hh_size[h]) {
-          obs <- matrix(NA, nrow = n_obs_type, ncol = n_states) # observation component for enrolled memebrs, set to 1 if no observation for this time step
+          # fill first column of alpha using starting probabilities
+          for (i in 1:hh_size[h]) {
+            obs <- matrix(NA, nrow = n_obs_type, ncol = n_states) # observation component for enrolled memebrs, set to 1 if no observation for this time step
 
-          ref = (n_states * (i - 1) + 1):(n_states * (i - 1) + n_states)
-
-          obs_switch = 0
-
-          if (t_day_hh[index] == 1) {
-            if (part_id_hh[index] == i) {
-              obs_switch = 1
-            }
-          }
-
-          if (obs_switch == 1) {
-            for (k in 1:n_obs_type) {
-              if (y_hh[index, k] != -1) {
-                obs[k, ] = obs_prob[k, y_hh[index, k], ]
-              } else {
-                obs[k, ] = 1
-              }
-            }
-          } else {
-            obs = matrix(1, nrow = n_obs_type, ncol = n_states)
-          }
-
-          if (obs_switch == 1) {
-            index = min(index + 1, hh_end_ind[h] - hh_start_ind[h] + 1)
-          }
-
-          # Fill in starting probability for SIR states
-          logalpha[[h]][ref, 1] = log(init_probs)
-          for (k in 1:n_obs_type) {
-            logalpha[[h]][ref, 1] = logalpha[[h]][ref, 1] + log(obs[k, ])
-          }
-          for (s in inf_states) {
-            i_rows[i, s] = n_states * (i - 1) + s
-          }
-
-          # normalize and convert to the probability scale
-          alpha[
-            (n_states * (i - 1) + 1):(n_states * (i - 1) + n_states),
-            1
-          ] = softmax(logalpha[[h]][ref, 1])
-        } # end participant loop - t=1, update logalpha with observation probability
-        for (tt in 2:(hh_tmax[h])) {
-          for (p in 1:hh_size[h]) {
-            obs <- matrix(NA, nrow = n_obs_type, ncol = n_states)
-            no_inf_prob <- numeric(n_states) # probability of avoiding all infections
-            no_hh_inf_prob <- matrix(NA, nrow = hh_size[h], ncol = n_states) # probability of avoiding infection from each HH member
-
-            ref = (n_states * (p - 1) + 1):(n_states * (p - 1) + n_states)
-
-            logalpha_temp = logalpha[[h]][ref, tt - 1]
+            ref = (n_states * (i - 1) + 1):(n_states * (i - 1) + n_states)
 
             obs_switch = 0
 
-            if (t_day_hh[index] == tt) {
-              if (part_id_hh[index] == p) {
+            if (t_day_hh[index] == 1) {
+              if (part_id_hh[index] == i) {
                 obs_switch = 1
               }
             }
@@ -274,88 +204,137 @@ test_that("State probabilities match expectation for toy examples", {
               index = min(index + 1, hh_end_ind[h] - hh_start_ind[h] + 1)
             }
 
-            ct = 1
-            for (s in 1:n_states) {
-              if (s %in% inf_states) {
-                no_hh_inf_prob[, s] = alpha[i_rows[, s], tt - 1] *
-                  (1 - ih_prob[ct]) +
-                  (1 - alpha[i_rows[, s], tt - 1]) # Pr of avoiding infection from each household member
-                ct = ct + 1
-                no_hh_inf_prob[p, s] = 1 # Particpant can't infect themselves
-              } else {
-                no_hh_inf_prob[, s] = 1
-              }
-              no_inf_prob[s] = prod(no_hh_inf_prob[, s]) # Probability of avoiding infection from all household members
+            # Fill in starting probability for SIR states
+            logalpha[[h]][ref, 1] = log(init_probs)
+            for (k in 1:n_obs_type) {
+              logalpha[[h]][ref, 1] = logalpha[[h]][ref, 1] + log(obs[k, ])
+            }
+            for (s in inf_states) {
+              i_rows[i, s] = n_states * (i - 1) + s
             }
 
-            # fill in tranistions that are being fit
-            trans_temp = trans # rebuild from the base each step
-            for (m in 1:n_trans_fit) {
-              if (sum(source_states[m, ]) == 0) {
-                trans_temp[
-                  trans_index[m, 1],
-                  trans_index[m, 2]
-                ] = params[param_index[m]]
-              } else {
-                no_inf = 1
-                for (s in 1:n_states) {
-                  if (source_states[m, s] == 1) {
-                    no_inf = no_inf * no_inf_prob[s]
+            # normalize and convert to the probability scale
+            alpha[
+              (n_states * (i - 1) + 1):(n_states * (i - 1) + n_states),
+              1
+            ] = softmax(logalpha[[h]][ref, 1])
+          } # end participant loop - t=1, update logalpha with observation probability
+          for (tt in 2:(hh_tmax[h])) {
+            for (p in 1:hh_size[h]) {
+              obs <- matrix(NA, nrow = n_obs_type, ncol = n_states)
+              no_inf_prob <- numeric(n_states) # probability of avoiding all infections
+              no_hh_inf_prob <- matrix(NA, nrow = hh_size[h], ncol = n_states) # probability of avoiding infection from each HH member
+
+              ref = (n_states * (p - 1) + 1):(n_states * (p - 1) + n_states)
+
+              logalpha_temp = logalpha[[h]][ref, tt - 1]
+
+              obs_switch = 0
+
+              if (t_day_hh[index] == tt) {
+                if (part_id_hh[index] == p) {
+                  obs_switch = 1
+                }
+              }
+
+              if (obs_switch == 1) {
+                for (k in 1:n_obs_type) {
+                  if (y_hh[index, k] != -1) {
+                    obs[k, ] = obs_prob[k, y_hh[index, k], ]
+                  } else {
+                    obs[k, ] = 1
                   }
                 }
-                trans_temp[trans_index[m, 1], trans_index[m, 2]] = 1 -
-                  (no_inf * (1 - eh_prob))
+              } else {
+                obs = matrix(1, nrow = n_obs_type, ncol = n_states)
               }
-            }
 
-            # fill in multipliers that are being fit
-            mult_temp = transition_multiplier # need to reset mult_temp since it is self-referential
-            if (n_mult_fit > 0) {
-              for (m in 1:n_mult_fit) {
-                if (mult_param_index[m] > 0) {
-                  mult_temp[
-                    mult_index[m, 1],
-                    mult_index[m, 2]
-                  ] = mult_params[mult_param_index[m]]
+              if (obs_switch == 1) {
+                index = min(index + 1, hh_end_ind[h] - hh_start_ind[h] + 1)
+              }
+
+              ct = 1
+              for (s in 1:n_states) {
+                if (s %in% inf_states) {
+                  no_hh_inf_prob[, s] = alpha[i_rows[, s], tt - 1] *
+                    (1 - ih_prob[ct]) +
+                    (1 - alpha[i_rows[, s], tt - 1]) # Pr of avoiding infection from each household member
+                  ct = ct + 1
+                  no_hh_inf_prob[p, s] = 1 # Particpant can't infect themselves
                 } else {
-                  mult_temp[mult_index[m, 1], mult_index[m, 2]] = mult_temp[
-                    mult_index[m, 1],
-                    mult_index[m, 2]
-                  ] -
-                    mult_params[-mult_param_index[m]]
+                  no_hh_inf_prob[, s] = 1
+                }
+                no_inf_prob[s] = prod(no_hh_inf_prob[, s]) # Probability of avoiding infection from all household members
+              }
+
+              # fill in tranistions that are being fit
+              trans_temp = trans # rebuild from the base each step
+              for (m in 1:n_trans_fit) {
+                if (sum(source_states[m, ]) == 0) {
+                  trans_temp[
+                    trans_index[m, 1],
+                    trans_index[m, 2]
+                  ] = params[param_index[m]]
+                } else {
+                  no_inf = 1
+                  for (s in 1:n_states) {
+                    if (source_states[m, s] == 1) {
+                      no_inf = no_inf * no_inf_prob[s]
+                    }
+                  }
+                  trans_temp[trans_index[m, 1], trans_index[m, 2]] = 1 -
+                    (no_inf * (1 - eh_prob))
                 }
               }
-            }
 
-            # transition splits
-            trans_temp <- trans_temp * mult_temp
+              # fill in multipliers that are being fit
+              mult_temp = transition_multiplier # need to reset mult_temp since it is self-referential
+              if (n_mult_fit > 0) {
+                for (m in 1:n_mult_fit) {
+                  if (mult_param_index[m] > 0) {
+                    mult_temp[
+                      mult_index[m, 1],
+                      mult_index[m, 2]
+                    ] = mult_params[mult_param_index[m]]
+                  } else {
+                    mult_temp[mult_index[m, 1], mult_index[m, 2]] = mult_temp[
+                      mult_index[m, 1],
+                      mult_index[m, 2]
+                    ] -
+                      mult_params[-mult_param_index[m]]
+                  }
+                }
+              }
 
-            # fill in diagonals (columns must sum to one)
-            for (i in 1:ncol(trans_temp)) {
-              trans_temp[i, i] = get_diagonal_element(trans_temp, i)
-            }
+              # transition splits
+              trans_temp <- trans_temp * mult_temp
 
-            # replace zeroes with epsilon and normalize
-            trans_temp = replace_zeroes(trans_temp, epsilon)
-            trans_temp = normalize_cols(trans_temp)
+              # fill in diagonals (columns must sum to one)
+              for (i in 1:ncol(trans_temp)) {
+                trans_temp[i, i] = get_diagonal_element(trans_temp, i)
+              }
 
-            # Compute the probability of each epidemiological state
-            logalpha[[h]][ref, tt] = log(trans_temp %*% exp(logalpha_temp))
-            for (k in 1:n_obs_type) {
-              logalpha[[h]][ref, tt] = logalpha[[h]][ref, tt] + log(obs[k, ])
-            }
+              # replace zeroes with epsilon and normalize
+              trans_temp = replace_zeroes(trans_temp, epsilon)
+              trans_temp = normalize_cols(trans_temp)
 
-            # normalize and convert to probability scale
-            alpha[
-              (n_states * (p - 1) + 1):(n_states * (p - 1) + n_states),
-              tt
-            ] = softmax(logalpha[[h]][ref, tt])
-          } # end participant loop - update logalpha with observation probability
-        } # end time loop
-      } # END FORWARD ALGORITHM
-    }
+              # Compute the probability of each epidemiological state
+              logalpha[[h]][ref, tt] = log(trans_temp %*% exp(logalpha_temp))
+              for (k in 1:n_obs_type) {
+                logalpha[[h]][ref, tt] = logalpha[[h]][ref, tt] + log(obs[k, ])
+              }
 
-    return(do.call(rbind, logalpha))
+              # normalize and convert to probability scale
+              alpha[
+                (n_states * (p - 1) + 1):(n_states * (p - 1) + n_states),
+                tt
+              ] = softmax(logalpha[[h]][ref, tt])
+            } # end participant loop - update logalpha with observation probability
+          } # end time loop
+        } # END FORWARD ALGORITHM
+      }
+      return(do.call(rbind, logalpha))
+    })
   }
 
   # Infection process model

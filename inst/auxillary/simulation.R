@@ -678,7 +678,9 @@ sim_seir <- function(
 #'   `obs_prob`.
 #'
 #' @param eh_prob Baseline per step probability that a susceptible member is
-#'   infected from outside the household.
+#'   infected from outside the household. May be a single value (shared across
+#'   both infectious compartments) or a length two vector (one per infectious
+#'   compartment).
 #' @param ih_prob Baseline per step intra household infection probability. May
 #'   be a single value (shared across both infectious compartments) or a length
 #'   two vector (one per infectious compartment).

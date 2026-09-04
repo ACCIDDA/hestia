@@ -302,7 +302,11 @@ transmit <- function(from, to, source = NA, split = NA) {
 #'
 #' @param ... a series of \link{progress} or \link{transmit} function calls
 #' @param mult_ih_inf_probs If FALSE then all intra-household infection
-#' probabilities are shared across infectious compartments
+#' probabilities are shared across infectious compartments. If TRUE, each
+#' infection compartment has a distinct probability.
+#' @param mult_eh_inf_probs If FALSE then all extra-household infection
+#' probabilities are shared across infectious compartments. If TRUE, each
+#' infection compartment has a distinct probability.
 #' @returns A data frame with a row for each unique transition in the infection
 #' process model and the following columns:
 #'  - "from", the name of the origin compartment
@@ -582,7 +586,7 @@ get_transmission_details <- function(inf_model) {
   # Check for competing transmission probabilities
   compete <- numeric(length = length(states))
   for (i in seq_along(states)) {
-    temp <- inf_model %>%
+    temp <- inf_model |>
       dplyr::filter(from == states[i])
 
     if (nrow(temp) <= 1) {
@@ -590,7 +594,7 @@ get_transmission_details <- function(inf_model) {
       compete[i] <- 0
     } else {
       # Appears as an origin multiple times
-      temp <- temp %>%
+      temp <- temp |>
         dplyr::mutate(
           both_na = ifelse(is.na(split_value) & is.na(split_name), 1, 0)
         )
@@ -743,6 +747,15 @@ make_stan_data <- function(
   eh_cov = NULL
 ) {
   inf_details <- get_transmission_details(inf_model)
+
+  if (sum(data$t < t_start) > 0) {
+    stop(paste0(
+      "The data contains values of t that are less than the indicated 
+    start time of",
+      t_start
+    ))
+  }
+
   dat <- data |>
     dplyr::mutate(t = t - t_start + 1) |>
     dplyr::arrange(hh_id, t, part_id)
