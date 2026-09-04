@@ -301,8 +301,12 @@ transmit <- function(from, to, source = NA, split = NA) {
 #' @title Build Infection Process Model
 #'
 #' @param ... a series of \link{progress} or \link{transmit} function calls
-#' @param mult_inf_probs If FALSE then all infection probabilities are shared
-#' across infectious compartments
+#' @param mult_ih_inf_probs If FALSE then all intra-household infection
+#' probabilities are shared across infectious compartments. If TRUE, each
+#' infection compartment has a distinct probability.
+#' @param mult_eh_inf_probs If FALSE then all extra-household infection
+#' probabilities are shared across infectious compartments. If TRUE, each
+#' infection compartment has a distinct probability.
 #' @returns A data frame with a row for each unique transition in the infection
 #' process model and the following columns:
 #'  - "from", the name of the origin compartment
@@ -313,8 +317,8 @@ transmit <- function(from, to, source = NA, split = NA) {
 #'  - "split_name", name of split parameter if fitting
 #'  - "split_value", numeric value of split if not fitting
 #'  - "source", names of compartment(s) that are the source of new infections
-#'  - "mult_inf_probs", a logical indicator for whether infectious compartments
-#'  have separate (`true`) or shared (`FALSE`) intra-household infection
+#'  - "mult_ih_inf_probs", a logical indicator for whether infectious compartments
+#'  have separate (`TRUE`) or shared (`FALSE`) intra-household infection
 #'  probabilities
 #'
 #' @examples
@@ -332,16 +336,21 @@ transmit <- function(from, to, source = NA, split = NA) {
 #'            split = "phi"),
 #'   progress(from = "I_s", to = "R", gamma_s = NA),
 #'   progress(from = "I_a", to = "R", gamma_a = NA),
-#'   mult_inf_probs = TRUE)
+#'   mult_ih_inf_probs = TRUE)
 #'
 #' @importFrom dplyr bind_rows
 #' @importFrom checkmate assert_data_frame assert_flag
 #' @export
-make_infection_model <- function(..., mult_inf_probs = FALSE) {
+make_infection_model <- function(
+  ...,
+  mult_ih_inf_probs = FALSE,
+  mult_eh_inf_probs = FALSE
+) {
   .dots <- list(...)
 
   # Entry-level input validation
-  checkmate::assert_flag(mult_inf_probs, .var.name = "mult_inf_probs")
+  checkmate::assert_flag(mult_ih_inf_probs, .var.name = "mult_ih_inf_probs")
+  checkmate::assert_flag(mult_eh_inf_probs, .var.name = "mult_eh_inf_probs")
   if (length(.dots) == 0) {
     stop(
       "At least one transmit() or progress() transition must be supplied."
@@ -356,7 +365,8 @@ make_infection_model <- function(..., mult_inf_probs = FALSE) {
   }
 
   out <- dplyr::bind_rows(.dots)
-  out$mult_inf_probs <- mult_inf_probs
+  out$mult_ih_inf_probs <- mult_ih_inf_probs
+  out$mult_eh_inf_probs <- mult_eh_inf_probs
 
   # Check that there is at least one transmit input
   if (!("source" %in% names(out))) {
@@ -434,7 +444,7 @@ graph_connected <- function(graph) {
 #'  the model, with parameter indexing details if the split is being fit
 #'  - "inf_states", numeric values corresponding to the indices in "states"
 #'  which are the infectious states
-#'  - "mult_inf_probs", indicator for whether infectious states have shared or
+#'  - "mult_ih_inf_probs", indicator for whether infectious states have shared or
 #'  separate inta-household infection probabilities. If FALSE then all infection
 #'  probabilities are shared across infectious compartments.
 #'
@@ -448,7 +458,7 @@ graph_connected <- function(graph) {
 #'            split = "phi"),
 #'   progress(from = "I_s", to = "R", gamma_s = NA),
 #'   progress(from = "I_a", to = "R", gamma_a = NA),
-#'   mult_inf_probs = TRUE)
+#'   mult_ih_inf_probs = TRUE)
 #'
 #' get_transmission_details(inf_model)
 #'
@@ -565,8 +575,60 @@ get_transmission_details <- function(inf_model) {
       if (grepl("1-", mult_to_fit$mult_name[i])) {
         to_match <- strsplit(mult_to_fit$mult_name[i], "-")[[1]]
         to_match <- to_match[to_match != "1"]
-        matches <- mult_to_fit$param[mult_to_fit$mult_name %in% to_match]
+        matches <- unlist(mult_to_fit$param[
+          mult_to_fit$mult_name %in% to_match
+        ])
         mult_to_fit$param[i] <- list(-1 * matches)
+      }
+    }
+  }
+
+  # Check for competing transmission probabilities
+  compete <- numeric(length = length(states))
+  for (i in seq_along(states)) {
+    temp <- inf_model |>
+      dplyr::filter(from == states[i])
+
+    if (nrow(temp) <= 1) {
+      # Does not appear as an origin multiple times
+      compete[i] <- 0
+    } else {
+      # Appears as an origin multiple times
+      temp <- temp |>
+        dplyr::mutate(
+          both_na = ifelse(is.na(split_value) & is.na(split_name), 1, 0)
+        )
+      if (sum(temp$both_na == 1) > 0) {
+        # at least one undefined split
+        compete[i] <- 1
+      } else {
+        # No undefined splits
+        if (sum(is.na(temp$split_name)) == 0) {
+          # Only split names defined
+          if (length(grep("1-", temp$split_name)) == 1) {
+            # Only one "1-"
+            compete[i] <- 0
+          } else {
+            # Multiple "1-"
+            compete[i] <- 1
+          }
+        } else {
+          # Not only split names defined
+          if (sum(is.na(temp$split_value)) == 0) {
+            # Only values defined
+            if (sum(temp$split_value) == 1) {
+              # Values sum to 1
+              compete[i] <- 0
+            } else {
+              # Values doesn't sum to one
+              checkmate::assert_count(sum(temp$split_value))
+              compete[i] <- 1
+            }
+          } else {
+            # Values and names defined
+            compete[i] <- 1
+          }
+        }
       }
     }
   }
@@ -580,7 +642,9 @@ get_transmission_details <- function(inf_model) {
     inf_states = unique(
       unlist(trans_to_fit$source[is.na(trans_to_fit$rate_name)])
     ),
-    mult_inf_probs = inf_model$mult_inf_probs[1]
+    mult_ih_inf_probs = inf_model$mult_ih_inf_probs[1],
+    mult_eh_inf_probs = inf_model$mult_eh_inf_probs[1],
+    compete = compete
   )
 }
 
@@ -677,12 +741,23 @@ make_stan_data <- function(
   obs_model,
   data,
   init_probs,
+  t_start = 1,
   epsilon = 1e-10,
   ih_cov = NULL,
   eh_cov = NULL
 ) {
   inf_details <- get_transmission_details(inf_model)
+
+  if (sum(data$t < t_start) > 0) {
+    stop(paste0(
+      "The data contains values of t that are less than the indicated 
+    start time of",
+      t_start
+    ))
+  }
+
   dat <- data |>
+    dplyr::mutate(t = t - t_start + 1) |>
     dplyr::arrange(hh_id, t, part_id)
 
   dat$row_id <- seq_len(nrow(dat))
@@ -748,6 +823,7 @@ make_stan_data <- function(
     transition_multiplier = inf_details$mult_matrix,
     n_mult_fit = nrow(mult_info),
     n_mult_params = length(unique(abs(unlist(mult_info$param)))),
+    compete = inf_details$compete,
     mult_param_index = unlist(mult_info$param),
     mult_index = mult_info |> dplyr::select(mult_row, mult_col),
     n_params = length(unique(
@@ -768,10 +844,14 @@ make_stan_data <- function(
     hh_tmax = hh_sum$hh_tmax,
     obs_prob = obs_array,
     init_probs = init_probs,
-    #TODO: Toggle to fit
     epsilon = epsilon,
-    n_inf_prob = ifelse(
-      inf_details$mult_inf_probs,
+    n_ih_inf_prob = ifelse(
+      inf_details$mult_ih_inf_probs,
+      length(inf_details$inf_states),
+      1
+    ),
+    n_eh_inf_prob = ifelse(
+      inf_details$mult_eh_inf_probs,
       length(inf_details$inf_states),
       1
     )
@@ -869,6 +949,7 @@ run_model <- function(
   obs_model,
   data,
   init_probs,
+  t_start = 1,
   epsilon = 1e-10,
   ih_cov = NULL,
   eh_cov = NULL,
@@ -896,6 +977,7 @@ run_model <- function(
     obs_model,
     data,
     init_probs,
+    t_start,
     epsilon,
     ih_cov,
     eh_cov
@@ -923,10 +1005,10 @@ run_model <- function(
               logit(0.5),
               dat_stan$n_mult_params
             )),
-            beta_eh = rep(0, dat_stan$k_eh),
-            beta_ih = rep(0, dat_stan$k_ih),
-            beta0_eh = logit(0.02),
-            beta0_ih = array(rep(logit(0.02), dat_stan$n_inf_prob))
+            beta_eh = array(rep(0, dat_stan$k_eh)),
+            beta_ih = array(rep(0, dat_stan$k_ih)),
+            beta0_eh = array(rep(logit(0.02), dat_stan$n_eh_inf_prob)),
+            beta0_ih = array(rep(logit(0.02), dat_stan$n_ih_inf_prob))
           )
         ),
         chains
@@ -940,8 +1022,8 @@ run_model <- function(
               logit(0.5),
               dat_stan$n_mult_params
             )),
-            beta_eh = logit(0.02),
-            beta_ih = array(rep(logit(0.02), dat_stan$n_inf_prob))
+            beta0_eh = array(rep(logit(0.02), dat_stan$n_eh_inf_prob)),
+            beta0_ih = array(rep(logit(0.02), dat_stan$n_ih_inf_prob))
           )
         ),
         chains
@@ -970,7 +1052,7 @@ run_model <- function(
     ih_cov_names = colnames(ih_cov)
   )
 
-  rename_chains(inf_model, stan_out)
+  rename_chains(inf_model, stan_out, save_llik, save_states)
 }
 
 #' @title Extract chains and renames with user-provided parameter names
@@ -979,11 +1061,19 @@ run_model <- function(
 #'   \link{make_infection_model}
 #' @param model_output A list generated within \link{run_model} which contains
 #'   the stanfit, the stan input data, and covariate names
+#' @param save_llik whether to write the per-household log-likelihood
+#'   (`llik_final`) in the model's generated quantities, for use with
+#'   `loo`/`waic` (default `FALSE`). When `FALSE`, `llik_final` is length 0 and
+#'   the extra per-household forward pass is skipped.
+#' @param save_states whether to write the per-participant log forward
+#'   probabilities (`logalpha`) in the model's generated quantities, for
+#'   reconstructing latent state probabilities (default `FALSE`). When
+#'   `FALSE`, `logalpha` is a 0x0 matrix.
 #' @returns A `draws_array` object with chains for each model parameter
 #'
 #' @importFrom posterior variables subset_draws
 #' @keywords internal
-rename_chains <- function(inf_model, model_output) {
+rename_chains <- function(inf_model, model_output, save_llik, save_states) {
   # Get parameter information
   inf_details <- get_transmission_details(inf_model)
   mult_names <- unique(inf_details$mult_to_fit$mult_name[
@@ -993,7 +1083,12 @@ rename_chains <- function(inf_model, model_output) {
     inf_details$trans_to_fit$param >= 1
   ])
   n_ih <- ifelse(
-    inf_details$mult_inf_probs == FALSE,
+    inf_details$mult_ih_inf_probs == FALSE,
+    1,
+    length(inf_details$inf_states)
+  )
+  n_eh <- ifelse(
+    inf_details$mult_eh_inf_probs == FALSE,
     1,
     length(inf_details$inf_states)
   )
@@ -1006,17 +1101,11 @@ rename_chains <- function(inf_model, model_output) {
   # Get variable names and subset to parameters of interest
   var_names <- posterior::variables(draws_full)
 
-  if (length(grep("beta0", var_names)) > 0) {
-    var_names_sub <- c(
-      grep("beta0_eh", var_names, value = TRUE),
-      grep("beta0_ih", var_names, value = TRUE)
-    )
-  } else {
-    var_names_sub <- c(
-      grep("beta_eh", var_names, value = TRUE),
-      grep("beta_ih", var_names, value = TRUE)
-    )
-  }
+  # PUll out infection probability intercepts
+  var_names_sub <- c(
+    grep("beta0_eh", var_names, value = TRUE),
+    grep("beta0_ih", var_names, value = TRUE)
+  )
 
   if (length(trans_names) > 0) {
     var_names_sub <- c(
@@ -1033,7 +1122,7 @@ rename_chains <- function(inf_model, model_output) {
   }
 
   # Pull covariate coefficients if covariate run
-  if (length(grep("beta0", var_names)) > 0) {
+  if (length(grep("beta_", var_names)) > 0) {
     var_names_sub <- c(
       var_names_sub,
       grep("beta_eh", var_names, value = TRUE),
@@ -1048,9 +1137,15 @@ rename_chains <- function(inf_model, model_output) {
     ih_names <- paste0("ih_prob_", inf_details$states[inf_details$inf_states])
   }
 
-  var_names_new <- c("eh_prob", ih_names, trans_names, mult_names)
+  if (n_eh == 1) {
+    eh_names <- "eh_prob"
+  } else {
+    eh_names <- paste0("eh_prob_", inf_details$states[inf_details$inf_states])
+  }
 
-  if (length(grep("beta0", var_names)) > 0) {
+  var_names_new <- c(eh_names, ih_names, trans_names, mult_names)
+
+  if (length(grep("beta_", var_names)) > 0) {
     var_names_new <- c(
       var_names_new,
       paste0(model_output$eh_cov_names, "_eh"),
@@ -1069,7 +1164,7 @@ rename_chains <- function(inf_model, model_output) {
   # dimensions [iteration, chain, variable], so we transform variable slices in
   # place by name.
   coef_names <- character(0)
-  if (length(grep("beta0", var_names)) > 0) {
+  if (length(grep("beta_", var_names)) > 0) {
     coef_names <- c(
       paste0(model_output$eh_cov_names, "_eh"),
       paste0(model_output$ih_cov_names, "_ih")
@@ -1078,10 +1173,24 @@ rename_chains <- function(inf_model, model_output) {
   prob_names <- setdiff(var_names_new, coef_names)
 
   for (nm in prob_names) {
-    draws[, , nm] <- inv_logit(draws[, , nm])
+    draws[,, nm] <- inv_logit(draws[,, nm])
   }
   for (nm in coef_names) {
-    draws[, , nm] <- exp(draws[, , nm])
+    draws[,, nm] <- exp(draws[,, nm])
+  }
+
+  if (save_llik) {
+    draws <- posterior::bind_draws(
+      draws,
+      posterior::subset_draws(draws_full, variable = "llik_final")
+    )
+  }
+
+  if (save_states) {
+    draws <- posterior::bind_draws(
+      draws,
+      posterior::subset_draws(draws_full, variable = "logalpha")
+    )
   }
 
   draws

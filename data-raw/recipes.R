@@ -44,7 +44,7 @@ build_siir_res_spec <- function() {
       ),
       progress(from = "Is", to = "R", gamma_s = NA),
       progress(from = "Ia", to = "R", gamma_a = NA),
-      mult_inf_probs = TRUE
+      mult_ih_inf_probs = TRUE
     ),
     obs_model = make_observation_model(
       pcr = c("S" = 0.05, "Is" = 0.95, "Ia" = 0.95, "R" = 0.05),
