@@ -38,7 +38,7 @@ test_that("multiple infections probabilities supported", {
     transmit(from = "S", to = c("Is", "Ia"), split = "phi"),
     progress(from = "Is", to = "R", gamma = NA),
     progress(from = "Ia", to = "R", gamma = NA),
-    mult_inf_probs = TRUE
+    mult_ih_inf_probs = TRUE
   )
 
   obs_mod <- make_observation_model(
