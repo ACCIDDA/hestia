@@ -44,7 +44,7 @@ test_stan_opts <- stan_options(chains = 1, iter = 80, seed = 1L, refresh = 0)
 # Keep the slice to households 1..3. make_stan_data() uses max(hh_id) as the
 # household count and groups by hh_id, so the slice must preserve contiguous
 # 1..N ids; hh_id <= 3 does.
-test_n_hh <- 3L
+test_n_hh <- 5L
 
 # Per-parameter RELATIVE tolerance (with a small absolute floor) for the Tier-2
 # golden-means regression. waldo's pooled tolerance is scaled by the whole
