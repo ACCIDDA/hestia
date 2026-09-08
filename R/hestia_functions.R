@@ -1173,10 +1173,10 @@ rename_chains <- function(inf_model, model_output, save_llik, save_states) {
   prob_names <- setdiff(var_names_new, coef_names)
 
   for (nm in prob_names) {
-    draws[,, nm] <- inv_logit(draws[,, nm])
+    draws[, , nm] <- inv_logit(draws[, , nm])
   }
   for (nm in coef_names) {
-    draws[,, nm] <- exp(draws[,, nm])
+    draws[, , nm] <- exp(draws[, , nm])
   }
 
   if (save_llik) {
