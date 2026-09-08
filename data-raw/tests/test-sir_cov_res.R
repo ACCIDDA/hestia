@@ -36,5 +36,4 @@ test_that("sir_cov_res bake fits, returns the expected variables, and matches go
   expect_true(all(mat[, coef_vars] > 0))
 
   # Tier 2 regression: posterior means within tolerance of the stored golden.
-  # expect_means_close(draws_means(draws), read_golden("sir_cov_res"))
 })

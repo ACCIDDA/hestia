@@ -119,26 +119,26 @@ test_that("State probabilities match expectation for toy examples", {
   }
 
   get_diagonal_element <- function(m, i) {
-    out = 1
-    for (j in 1:nrow(m)) {
+    out <- 1
+    for (j in seqlen(nrow(m))) {
       if (j != i) {
         out = out - m[j, i]
       }
     }
-    return(out)
+    out
   }
 
   replace_zeroes <- function(m, epsilon) {
     out <- matrix(NA, nrow = nrow(m), ncol = ncol(m))
     out <- m
-    for (i in 1:nrow(m)) {
+    for (i in seqlen(nrow(m))) {
       for (j in 1:ncol(m)) {
         if (m[i, j] == 0) {
           out[i, j] <- epsilon
         }
       }
     }
-    return(out)
+    out
   }
 
   normalize_cols <- function(m) {
