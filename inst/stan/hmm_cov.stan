@@ -441,6 +441,8 @@ model {
 
   beta0_eh ~ normal(-3,3);
   beta0_ih ~ normal(-3,3);
+  beta_eh ~ normal(0,3);
+  beta_ih ~ normal(0,3);
 
   // Parallelised forward algorithm (households are independent given params)
   array[n_hh] int hh_indices;
