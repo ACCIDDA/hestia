@@ -132,7 +132,7 @@ test_that("State probabilities match expectation for toy examples", {
     out <- matrix(NA, nrow = nrow(m), ncol = ncol(m))
     out <- m
     for (i in seq_len(nrow(m))) {
-      for (j in seq_len((m))) {
+      for (j in seq_len(ncol(m))) {
         if (m[i, j] == 0) {
           out[i, j] <- epsilon
         }
@@ -315,7 +315,7 @@ test_that("State probabilities match expectation for toy examples", {
             trans_temp <- trans_temp * mult_temp
 
             # fill in diagonals (columns must sum to one)
-            for (i in seq_len((trans_temp))) {
+            for (i in seq_len(ncol(trans_temp))) {
               trans_temp[i, i] <- get_diagonal_element(trans_temp, i)
             }
 
