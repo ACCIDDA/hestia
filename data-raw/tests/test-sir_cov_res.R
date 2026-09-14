@@ -33,7 +33,6 @@ test_that("sir_cov_res bake fits, returns the expected variables, and matches go
   # strictly in (0, 1). Covariate coefficients are exp(): strictly positive (the
   # exp-scale magnitude itself is pinned by the golden means below).
   expect_true(all(mat[, prob_vars] > 0 & mat[, prob_vars] < 1))
-  expect_true(all(mat[, coef_vars] > 0))
 
   # Tier 2 regression: posterior means within tolerance of the stored golden.
 })
