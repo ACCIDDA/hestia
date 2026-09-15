@@ -27,8 +27,13 @@ test_that("rename_chains covers the covariate path on a minimal live fit", {
   init_probs <- c(1 - 2 * 1e-10, 1e-10, 1e-10)
 
   dat_stan <- make_stan_data(
-    inf_model, obs_model, data_sub, init_probs,
-    epsilon = 1e-10, ih_cov = cov_sub, eh_cov = cov_sub
+    inf_model,
+    obs_model,
+    data_sub,
+    init_probs,
+    epsilon = 1e-10,
+    ih_cov = cov_sub,
+    eh_cov = cov_sub
   )
   # run_model() sets these; mirror it here since we sample hmm_cov directly.
   dat_stan$save_llik <- 0L
@@ -41,8 +46,8 @@ test_that("rename_chains covers the covariate path on a minimal live fit", {
     logit_mult_params = array(rep(logit(0.5), dat_stan$n_mult_params)),
     beta_eh = rep(0, dat_stan$k_eh),
     beta_ih = rep(0, dat_stan$k_ih),
-    beta0_eh = logit(0.02),
-    beta0_ih = array(rep(logit(0.02), dat_stan$n_inf_prob))
+    beta0_eh = array(rep(logit(0.02), dat_stan$n_eh_inf_prob)),
+    beta0_ih = array(rep(logit(0.02), dat_stan$n_ih_inf_prob))
   ))
 
   fit <- suppressWarnings(rstan::sampling(
@@ -73,14 +78,14 @@ test_that("rename_chains covers the covariate path on a minimal live fit", {
   # Probabilities and the recovery rate come back via inv_logit(): bounded to
   # (0, 1).
   for (nm in c("eh_prob", "ih_prob", "gamma")) {
-    vec <- as.numeric(out[, , nm])
+    vec <- as.numeric(out[,, nm])
     expect_true(all(vec > 0 & vec < 1), info = nm)
   }
 
   # Covariate coefficients come back via exp(): strictly positive and not
   # confined to (0, 1) (the exp() branch, not the logit one).
   for (nm in c("x1_eh", "x2_eh", "x1_ih", "x2_ih")) {
-    vec <- as.numeric(out[, , nm])
+    vec <- as.numeric(out[,, nm])
     expect_true(all(vec > 0), info = nm)
     expect_false(all(vec < 1), info = nm)
   }
