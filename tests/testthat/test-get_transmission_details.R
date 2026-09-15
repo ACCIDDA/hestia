@@ -16,7 +16,9 @@ test_that("returns the documented list structure for a basic SIR model", {
       "trans_to_fit",
       "mult_to_fit",
       "inf_states",
-      "mult_inf_probs"
+      "mult_ih_inf_probs",
+      "mult_eh_inf_probs",
+      "compete"
     )
   )
 })
@@ -73,7 +75,8 @@ test_that("a model with no splits produces an empty multiplier table", {
   td <- get_transmission_details(sir_infection_model())
 
   expect_equal(nrow(td$mult_to_fit), 0)
-  expect_false(isTRUE(td$mult_inf_probs))
+  expect_false(isTRUE(td$mult_ih_inf_probs))
+  expect_false(isTRUE(td$mult_eh_inf_probs))
 })
 
 test_that("a fixed transition rate is written into the matrix, not the fit table", {
@@ -106,11 +109,11 @@ test_that("a named split is carried into the multiplier fit table", {
 })
 
 test_that("separate infection probabilities expose both infectious states", {
-  shared <- get_transmission_details(siir_infection_model(mult_inf_probs = FALSE))
-  separate <- get_transmission_details(siir_infection_model(mult_inf_probs = TRUE))
+  shared <- get_transmission_details(siir_infection_model(mult_ih_inf_probs = FALSE))
+  separate <- get_transmission_details(siir_infection_model(mult_ih_inf_probs = TRUE))
 
-  expect_false(isTRUE(shared$mult_inf_probs))
-  expect_true(isTRUE(separate$mult_inf_probs))
+  expect_false(isTRUE(shared$mult_ih_inf_probs))
+  expect_true(isTRUE(separate$mult_ih_inf_probs))
 
   # Both Is and Ia are infectious sources regardless of the probability sharing.
   expect_setequal(separate$inf_states, which(separate$states %in% c("Is", "Ia")))

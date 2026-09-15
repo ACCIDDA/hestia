@@ -36,13 +36,21 @@ test_that("entry validation rejects empty or malformed inputs", {
     "data frame|transition"
   )
 
-  # mult_inf_probs must be a single logical flag
+  # mult_ih_inf_probs and mult_eh_inf_probs must be single logical flags
   expect_error(
     make_infection_model(
       transmit(from = "S", to = "I"),
       progress(from = "I", to = "R", gamma = NA),
-      mult_inf_probs = "yes"
+      mult_ih_inf_probs = "yes"
     ),
-    "mult_inf_probs"
+    "mult_ih_inf_probs"
+  )
+  expect_error(
+    make_infection_model(
+      transmit(from = "S", to = "I"),
+      progress(from = "I", to = "R", gamma = NA),
+      mult_eh_inf_probs = "yes"
+    ),
+    "mult_eh_inf_probs"
   )
 })

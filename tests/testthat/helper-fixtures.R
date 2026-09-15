@@ -18,12 +18,16 @@ sir_infection_model <- function() {
 # asymptomatic (Ia) compartments via a fitted split parameter phi. Useful for
 # checking split / multiplier handling. Set mult_inf_probs to TRUE to give the
 # two infectious compartments separate intra-household infection probabilities.
-siir_infection_model <- function(mult_inf_probs = FALSE) {
+siir_infection_model <- function(
+  mult_ih_inf_probs = FALSE,
+  mult_eh_inf_probs = FALSE
+) {
   make_infection_model(
     transmit(from = "S", to = c("Is", "Ia"), split = "phi"),
     progress(from = "Is", to = "R", gamma = NA),
     progress(from = "Ia", to = "R", gamma = NA),
-    mult_inf_probs = mult_inf_probs
+    mult_ih_inf_probs = mult_ih_inf_probs,
+    mult_eh_inf_probs = mult_eh_inf_probs
   )
 }
 
