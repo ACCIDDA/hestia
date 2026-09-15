@@ -67,7 +67,7 @@ test_that("rename_chains covers the covariate path on a minimal live fit", {
     ih_cov_names = colnames(cov_sub)
   )
 
-  out <- rename_chains(inf_model, stan_out, 
+  out <- rename_chains(inf_model, stan_out,
                        save_llik = FALSE,
                        save_states = FALSE)
 
@@ -80,14 +80,14 @@ test_that("rename_chains covers the covariate path on a minimal live fit", {
   # Probabilities and the recovery rate come back via inv_logit(): bounded to
   # (0, 1).
   for (nm in c("eh_prob", "ih_prob", "gamma")) {
-    vec <- as.numeric(out[ , , nm])
+    vec <- as.numeric(out[, , nm])
     expect_true(all(vec > 0 & vec < 1), info = nm)
   }
 
   # Covariate coefficients come back via exp(): strictly positive and not
   # confined to (0, 1) (the exp() branch, not the logit one).
   for (nm in c("x1_eh", "x2_eh", "x1_ih", "x2_ih")) {
-    vec <- as.numeric(out[ , , nm])
+    vec <- as.numeric(out[, , nm])
     expect_true(all(vec > 0), info = nm)
     expect_false(all(vec < 1), info = nm)
   }
