@@ -42,7 +42,10 @@ LinkingTo:
 SystemRequirements: GNU make
 LazyData: true
 Suggests:
+    bayesplot,
+    ggplot2,
     knitr,
+    patchwork,
     rmarkdown,
     roxyglobals,
     testthat (>= 3.0.0),
