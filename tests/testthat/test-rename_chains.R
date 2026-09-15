@@ -67,7 +67,9 @@ test_that("rename_chains covers the covariate path on a minimal live fit", {
     ih_cov_names = colnames(cov_sub)
   )
 
-  out <- rename_chains(inf_model, stan_out)
+  out <- rename_chains(inf_model, stan_out, 
+                       save_llik = FALSE,
+                       save_states = FALSE)
 
   expect_s3_class(out, "draws_array")
   expect_setequal(
