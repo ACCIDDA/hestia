@@ -14,6 +14,7 @@ knitr::opts_chunk$set(echo = TRUE)
 library(hestia)
 library(dplyr)
 library(posterior)
+library(ggplot2)
 
 ```
 
@@ -41,7 +42,7 @@ In addition to the data, the user needs to specify the underlying model structur
 
 ### Infection process model
 
-In this infection process model, infected individuals are split into two compartments, symptomatic infections (`Is`) and asymptomatic infections (`Ia`). The proportion which goes into the symptomatic compartment is governed by the parameter `split`. Note that although there are two infectious compartments we only need to provide one value for split as the model enforces that the proportion going to the second infectious compartment is `1-split`. Here we are providing a parameter name to this argument (`split = "phi"`) indicating that we want the model to fit this parameter. We could also provide a numeric value for the model to use directly. We also use the `mult_inf_probs = TRUE` argument to indicate that we would like the two infectious compartments to have separate (rather than a single shared) intra-household infection probability.   
+In this infection process model, infected individuals are split into two compartments, symptomatic infections (`Is`) and asymptomatic infections (`Ia`). The proportion which goes into the symptomatic compartment is governed by the parameter `split`. Note that although there are two infectious compartments we only need to provide one value for split as the model enforces that the proportion going to the second infectious compartment is `1-split`. Here we are providing a parameter name to this argument (`split = "phi"`) indicating that we want the model to fit this parameter. We could also provide a numeric value for the model to use directly. We also use the `mult_ih_inf_probs = TRUE` argument to indicate that we would like the two infectious compartments to have separate (rather than a single shared) intra-household infection probability.
 
 ```{r}
 
@@ -110,6 +111,64 @@ draws_sum$true_value <- c(0.01, 0.05, 0.025, 0.2, 1/3, 0.7)
 
 draws_sum
 
+```
+
+We can also visualize the parameter estimates alongside the true simulation values:
+
+```{r, fig.width=7, fig.height=5.5}
+draws_plot <- draws_sum |>
+  mutate(
+    category = factor(
+      c(rep("Infection Probability (daily)", 3),
+        rep("Recovery Rate (per day)", 2),
+        "Symptomatic Proportion (split)"),
+      levels = c("Infection Probability (daily)", "Recovery Rate (per day)", "Symptomatic Proportion (split)")
+    ),
+    label = factor(
+      c("Extra-household prob (eh_prob)",
+        "Intra-household symptomatic (ih_prob_Is)",
+        "Intra-household asymptomatic (ih_prob_Ia)",
+        "Symptomatic recovery (gamma_s)",
+        "Asymptomatic recovery (gamma_a)",
+        "Symptomatic proportion (phi)"),
+      levels = rev(c("Extra-household prob (eh_prob)",
+                 "Intra-household symptomatic (ih_prob_Is)",
+                 "Intra-household asymptomatic (ih_prob_Ia)",
+                 "Symptomatic recovery (gamma_s)",
+                 "Asymptomatic recovery (gamma_a)",
+                 "Symptomatic proportion (phi)"))
+    )
+  )
+
+ggplot(draws_plot, aes(y = label)) +
+  geom_errorbar(aes(xmin = q2.5, xmax = q97.5), width = 0, color = "#7570b3", linewidth = 1) +
+  geom_point(aes(x = median, fill = "Posterior median"), size = 3, shape = 21, color = "#4d4785", stroke = 1.4) +
+  geom_point(aes(x = true_value, fill = "True simulation value"), size = 3, shape = 23, color = "#a63603", stroke = 1.4) +
+  facet_wrap(~category, scales = "free", ncol = 1) +
+  scale_fill_manual(
+    name = "",
+    values = c("Posterior median" = "#ffffff", "True simulation value" = "#d95f02"),
+    guide = guide_legend(override.aes = list(
+      shape = c(21, 23),
+      color = c("#4d4785", "#a63603"),
+      fill = c("#ffffff", "#d95f02")
+    ))
+  ) +
+  labs(
+    title = "SIIR Model Parameter Estimates",
+    subtitle = "Circle = posterior median; bar = 95% CrI; diamond = true simulation value",
+    x = "Parameter Value",
+    y = NULL
+  ) +
+  theme_minimal() +
+  theme(
+    legend.position = "top",
+    legend.justification = "right",
+    panel.grid.minor = element_blank(),
+    panel.grid.major.y = element_line(color = "grey90"),
+    plot.title = element_text(face = "bold"),
+    strip.text = element_text(face = "bold", hjust = 0)
+  )
 ```
 
 
