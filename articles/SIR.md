@@ -127,6 +127,56 @@ draws_sum
     ## 2 ih_prob  0.0545  0.0545  0.0486  0.0607 Infection probability       0.05
     ## 3 gamma    0.203   0.203   0.192   0.213  Recovery rate               0.2
 
+We can also visualize the parameter estimates alongside the true
+simulation values:
+
+``` r
+
+draws_plot <- draws_sum |>
+  mutate(
+    label = factor(
+      c("Extra-household infection prob (eh_prob)",
+        "Intra-household infection prob (ih_prob)",
+        "Recovery rate (gamma)"),
+      levels = c("Extra-household infection prob (eh_prob)",
+                 "Intra-household infection prob (ih_prob)",
+                 "Recovery rate (gamma)")
+    )
+  )
+
+ggplot(draws_plot, aes(y = label)) +
+  geom_errorbar(aes(xmin = q2.5, xmax = q97.5), width = 0, color = "#2b5c8f", linewidth = 1) +
+  geom_point(aes(x = median, fill = "Posterior median"), size = 3, shape = 21, color = "#0f2540", stroke = 1.4) +
+  geom_point(aes(x = true_value, fill = "True simulation value"), size = 3, shape = 23, color = "#a63603", stroke = 1.4) +
+  facet_wrap(~var_type, scales = "free", ncol = 1) +
+  scale_fill_manual(
+    name = "",
+    values = c("Posterior median" = "#ffffff", "True simulation value" = "#d95f02"),
+    guide = guide_legend(override.aes = list(
+      shape = c(21, 23),
+      color = c("#0f2540", "#a63603"),
+      fill = c("#ffffff", "#d95f02")
+    ))
+  ) +
+  labs(
+    title = "Posterior Parameter Estimates (SIR Model)",
+    subtitle = "Circle = posterior median; bar = 95% credible interval; diamond = true simulation value",
+    x = "Parameter Value (Natural Scale)",
+    y = NULL
+  ) +
+  theme_minimal() +
+  theme(
+    legend.position = "top",
+    legend.justification = "right",
+    panel.grid.minor = element_blank(),
+    panel.grid.major.y = element_line(color = "grey90"),
+    plot.title = element_text(face = "bold"),
+    strip.text = element_text(face = "bold", hjust = 0)
+  )
+```
+
+![](SIR_files/figure-html/unnamed-chunk-6-1.png)
+
 ### Add in covariates
 
 We can add covariates on the intra- and extra-household infection risk
@@ -181,3 +231,68 @@ draws_sum
     ## 5 x2_eh    2.03    2.03    1.75    2.37   Coefficient               2.01 
     ## 6 x1_ih    2.22    2.20    1.77    2.74   Coefficient               2.23 
     ## 7 x2_ih    0.857   0.851   0.659   1.10   Coefficient               1.11
+
+We can plot the baseline probabilities, recovery rate, and covariate
+effects on the natural (exponentiated) scale:
+
+``` r
+
+draws_cov_plot <- draws_sum |>
+  mutate(
+    category = factor(
+      c("Baseline Probabilities", "Baseline Probabilities", "Recovery Rate",
+        rep("Covariate Effects (Natural / Exponentiated Scale)", 4)),
+      levels = c("Baseline Probabilities", "Recovery Rate", "Covariate Effects (Natural / Exponentiated Scale)")
+    ),
+    label = factor(
+      c("Extra-household baseline (eh_prob)",
+        "Intra-household baseline (ih_prob)",
+        "Recovery rate (gamma)",
+        "x1 on extra-household (x1_eh)",
+        "x2 on extra-household (x2_eh)",
+        "x1 on intra-household (x1_ih)",
+        "x2 on intra-household (x2_ih)"),
+      levels = rev(c("Extra-household baseline (eh_prob)",
+                 "Intra-household baseline (ih_prob)",
+                 "Recovery rate (gamma)",
+                 "x1 on extra-household (x1_eh)",
+                 "x2 on extra-household (x2_eh)",
+                 "x1 on intra-household (x1_ih)",
+                 "x2 on intra-household (x2_ih)"))
+    )
+  )
+
+ggplot(draws_cov_plot, aes(y = label)) +
+  geom_vline(data = filter(draws_cov_plot, grepl("Covariate", category)),
+             aes(xintercept = 1), linetype = "dashed", color = "grey60") +
+  geom_errorbar(aes(xmin = q2.5, xmax = q97.5), width = 0, color = "#1b9e77", linewidth = 1) +
+  geom_point(aes(x = median, fill = "Posterior median"), size = 3, shape = 21, color = "#0d664c", stroke = 1.4) +
+  geom_point(aes(x = true_vals, fill = "True simulation value"), size = 3, shape = 23, color = "#a63603", stroke = 1.4) +
+  facet_wrap(~category, scales = "free", ncol = 1) +
+  scale_fill_manual(
+    name = "",
+    values = c("Posterior median" = "#ffffff", "True simulation value" = "#d95f02"),
+    guide = guide_legend(override.aes = list(
+      shape = c(21, 23),
+      color = c("#0d664c", "#a63603"),
+      fill = c("#ffffff", "#d95f02")
+    ))
+  ) +
+  labs(
+    title = "Posterior Estimates with Covariates (SIR Model)",
+    subtitle = "Circle = posterior median; bar = 95% CrI; diamond = true simulation value",
+    x = "Estimate",
+    y = NULL
+  ) +
+  theme_minimal() +
+  theme(
+    legend.position = "top",
+    legend.justification = "right",
+    panel.grid.minor = element_blank(),
+    panel.grid.major.y = element_line(color = "grey90"),
+    plot.title = element_text(face = "bold"),
+    strip.text = element_text(face = "bold", hjust = 0)
+  )
+```
+
+![](SIR_files/figure-html/unnamed-chunk-9-1.png)

@@ -185,6 +185,51 @@ package.</p>
 <span><span class="co">## <span style="color: #BCBCBC;">1</span> eh_prob  0.009<span style="text-decoration: underline;">84</span> 0.009<span style="text-decoration: underline;">84</span> 0.009<span style="text-decoration: underline;">11</span> 0.010<span style="text-decoration: underline;">5</span> Infection probability       0.01</span></span>
 <span><span class="co">## <span style="color: #BCBCBC;">2</span> ih_prob  0.054<span style="text-decoration: underline;">5</span>  0.054<span style="text-decoration: underline;">5</span>  0.048<span style="text-decoration: underline;">6</span>  0.060<span style="text-decoration: underline;">7</span> Infection probability       0.05</span></span>
 <span><span class="co">## <span style="color: #BCBCBC;">3</span> gamma    0.203   0.203   0.192   0.213  Recovery rate               0.2</span></span></code></pre>
+<p>We can also visualize the parameter estimates alongside the true
+simulation values:</p>
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">draws_plot</span> <span class="op">&lt;-</span> <span class="va">draws_sum</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu">mutate</span><span class="op">(</span></span>
+<span>    label <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/factor.html" class="external-link">factor</a></span><span class="op">(</span></span>
+<span>      <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Extra-household infection prob (eh_prob)"</span>,</span>
+<span>        <span class="st">"Intra-household infection prob (ih_prob)"</span>,</span>
+<span>        <span class="st">"Recovery rate (gamma)"</span><span class="op">)</span>,</span>
+<span>      levels <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Extra-household infection prob (eh_prob)"</span>,</span>
+<span>                 <span class="st">"Intra-household infection prob (ih_prob)"</span>,</span>
+<span>                 <span class="st">"Recovery rate (gamma)"</span><span class="op">)</span></span>
+<span>    <span class="op">)</span></span>
+<span>  <span class="op">)</span></span>
+<span></span>
+<span><span class="fu">ggplot</span><span class="op">(</span><span class="va">draws_plot</span>, <span class="fu">aes</span><span class="op">(</span>y <span class="op">=</span> <span class="va">label</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu">geom_errorbar</span><span class="op">(</span><span class="fu">aes</span><span class="op">(</span>xmin <span class="op">=</span> <span class="va">q2.5</span>, xmax <span class="op">=</span> <span class="va">q97.5</span><span class="op">)</span>, width <span class="op">=</span> <span class="fl">0</span>, color <span class="op">=</span> <span class="st">"#2b5c8f"</span>, linewidth <span class="op">=</span> <span class="fl">1</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu">geom_point</span><span class="op">(</span><span class="fu">aes</span><span class="op">(</span>x <span class="op">=</span> <span class="va">median</span>, fill <span class="op">=</span> <span class="st">"Posterior median"</span><span class="op">)</span>, size <span class="op">=</span> <span class="fl">3</span>, shape <span class="op">=</span> <span class="fl">21</span>, color <span class="op">=</span> <span class="st">"#0f2540"</span>, stroke <span class="op">=</span> <span class="fl">1.4</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu">geom_point</span><span class="op">(</span><span class="fu">aes</span><span class="op">(</span>x <span class="op">=</span> <span class="va">true_value</span>, fill <span class="op">=</span> <span class="st">"True simulation value"</span><span class="op">)</span>, size <span class="op">=</span> <span class="fl">3</span>, shape <span class="op">=</span> <span class="fl">23</span>, color <span class="op">=</span> <span class="st">"#a63603"</span>, stroke <span class="op">=</span> <span class="fl">1.4</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu">facet_wrap</span><span class="op">(</span><span class="op">~</span><span class="va">var_type</span>, scales <span class="op">=</span> <span class="st">"free"</span>, ncol <span class="op">=</span> <span class="fl">1</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu">scale_fill_manual</span><span class="op">(</span></span>
+<span>    name <span class="op">=</span> <span class="st">""</span>,</span>
+<span>    values <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Posterior median"</span> <span class="op">=</span> <span class="st">"#ffffff"</span>, <span class="st">"True simulation value"</span> <span class="op">=</span> <span class="st">"#d95f02"</span><span class="op">)</span>,</span>
+<span>    guide <span class="op">=</span> <span class="fu">guide_legend</span><span class="op">(</span>override.aes <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
+<span>      shape <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">21</span>, <span class="fl">23</span><span class="op">)</span>,</span>
+<span>      color <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"#0f2540"</span>, <span class="st">"#a63603"</span><span class="op">)</span>,</span>
+<span>      fill <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"#ffffff"</span>, <span class="st">"#d95f02"</span><span class="op">)</span></span>
+<span>    <span class="op">)</span><span class="op">)</span></span>
+<span>  <span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu">labs</span><span class="op">(</span></span>
+<span>    title <span class="op">=</span> <span class="st">"Posterior Parameter Estimates (SIR Model)"</span>,</span>
+<span>    subtitle <span class="op">=</span> <span class="st">"Circle = posterior median; bar = 95% credible interval; diamond = true simulation value"</span>,</span>
+<span>    x <span class="op">=</span> <span class="st">"Parameter Value (Natural Scale)"</span>,</span>
+<span>    y <span class="op">=</span> <span class="cn">NULL</span></span>
+<span>  <span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu">theme_minimal</span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu">theme</span><span class="op">(</span></span>
+<span>    legend.position <span class="op">=</span> <span class="st">"top"</span>,</span>
+<span>    legend.justification <span class="op">=</span> <span class="st">"right"</span>,</span>
+<span>    panel.grid.minor <span class="op">=</span> <span class="fu">element_blank</span><span class="op">(</span><span class="op">)</span>,</span>
+<span>    panel.grid.major.y <span class="op">=</span> <span class="fu">element_line</span><span class="op">(</span>color <span class="op">=</span> <span class="st">"grey90"</span><span class="op">)</span>,</span>
+<span>    plot.title <span class="op">=</span> <span class="fu">element_text</span><span class="op">(</span>face <span class="op">=</span> <span class="st">"bold"</span><span class="op">)</span>,</span>
+<span>    strip.text <span class="op">=</span> <span class="fu">element_text</span><span class="op">(</span>face <span class="op">=</span> <span class="st">"bold"</span>, hjust <span class="op">=</span> <span class="fl">0</span><span class="op">)</span></span>
+<span>  <span class="op">)</span></span></code></pre></div>
+<p><img src="SIR_files/figure-html/unnamed-chunk-6-1.png" class="r-plt" alt="" width="672"></p>
 </div>
 </div>
 <div class="section level3">
@@ -194,7 +239,7 @@ package.</p>
 risk by including the optional <code>ih_cov</code> and
 <code>eh_cov</code> arguments, respectively, in
 <code><a href="../reference/run_model.html">run_model()</a></code>.</p>
-<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Simulated data from a basic SIR model for 500 households</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">sir_cov</span><span class="op">$</span><span class="va">observations</span><span class="op">)</span></span>
 <span></span>
@@ -209,7 +254,7 @@ risk by including the optional <code>ih_cov</code> and
 <span>  stan_opts <span class="op">=</span> <span class="fu">stan_options</span><span class="op">(</span>iter <span class="op">=</span> <span class="fl">1000</span><span class="op">)</span></span>
 <span><span class="op">)</span></span></code></pre></div>
 <p>Let’s take a look at the results once more.</p>
-<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># The output from the model in the previous code chunk is available in the</span></span>
 <span><span class="co"># sir_cov_res package data object</span></span>
 <span></span>
@@ -234,6 +279,66 @@ risk by including the optional <code>ih_cov</code> and
 <span><span class="co">## <span style="color: #BCBCBC;">5</span> x2_eh    2.03    2.03    1.75    2.37   Coefficient               2.01 </span></span>
 <span><span class="co">## <span style="color: #BCBCBC;">6</span> x1_ih    2.22    2.20    1.77    2.74   Coefficient               2.23 </span></span>
 <span><span class="co">## <span style="color: #BCBCBC;">7</span> x2_ih    0.857   0.851   0.659   1.10   Coefficient               1.11</span></span></code></pre>
+<p>We can plot the baseline probabilities, recovery rate, and covariate
+effects on the natural (exponentiated) scale:</p>
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">draws_cov_plot</span> <span class="op">&lt;-</span> <span class="va">draws_sum</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu">mutate</span><span class="op">(</span></span>
+<span>    category <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/factor.html" class="external-link">factor</a></span><span class="op">(</span></span>
+<span>      <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Baseline Probabilities"</span>, <span class="st">"Baseline Probabilities"</span>, <span class="st">"Recovery Rate"</span>,</span>
+<span>        <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="st">"Covariate Effects (Natural / Exponentiated Scale)"</span>, <span class="fl">4</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>      levels <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Baseline Probabilities"</span>, <span class="st">"Recovery Rate"</span>, <span class="st">"Covariate Effects (Natural / Exponentiated Scale)"</span><span class="op">)</span></span>
+<span>    <span class="op">)</span>,</span>
+<span>    label <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/factor.html" class="external-link">factor</a></span><span class="op">(</span></span>
+<span>      <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Extra-household baseline (eh_prob)"</span>,</span>
+<span>        <span class="st">"Intra-household baseline (ih_prob)"</span>,</span>
+<span>        <span class="st">"Recovery rate (gamma)"</span>,</span>
+<span>        <span class="st">"x1 on extra-household (x1_eh)"</span>,</span>
+<span>        <span class="st">"x2 on extra-household (x2_eh)"</span>,</span>
+<span>        <span class="st">"x1 on intra-household (x1_ih)"</span>,</span>
+<span>        <span class="st">"x2 on intra-household (x2_ih)"</span><span class="op">)</span>,</span>
+<span>      levels <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/rev.html" class="external-link">rev</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Extra-household baseline (eh_prob)"</span>,</span>
+<span>                 <span class="st">"Intra-household baseline (ih_prob)"</span>,</span>
+<span>                 <span class="st">"Recovery rate (gamma)"</span>,</span>
+<span>                 <span class="st">"x1 on extra-household (x1_eh)"</span>,</span>
+<span>                 <span class="st">"x2 on extra-household (x2_eh)"</span>,</span>
+<span>                 <span class="st">"x1 on intra-household (x1_ih)"</span>,</span>
+<span>                 <span class="st">"x2 on intra-household (x2_ih)"</span><span class="op">)</span><span class="op">)</span></span>
+<span>    <span class="op">)</span></span>
+<span>  <span class="op">)</span></span>
+<span></span>
+<span><span class="fu">ggplot</span><span class="op">(</span><span class="va">draws_cov_plot</span>, <span class="fu">aes</span><span class="op">(</span>y <span class="op">=</span> <span class="va">label</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu">geom_vline</span><span class="op">(</span>data <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">draws_cov_plot</span>, <span class="fu"><a href="https://rdrr.io/r/base/grep.html" class="external-link">grepl</a></span><span class="op">(</span><span class="st">"Covariate"</span>, <span class="va">category</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>             <span class="fu">aes</span><span class="op">(</span>xintercept <span class="op">=</span> <span class="fl">1</span><span class="op">)</span>, linetype <span class="op">=</span> <span class="st">"dashed"</span>, color <span class="op">=</span> <span class="st">"grey60"</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu">geom_errorbar</span><span class="op">(</span><span class="fu">aes</span><span class="op">(</span>xmin <span class="op">=</span> <span class="va">q2.5</span>, xmax <span class="op">=</span> <span class="va">q97.5</span><span class="op">)</span>, width <span class="op">=</span> <span class="fl">0</span>, color <span class="op">=</span> <span class="st">"#1b9e77"</span>, linewidth <span class="op">=</span> <span class="fl">1</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu">geom_point</span><span class="op">(</span><span class="fu">aes</span><span class="op">(</span>x <span class="op">=</span> <span class="va">median</span>, fill <span class="op">=</span> <span class="st">"Posterior median"</span><span class="op">)</span>, size <span class="op">=</span> <span class="fl">3</span>, shape <span class="op">=</span> <span class="fl">21</span>, color <span class="op">=</span> <span class="st">"#0d664c"</span>, stroke <span class="op">=</span> <span class="fl">1.4</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu">geom_point</span><span class="op">(</span><span class="fu">aes</span><span class="op">(</span>x <span class="op">=</span> <span class="va">true_vals</span>, fill <span class="op">=</span> <span class="st">"True simulation value"</span><span class="op">)</span>, size <span class="op">=</span> <span class="fl">3</span>, shape <span class="op">=</span> <span class="fl">23</span>, color <span class="op">=</span> <span class="st">"#a63603"</span>, stroke <span class="op">=</span> <span class="fl">1.4</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu">facet_wrap</span><span class="op">(</span><span class="op">~</span><span class="va">category</span>, scales <span class="op">=</span> <span class="st">"free"</span>, ncol <span class="op">=</span> <span class="fl">1</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu">scale_fill_manual</span><span class="op">(</span></span>
+<span>    name <span class="op">=</span> <span class="st">""</span>,</span>
+<span>    values <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Posterior median"</span> <span class="op">=</span> <span class="st">"#ffffff"</span>, <span class="st">"True simulation value"</span> <span class="op">=</span> <span class="st">"#d95f02"</span><span class="op">)</span>,</span>
+<span>    guide <span class="op">=</span> <span class="fu">guide_legend</span><span class="op">(</span>override.aes <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
+<span>      shape <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">21</span>, <span class="fl">23</span><span class="op">)</span>,</span>
+<span>      color <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"#0d664c"</span>, <span class="st">"#a63603"</span><span class="op">)</span>,</span>
+<span>      fill <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"#ffffff"</span>, <span class="st">"#d95f02"</span><span class="op">)</span></span>
+<span>    <span class="op">)</span><span class="op">)</span></span>
+<span>  <span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu">labs</span><span class="op">(</span></span>
+<span>    title <span class="op">=</span> <span class="st">"Posterior Estimates with Covariates (SIR Model)"</span>,</span>
+<span>    subtitle <span class="op">=</span> <span class="st">"Circle = posterior median; bar = 95% CrI; diamond = true simulation value"</span>,</span>
+<span>    x <span class="op">=</span> <span class="st">"Estimate"</span>,</span>
+<span>    y <span class="op">=</span> <span class="cn">NULL</span></span>
+<span>  <span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu">theme_minimal</span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu">theme</span><span class="op">(</span></span>
+<span>    legend.position <span class="op">=</span> <span class="st">"top"</span>,</span>
+<span>    legend.justification <span class="op">=</span> <span class="st">"right"</span>,</span>
+<span>    panel.grid.minor <span class="op">=</span> <span class="fu">element_blank</span><span class="op">(</span><span class="op">)</span>,</span>
+<span>    panel.grid.major.y <span class="op">=</span> <span class="fu">element_line</span><span class="op">(</span>color <span class="op">=</span> <span class="st">"grey90"</span><span class="op">)</span>,</span>
+<span>    plot.title <span class="op">=</span> <span class="fu">element_text</span><span class="op">(</span>face <span class="op">=</span> <span class="st">"bold"</span><span class="op">)</span>,</span>
+<span>    strip.text <span class="op">=</span> <span class="fu">element_text</span><span class="op">(</span>face <span class="op">=</span> <span class="st">"bold"</span>, hjust <span class="op">=</span> <span class="fl">0</span><span class="op">)</span></span>
+<span>  <span class="op">)</span></span></code></pre></div>
+<p><img src="SIR_files/figure-html/unnamed-chunk-9-1.png" class="r-plt" alt="" width="672"></p>
 </div>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

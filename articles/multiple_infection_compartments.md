@@ -48,9 +48,10 @@ the model enforces that the proportion going to the second infectious
 compartment is `1-split`. Here we are providing a parameter name to this
 argument (`split = "phi"`) indicating that we want the model to fit this
 parameter. We could also provide a numeric value for the model to use
-directly. We also use the `mult_inf_probs = TRUE` argument to indicate
-that we would like the two infectious compartments to have separate
-(rather than a single shared) intra-household infection probability.
+directly. We also use the `mult_ih_inf_probs = TRUE` argument to
+indicate that we would like the two infectious compartments to have
+separate (rather than a single shared) intra-household infection
+probability.
 
 ``` r
 
@@ -134,3 +135,65 @@ draws_sum
     ## 4 gamma_s    0.204   0.204   0.191   0.217  Recovery rate               0.2  
     ## 5 gamma_a    0.339   0.339   0.311   0.369  Recovery rate               0.333
     ## 6 phi        0.688   0.688   0.660   0.715  Symptomatic proportion      0.7
+
+We can also visualize the parameter estimates alongside the true
+simulation values:
+
+``` r
+
+draws_plot <- draws_sum |>
+  mutate(
+    category = factor(
+      c(rep("Infection Probability (daily)", 3),
+        rep("Recovery Rate (per day)", 2),
+        "Symptomatic Proportion (split)"),
+      levels = c("Infection Probability (daily)", "Recovery Rate (per day)", "Symptomatic Proportion (split)")
+    ),
+    label = factor(
+      c("Extra-household prob (eh_prob)",
+        "Intra-household symptomatic (ih_prob_Is)",
+        "Intra-household asymptomatic (ih_prob_Ia)",
+        "Symptomatic recovery (gamma_s)",
+        "Asymptomatic recovery (gamma_a)",
+        "Symptomatic proportion (phi)"),
+      levels = rev(c("Extra-household prob (eh_prob)",
+                 "Intra-household symptomatic (ih_prob_Is)",
+                 "Intra-household asymptomatic (ih_prob_Ia)",
+                 "Symptomatic recovery (gamma_s)",
+                 "Asymptomatic recovery (gamma_a)",
+                 "Symptomatic proportion (phi)"))
+    )
+  )
+
+ggplot(draws_plot, aes(y = label)) +
+  geom_errorbar(aes(xmin = q2.5, xmax = q97.5), width = 0, color = "#7570b3", linewidth = 1) +
+  geom_point(aes(x = median, fill = "Posterior median"), size = 3, shape = 21, color = "#4d4785", stroke = 1.4) +
+  geom_point(aes(x = true_value, fill = "True simulation value"), size = 3, shape = 23, color = "#a63603", stroke = 1.4) +
+  facet_wrap(~category, scales = "free", ncol = 1) +
+  scale_fill_manual(
+    name = "",
+    values = c("Posterior median" = "#ffffff", "True simulation value" = "#d95f02"),
+    guide = guide_legend(override.aes = list(
+      shape = c(21, 23),
+      color = c("#4d4785", "#a63603"),
+      fill = c("#ffffff", "#d95f02")
+    ))
+  ) +
+  labs(
+    title = "SIIR Model Parameter Estimates",
+    subtitle = "Circle = posterior median; bar = 95% CrI; diamond = true simulation value",
+    x = "Parameter Value",
+    y = NULL
+  ) +
+  theme_minimal() +
+  theme(
+    legend.position = "top",
+    legend.justification = "right",
+    panel.grid.minor = element_blank(),
+    panel.grid.major.y = element_line(color = "grey90"),
+    plot.title = element_text(face = "bold"),
+    strip.text = element_text(face = "bold", hjust = 0)
+  )
+```
+
+![](multiple_infection_compartments_files/figure-html/unnamed-chunk-6-1.png)
