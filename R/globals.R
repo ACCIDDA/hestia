@@ -2,6 +2,9 @@
 
 utils::globalVariables(c(
   "param", # <get_transmission_details>
+  "from", # <get_transmission_details>
+  "split_value", # <get_transmission_details>
+  "split_name", # <get_transmission_details>
   "hh_id", # <make_stan_data>
   "part_id", # <make_stan_data>
   "hh_size", # <make_stan_data>

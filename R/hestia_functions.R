@@ -463,7 +463,10 @@ graph_connected <- function(graph) {
 #' get_transmission_details(inf_model)
 #'
 #'
-#' @global param
+#' @global param 
+#' @global from 
+#' @global split_value
+#' @global split_name
 #'
 #' @importFrom dplyr bind_rows mutate
 #' @importFrom tidyr replace_na
@@ -717,6 +720,7 @@ make_observation_model <- function(...) {
 #'  name matches the outcome name provided to \link{make_observation_model}
 #' @param init_probs vector of initial probabilities for each infection process
 #'   model state
+#' @param t_start integer value corresponding to the start of model time  
 #' @param epsilon very small number to use for zero probability transitions
 #' @param ih_cov NULL for run without covariates, otherwise data frame with
 #'   intra-household covariates for each participant
@@ -903,6 +907,7 @@ make_stan_data <- function(
 #'  name matches the outcome name provided to \link{make_observation_model}
 #' @param init_probs vector of initial probabilities for each infection process
 #'   model state
+#' @param t_start integer value corresponding to the start of model time
 #' @param epsilon very small number to use for zero probability transitions
 #' @param ih_cov NULL for run without covariates, otherwise data frame with
 #'   intra-household covariates for each participant
