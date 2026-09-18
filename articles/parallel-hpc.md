@@ -32,7 +32,9 @@ chains.
 ## Turning it on
 
 Threading is off unless you ask for it, and you ask for it through the
-same `stan_options()` you already pass to
+same
+[`stan_options()`](https://accidda.github.io/flexstanr/reference/stan_options.html)
+you already pass to
 [`run_model()`](https://accidda.github.io/hestia/reference/run_model.md):
 
 ``` r

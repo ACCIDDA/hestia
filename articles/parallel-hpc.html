@@ -108,7 +108,7 @@ more cores than chains.</p>
 <h2 id="turning-it-on">Turning it on<a class="anchor" aria-label="anchor" href="#turning-it-on"></a>
 </h2>
 <p>Threading is off unless you ask for it, and you ask for it through
-the same <code>stan_options()</code> you already pass to
+the same <code><a href="https://accidda.github.io/flexstanr/reference/stan_options.html" class="external-link">stan_options()</a></code> you already pass to
 <code><a href="../reference/run_model.html">run_model()</a></code>:</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># detect the cores this process is allowed to use and split them automatically</span></span>
@@ -117,17 +117,17 @@ the same <code>stan_options()</code> you already pass to
 <span>  obs_model  <span class="op">=</span> <span class="va">obs_process</span>,</span>
 <span>  data       <span class="op">=</span> <span class="va">sir</span>,</span>
 <span>  init_probs <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span> <span class="op">-</span> <span class="fl">2</span> <span class="op">*</span> <span class="fl">1e-10</span>, <span class="fl">1e-10</span>, <span class="fl">1e-10</span><span class="op">)</span>,</span>
-<span>  stan_opts  <span class="op">=</span> <span class="fu">stan_options</span><span class="op">(</span>chains <span class="op">=</span> <span class="fl">4</span>, iter <span class="op">=</span> <span class="fl">1000</span>, threading <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
+<span>  stan_opts  <span class="op">=</span> <span class="fu"><a href="https://accidda.github.io/flexstanr/reference/stan_options.html" class="external-link">stan_options</a></span><span class="op">(</span>chains <span class="op">=</span> <span class="fl">4</span>, iter <span class="op">=</span> <span class="fl">1000</span>, threading <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
 <span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># cap the pool, for example to keep some cores free</span></span>
 <span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/run_model.html">run_model</a></span><span class="op">(</span></span>
 <span>  <span class="va">...</span>,</span>
-<span>  stan_opts <span class="op">=</span> <span class="fu">stan_options</span><span class="op">(</span>chains <span class="op">=</span> <span class="fl">4</span>, threading <span class="op">=</span> <span class="cn">TRUE</span>, max_cores <span class="op">=</span> <span class="fl">6</span><span class="op">)</span></span>
+<span>  stan_opts <span class="op">=</span> <span class="fu"><a href="https://accidda.github.io/flexstanr/reference/stan_options.html" class="external-link">stan_options</a></span><span class="op">(</span>chains <span class="op">=</span> <span class="fl">4</span>, threading <span class="op">=</span> <span class="cn">TRUE</span>, max_cores <span class="op">=</span> <span class="fl">6</span><span class="op">)</span></span>
 <span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># single-threaded (the default): manage backend parallelism yourself</span></span>
-<span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/run_model.html">run_model</a></span><span class="op">(</span><span class="va">...</span>, stan_opts <span class="op">=</span> <span class="fu">stan_options</span><span class="op">(</span>threading <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+<span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/run_model.html">run_model</a></span><span class="op">(</span><span class="va">...</span>, stan_opts <span class="op">=</span> <span class="fu"><a href="https://accidda.github.io/flexstanr/reference/stan_options.html" class="external-link">stan_options</a></span><span class="op">(</span>threading <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
 <p>The same <code>stan_opts</code> works on a laptop and inside a
 scheduled job: <code>flexstanr</code> sizes the fit from the allocation
 the process actually has, not from the machine’s total core count. See

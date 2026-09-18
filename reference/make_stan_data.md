@@ -51,6 +51,10 @@ make_stan_data(
 
   vector of initial probabilities for each infection process model state
 
+- t_start:
+
+  integer value corresponding to the start of model time
+
 - epsilon:
 
   very small number to use for zero probability transitions

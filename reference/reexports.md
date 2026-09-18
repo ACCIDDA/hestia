@@ -5,4 +5,4 @@ to see their documentation.
 
 - flexstanr:
 
-  `stan_options()`
+  [`stan_options()`](https://accidda.github.io/flexstanr/reference/stan_options.html)

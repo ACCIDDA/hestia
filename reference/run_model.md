@@ -55,6 +55,10 @@ run_model(
 
   vector of initial probabilities for each infection process model state
 
+- t_start:
+
+  integer value corresponding to the start of model time
+
 - epsilon:
 
   very small number to use for zero probability transitions
@@ -89,7 +93,8 @@ run_model(
 
 - stan_opts:
 
-  a named list of Stan sampler options, as produced by `stan_options()`
+  a named list of Stan sampler options, as produced by
+  [`stan_options()`](https://accidda.github.io/flexstanr/reference/stan_options.html)
   (for example `stan_options(iter = 1000)`).
 
 ## Value
@@ -121,8 +126,8 @@ run_model(inf_model = inf_mod,
 #> 
 #> SAMPLING FOR MODEL 'hmm' NOW (CHAIN 1).
 #> Chain 1: 
-#> Chain 1: Gradient evaluation took 0.008057 seconds
-#> Chain 1: 1000 transitions using 10 leapfrog steps per transition would take 80.57 seconds.
+#> Chain 1: Gradient evaluation took 0.010731 seconds
+#> Chain 1: 1000 transitions using 10 leapfrog steps per transition would take 107.31 seconds.
 #> Chain 1: Adjust your expectations accordingly!
 #> Chain 1: 
 #> Chain 1: 
@@ -139,15 +144,15 @@ run_model(inf_model = inf_mod,
 #> Chain 1: Iteration: 1800 / 2000 [ 90%]  (Sampling)
 #> Chain 1: Iteration: 2000 / 2000 [100%]  (Sampling)
 #> Chain 1: 
-#> Chain 1:  Elapsed Time: 38.736 seconds (Warm-up)
-#> Chain 1:                38.627 seconds (Sampling)
-#> Chain 1:                77.363 seconds (Total)
+#> Chain 1:  Elapsed Time: 48.529 seconds (Warm-up)
+#> Chain 1:                52.613 seconds (Sampling)
+#> Chain 1:                101.142 seconds (Total)
 #> Chain 1: 
 #> 
 #> SAMPLING FOR MODEL 'hmm' NOW (CHAIN 2).
 #> Chain 2: 
-#> Chain 2: Gradient evaluation took 0.006345 seconds
-#> Chain 2: 1000 transitions using 10 leapfrog steps per transition would take 63.45 seconds.
+#> Chain 2: Gradient evaluation took 0.008242 seconds
+#> Chain 2: 1000 transitions using 10 leapfrog steps per transition would take 82.42 seconds.
 #> Chain 2: Adjust your expectations accordingly!
 #> Chain 2: 
 #> Chain 2: 
@@ -164,15 +169,15 @@ run_model(inf_model = inf_mod,
 #> Chain 2: Iteration: 1800 / 2000 [ 90%]  (Sampling)
 #> Chain 2: Iteration: 2000 / 2000 [100%]  (Sampling)
 #> Chain 2: 
-#> Chain 2:  Elapsed Time: 36.064 seconds (Warm-up)
-#> Chain 2:                37.76 seconds (Sampling)
-#> Chain 2:                73.824 seconds (Total)
+#> Chain 2:  Elapsed Time: 49.348 seconds (Warm-up)
+#> Chain 2:                45.593 seconds (Sampling)
+#> Chain 2:                94.941 seconds (Total)
 #> Chain 2: 
 #> 
 #> SAMPLING FOR MODEL 'hmm' NOW (CHAIN 3).
 #> Chain 3: 
-#> Chain 3: Gradient evaluation took 0.005833 seconds
-#> Chain 3: 1000 transitions using 10 leapfrog steps per transition would take 58.33 seconds.
+#> Chain 3: Gradient evaluation took 0.008142 seconds
+#> Chain 3: 1000 transitions using 10 leapfrog steps per transition would take 81.42 seconds.
 #> Chain 3: Adjust your expectations accordingly!
 #> Chain 3: 
 #> Chain 3: 
@@ -189,15 +194,15 @@ run_model(inf_model = inf_mod,
 #> Chain 3: Iteration: 1800 / 2000 [ 90%]  (Sampling)
 #> Chain 3: Iteration: 2000 / 2000 [100%]  (Sampling)
 #> Chain 3: 
-#> Chain 3:  Elapsed Time: 43.726 seconds (Warm-up)
-#> Chain 3:                40.324 seconds (Sampling)
-#> Chain 3:                84.05 seconds (Total)
+#> Chain 3:  Elapsed Time: 48.005 seconds (Warm-up)
+#> Chain 3:                51.698 seconds (Sampling)
+#> Chain 3:                99.703 seconds (Total)
 #> Chain 3: 
 #> 
 #> SAMPLING FOR MODEL 'hmm' NOW (CHAIN 4).
 #> Chain 4: 
-#> Chain 4: Gradient evaluation took 0.005926 seconds
-#> Chain 4: 1000 transitions using 10 leapfrog steps per transition would take 59.26 seconds.
+#> Chain 4: Gradient evaluation took 0.007605 seconds
+#> Chain 4: 1000 transitions using 10 leapfrog steps per transition would take 76.05 seconds.
 #> Chain 4: Adjust your expectations accordingly!
 #> Chain 4: 
 #> Chain 4: 
@@ -214,40 +219,40 @@ run_model(inf_model = inf_mod,
 #> Chain 4: Iteration: 1800 / 2000 [ 90%]  (Sampling)
 #> Chain 4: Iteration: 2000 / 2000 [100%]  (Sampling)
 #> Chain 4: 
-#> Chain 4:  Elapsed Time: 36.846 seconds (Warm-up)
-#> Chain 4:                39.213 seconds (Sampling)
-#> Chain 4:                76.059 seconds (Total)
+#> Chain 4:  Elapsed Time: 47.576 seconds (Warm-up)
+#> Chain 4:                51.716 seconds (Sampling)
+#> Chain 4:                99.292 seconds (Total)
 #> Chain 4: 
 #> # A draws_array: 1000 iterations, 4 chains, and 3 variables
 #> , , variable = eh_prob
 #> 
 #>          chain
-#> iteration     1     2     3     4
-#>         1 0.012 0.017 0.026 0.019
-#>         2 0.011 0.017 0.022 0.014
-#>         3 0.018 0.017 0.019 0.015
-#>         4 0.017 0.014 0.019 0.023
-#>         5 0.017 0.016 0.015 0.025
+#> iteration     1     2     3      4
+#>         1 0.017 0.023 0.019 0.0206
+#>         2 0.015 0.016 0.015 0.0204
+#>         3 0.017 0.019 0.024 0.0112
+#>         4 0.025 0.020 0.012 0.0108
+#>         5 0.013 0.014 0.018 0.0085
 #> 
 #> , , variable = ih_prob
 #> 
 #>          chain
 #> iteration     1     2     3     4
-#>         1 0.079 0.020 0.033 0.049
-#>         2 0.074 0.070 0.058 0.065
-#>         3 0.049 0.058 0.043 0.041
-#>         4 0.057 0.041 0.044 0.068
-#>         5 0.049 0.037 0.025 0.071
+#>         1 0.079 0.059 0.035 0.029
+#>         2 0.026 0.047 0.044 0.053
+#>         3 0.030 0.064 0.080 0.054
+#>         4 0.041 0.060 0.051 0.067
+#>         5 0.039 0.044 0.063 0.078
 #> 
 #> , , variable = gamma
 #> 
 #>          chain
-#> iteration    1    2    3    4
-#>         1 0.15 0.15 0.12 0.15
-#>         2 0.15 0.13 0.16 0.19
-#>         3 0.14 0.15 0.13 0.13
-#>         4 0.16 0.15 0.15 0.14
-#>         5 0.16 0.14 0.13 0.13
+#> iteration    1    2    3     4
+#>         1 0.14 0.13 0.20 0.142
+#>         2 0.17 0.18 0.18 0.087
+#>         3 0.17 0.14 0.15 0.164
+#>         4 0.12 0.22 0.18 0.136
+#>         5 0.15 0.14 0.16 0.134
 #> 
 #> # ... with 995 more iterations
 # }
