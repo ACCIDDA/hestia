@@ -126,8 +126,8 @@ run_model(inf_model = inf_mod,
 #> 
 #> SAMPLING FOR MODEL 'hmm' NOW (CHAIN 1).
 #> Chain 1: 
-#> Chain 1: Gradient evaluation took 0.010684 seconds
-#> Chain 1: 1000 transitions using 10 leapfrog steps per transition would take 106.84 seconds.
+#> Chain 1: Gradient evaluation took 0.008629 seconds
+#> Chain 1: 1000 transitions using 10 leapfrog steps per transition would take 86.29 seconds.
 #> Chain 1: Adjust your expectations accordingly!
 #> Chain 1: 
 #> Chain 1: 
@@ -144,15 +144,15 @@ run_model(inf_model = inf_mod,
 #> Chain 1: Iteration: 1800 / 2000 [ 90%]  (Sampling)
 #> Chain 1: Iteration: 2000 / 2000 [100%]  (Sampling)
 #> Chain 1: 
-#> Chain 1:  Elapsed Time: 51.105 seconds (Warm-up)
-#> Chain 1:                49.206 seconds (Sampling)
-#> Chain 1:                100.311 seconds (Total)
+#> Chain 1:  Elapsed Time: 38.197 seconds (Warm-up)
+#> Chain 1:                38.332 seconds (Sampling)
+#> Chain 1:                76.529 seconds (Total)
 #> Chain 1: 
 #> 
 #> SAMPLING FOR MODEL 'hmm' NOW (CHAIN 2).
 #> Chain 2: 
-#> Chain 2: Gradient evaluation took 0.008101 seconds
-#> Chain 2: 1000 transitions using 10 leapfrog steps per transition would take 81.01 seconds.
+#> Chain 2: Gradient evaluation took 0.006089 seconds
+#> Chain 2: 1000 transitions using 10 leapfrog steps per transition would take 60.89 seconds.
 #> Chain 2: Adjust your expectations accordingly!
 #> Chain 2: 
 #> Chain 2: 
@@ -169,15 +169,15 @@ run_model(inf_model = inf_mod,
 #> Chain 2: Iteration: 1800 / 2000 [ 90%]  (Sampling)
 #> Chain 2: Iteration: 2000 / 2000 [100%]  (Sampling)
 #> Chain 2: 
-#> Chain 2:  Elapsed Time: 48.754 seconds (Warm-up)
-#> Chain 2:                48.466 seconds (Sampling)
-#> Chain 2:                97.22 seconds (Total)
+#> Chain 2:  Elapsed Time: 36.209 seconds (Warm-up)
+#> Chain 2:                40.978 seconds (Sampling)
+#> Chain 2:                77.187 seconds (Total)
 #> Chain 2: 
 #> 
 #> SAMPLING FOR MODEL 'hmm' NOW (CHAIN 3).
 #> Chain 3: 
-#> Chain 3: Gradient evaluation took 0.008557 seconds
-#> Chain 3: 1000 transitions using 10 leapfrog steps per transition would take 85.57 seconds.
+#> Chain 3: Gradient evaluation took 0.006586 seconds
+#> Chain 3: 1000 transitions using 10 leapfrog steps per transition would take 65.86 seconds.
 #> Chain 3: Adjust your expectations accordingly!
 #> Chain 3: 
 #> Chain 3: 
@@ -194,15 +194,15 @@ run_model(inf_model = inf_mod,
 #> Chain 3: Iteration: 1800 / 2000 [ 90%]  (Sampling)
 #> Chain 3: Iteration: 2000 / 2000 [100%]  (Sampling)
 #> Chain 3: 
-#> Chain 3:  Elapsed Time: 50.24 seconds (Warm-up)
-#> Chain 3:                53.065 seconds (Sampling)
-#> Chain 3:                103.305 seconds (Total)
+#> Chain 3:  Elapsed Time: 38.123 seconds (Warm-up)
+#> Chain 3:                38.181 seconds (Sampling)
+#> Chain 3:                76.304 seconds (Total)
 #> Chain 3: 
 #> 
 #> SAMPLING FOR MODEL 'hmm' NOW (CHAIN 4).
 #> Chain 4: 
-#> Chain 4: Gradient evaluation took 0.009427 seconds
-#> Chain 4: 1000 transitions using 10 leapfrog steps per transition would take 94.27 seconds.
+#> Chain 4: Gradient evaluation took 0.006511 seconds
+#> Chain 4: 1000 transitions using 10 leapfrog steps per transition would take 65.11 seconds.
 #> Chain 4: Adjust your expectations accordingly!
 #> Chain 4: 
 #> Chain 4: 
@@ -219,40 +219,40 @@ run_model(inf_model = inf_mod,
 #> Chain 4: Iteration: 1800 / 2000 [ 90%]  (Sampling)
 #> Chain 4: Iteration: 2000 / 2000 [100%]  (Sampling)
 #> Chain 4: 
-#> Chain 4:  Elapsed Time: 55.052 seconds (Warm-up)
-#> Chain 4:                41.917 seconds (Sampling)
-#> Chain 4:                96.969 seconds (Total)
+#> Chain 4:  Elapsed Time: 36.868 seconds (Warm-up)
+#> Chain 4:                37.817 seconds (Sampling)
+#> Chain 4:                74.685 seconds (Total)
 #> Chain 4: 
 #> # A draws_array: 1000 iterations, 4 chains, and 3 variables
 #> , , variable = eh_prob
 #> 
 #>          chain
-#> iteration     1     2     3     4
-#>         1 0.014 0.014 0.013 0.024
-#>         2 0.016 0.016 0.019 0.024
-#>         3 0.025 0.016 0.021 0.013
-#>         4 0.022 0.012 0.034 0.021
-#>         5 0.013 0.026 0.014 0.014
+#> iteration      1     2      3     4
+#>         1 0.0103 0.020 0.0199 0.017
+#>         2 0.0177 0.013 0.0204 0.012
+#>         3 0.0224 0.022 0.0083 0.022
+#>         4 0.0133 0.018 0.0176 0.020
+#>         5 0.0082 0.018 0.0178 0.017
 #> 
 #> , , variable = ih_prob
 #> 
 #>          chain
 #> iteration     1     2     3     4
-#>         1 0.072 0.038 0.050 0.056
-#>         2 0.088 0.076 0.088 0.065
-#>         3 0.052 0.048 0.023 0.080
-#>         4 0.050 0.066 0.024 0.046
-#>         5 0.068 0.049 0.045 0.083
+#>         1 0.045 0.079 0.070 0.067
+#>         2 0.050 0.044 0.041 0.060
+#>         3 0.090 0.082 0.106 0.066
+#>         4 0.044 0.062 0.043 0.051
+#>         5 0.039 0.050 0.042 0.042
 #> 
 #> , , variable = gamma
 #> 
 #>          chain
 #> iteration    1    2    3    4
-#>         1 0.15 0.16 0.16 0.18
-#>         2 0.17 0.14 0.13 0.16
-#>         3 0.18 0.12 0.19 0.13
-#>         4 0.17 0.15 0.15 0.15
-#>         5 0.19 0.20 0.18 0.15
+#>         1 0.14 0.16 0.16 0.17
+#>         2 0.15 0.16 0.15 0.17
+#>         3 0.14 0.15 0.14 0.16
+#>         4 0.17 0.16 0.13 0.15
+#>         5 0.16 0.17 0.15 0.21
 #> 
 #> # ... with 995 more iterations
 # }
