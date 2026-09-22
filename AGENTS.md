@@ -37,7 +37,7 @@ This document provides concise instructions and rules for AI coding assistants w
 * **Test Suite Conventions**:
   * Unit tests live in `tests/testthat/`.
   * Reusable test helpers and model constructors live in `tests/testthat/helper-fixtures.R`.
-  * Use `expect_shape(df, nrow = ..., ncol = ...)` for verifying tabular shapes.
+  * Use `expect_shape(df, expected_nrow = ..., expected_ncol = ...)` for verifying tabular shapes.
 
 ---
 
