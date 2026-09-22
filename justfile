@@ -25,8 +25,19 @@ docs: bootstrap-namespace
 format:
         air format .
 
-[doc('Check R code using air and lintr')]
-lint: lintair lintr
+[doc('Check R code using air and lintr, and verify that Rcpp exports are up to date')]
+lint: lintair lintr check-rcpp
+
+[doc('Check that Rcpp export bindings in src/ are synchronized with Stan models')]
+check-rcpp:
+        #!/usr/bin/env bash
+        set -euo pipefail
+        Rscript -e "if (require(Rcpp)) Rcpp::compileAttributes() else stop(\"missing 'Rcpp'\")"
+        if ! git diff --quiet src/RcppExports.cpp; then
+                echo "Error: src/RcppExports.cpp is out of date. Run 'just docs' or 'Rcpp::compileAttributes()' and commit the changes." >&2
+                git diff src/RcppExports.cpp
+                exit 1
+        fi
 
 [doc('Check R code using air')]
 lintair:
