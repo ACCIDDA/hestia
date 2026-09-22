@@ -6,17 +6,17 @@
 [![codecov](https://codecov.io/gh/ACCIDDA/hestia/branch/main/graph/badge.svg)](https://app.codecov.io/gh/ACCIDDA/hestia)
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.20837539.svg)](https://doi.org/10.5281/zenodo.20837539)
 
-`{hestia}` fits Bayesian compartmental infection models — such as
-susceptible-infected-recovered (SIR) and multi-compartment hidden Markov
-variants — from individual-level outcome data. Models are composed from
-infection-process and observation-process components and fit using Stan
-via [rstan](https://mc-stan.org/rstan/).
+[hestia](https://accidda.github.io/hestia/) fits Bayesian compartmental
+infection models — such as susceptible-infected-recovered (SIR) and
+multi-compartment hidden Markov variants — from individual-level outcome
+data. Models are composed from infection-process and observation-process
+components and fit using Stan via [rstan](https://mc-stan.org/rstan/).
 
 ## Installation
 
 ``` r
 
-remotes::install_github("ACCIDDA/hestia")
+remotes::install_github("ACCIDDA/hestia", build = TRUE)
 ```
 
 Requires R \>= 4.1.0 and a C++ toolchain (for Stan model compilation).
@@ -50,8 +50,9 @@ worked examples, including a multi-compartment
 
 ## Part of ACCIDDA
 
-`{hestia}` is developed by the [Atlantic Coast Center for Infectious
-Disease Dynamics and Analytics (ACCIDDA)](https://accidda.org/).
+[hestia](https://accidda.github.io/hestia/) is developed by the
+[Atlantic Coast Center for Infectious Disease Dynamics and Analytics
+(ACCIDDA)](https://accidda.org/).
 
 # Package index
 

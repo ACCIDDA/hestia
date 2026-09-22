@@ -7,6 +7,16 @@ A DESCRIPTION OF THE PACKAGE
 Stan Development Team (NA). RStan: the R interface to Stan. R package
 version 2.32.7. https://mc-stan.org
 
+## See also
+
+Useful links:
+
+- <https://accidda.github.io/hestia/>
+
+- <https://github.com/ACCIDDA/hestia>
+
+- Report bugs at <https://github.com/ACCIDDA/hestia/issues>
+
 ## Author
 
 **Maintainer**: Claire Perrin Smith <clairesmith6995@gmail.com>

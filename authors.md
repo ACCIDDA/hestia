@@ -2,12 +2,15 @@
 
 ## Authors
 
-- **Claire Perrin Smith**. Author, maintainer.
-  [](https://orcid.org/0000-0003-1069-9460)
+- **[Claire Perrin Smith](https://github.com/csmith701)**. Author,
+  maintainer. [](https://orcid.org/0000-0003-1069-9460)
 
-- **Jack Goodall**. Author.
+- **[Jack Goodall](https://github.com/jackwgoodall)**. Author.
 
 ## Citation
+
+Source:
+[`inst/CITATION`](https://github.com/ACCIDDA/hestia/blob/main/inst/CITATION)
 
 Smith, Claire Perrin and Goodall, Jack (2026). hestia: Bayesian
 Compartmental Infection Models from Individual Outcomes. R package
