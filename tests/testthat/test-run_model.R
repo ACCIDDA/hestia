@@ -122,7 +122,7 @@ test_that("State probabilities match expectation for toy examples", {
     out <- 1
     for (j in seq_len(nrow(m))) {
       if (j != i) {
-        out = out - m[j, i]
+        out <- out - m[j, i]
       }
     }
     out

@@ -53,3 +53,14 @@ siir_observation_model <- function() {
 sir_subset <- function(n_hh = 10) {
   sir[sir$hh_id <= n_hh, ]
 }
+
+# Custom expectation for verifying data frame / matrix dimensions.
+expect_shape <- function(object, nrow = NULL, ncol = NULL) {
+  if (!is.null(nrow)) {
+    testthat::expect_equal(nrow(object), nrow)
+  }
+  if (!is.null(ncol)) {
+    testthat::expect_equal(ncol(object), ncol)
+  }
+  invisible(object)
+}

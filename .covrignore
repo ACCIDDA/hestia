@@ -8,5 +8,10 @@
 # can act on. The Stan models themselves are exercised by integration
 # tests via hestia(), but coverage is recorded against the .stan source,
 # which covr doesn't instrument anyway.
-src/stanExports_*.cc
-src/stanExports_*.h
+src/*.cc
+src/*.cpp
+src/*.h
+R/stanmodels.R
+R/globals.R
+R/flexstanr.R
+

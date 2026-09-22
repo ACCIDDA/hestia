@@ -1,0 +1,87 @@
+name: Promote Release Candidate to Official Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to promote (e.g., 0.1.0). If blank, reads from DESCRIPTION.'
+        required: false
+        default: ''
+      cleanup_candidate:
+        description: 'Delete candidate pre-release after promotion?'
+        type: boolean
+        default: true
+
+permissions:
+  contents: write
+
+jobs:
+  promote:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Promote candidate to official release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: bash
+        run: |
+          VERSION="${{ github.event.inputs.version }}"
+          if [ -z "$VERSION" ]; then
+            VERSION=$(grep -E '^Version:' DESCRIPTION | sed -E 's/Version:[[:space:]]*//')
+          fi
+          
+          CANDIDATE_TAG="v${VERSION}-candidate"
+          FINAL_TAG="v${VERSION}"
+          
+          echo "Promoting $CANDIDATE_TAG to $FINAL_TAG..."
+          
+          # Check if candidate release exists
+          if ! gh release view "$CANDIDATE_TAG" >/dev/null 2>&1; then
+            echo "Error: Candidate release $CANDIDATE_TAG not found on GitHub." >&2
+            exit 1
+          fi
+          
+          # Download the source tarball from the candidate release
+          mkdir -p /tmp/release-asset/
+          gh release download "$CANDIDATE_TAG" --pattern "*.tar.gz" --dir /tmp/release-asset/
+          TARBALL=$(ls -1 /tmp/release-asset/*.tar.gz 2>/dev/null | head -n 1)
+          
+          if [ ! -f "$TARBALL" ]; then
+            echo "Error: No .tar.gz source artifact found in candidate release $CANDIDATE_TAG." >&2
+            exit 1
+          fi
+          
+          echo "Found candidate source tarball: $TARBALL"
+          
+          # Get target commit from candidate tag
+          TARGET_COMMIT=$(git rev-list -n 1 "$CANDIDATE_TAG")
+          echo "Target commit for official release: $TARGET_COMMIT"
+          
+          # Create permanent production git tag
+          git tag -f "$FINAL_TAG" "$TARGET_COMMIT"
+          git push --force origin "$FINAL_TAG"
+          
+          # Create or update official production GitHub release
+          if gh release view "$FINAL_TAG" >/dev/null 2>&1; then
+            echo "Official release $FINAL_TAG already exists. Uploading asset and setting latest..."
+            gh release edit "$FINAL_TAG" --title "hestia v${VERSION}" --prerelease=false --latest
+            gh release upload "$FINAL_TAG" "$TARBALL" --clobber
+          else
+            echo "Creating official GitHub release $FINAL_TAG..."
+            gh release create "$FINAL_TAG" "$TARBALL" \
+              --title "hestia v${VERSION}" \
+              --notes "Official CRAN release for hestia v${VERSION} accepted on $(date -u +'%Y-%m-%d'). Built from commit ${TARGET_COMMIT}." \
+              --target "$TARGET_COMMIT" \
+              --latest
+          fi
+          
+          # Clean up candidate release if requested
+          if [ "${{ github.event.inputs.cleanup_candidate }}" = "true" ]; then
+            echo "Deleting temporary candidate release and tag: $CANDIDATE_TAG..."
+            gh release delete "$CANDIDATE_TAG" --yes --cleanup-tag || true
+          fi
+          
+          echo "Successfully promoted hestia v${VERSION} to official release!"

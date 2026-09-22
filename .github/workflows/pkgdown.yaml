@@ -27,36 +27,22 @@ jobs:
 
       - uses: r-lib/actions/setup-pandoc@v2
 
-      - uses: r-lib/actions/setup-r@v2
+      # local::. is intentionally NOT installed by the setup: NAMESPACE is
+      # untracked, so the package can't be installed until the composite
+      # action's NAMESPACE bootstrap + roxygenise have all run. The
+      # "Build site" step installs it (install = TRUE) afterwards.
+      - name: Setup hestia CI environment
+        uses: ./.github/actions/setup-hestia
         with:
-          use-public-rspm: true
-
-      - uses: r-lib/actions/setup-r-dependencies@v2
-        with:
-          extra-packages: any::pkgdown, any::roxygen2, any::roxyglobals, local::.
+          extra-packages: any::pkgdown, any::roxygen2, any::roxyglobals, any::pkgload
           needs: website
 
-      - name: Cache Stan compilation objects
-        uses: actions/cache@v5
-        with:
-          path: src/
-          key: ${{ runner.os }}-stan-pkgdown-${{ hashFiles('inst/stan/**/*.stan', 'src/**/*.stan') }}
-          restore-keys: |
-            ${{ runner.os }}-stan-pkgdown-
-            ${{ runner.os }}-stan-
-
-      # PKG_BUILD_EXTRA_FLAGS=false stops pkgbuild from injecting its
-      # debug flags (-g -O0) when pkgload::load_all() recompiles the
-      # package under roxygen2. See R-CMD-check.yaml for full context.
-      - name: Generate documentation
-        env:
-          PKG_BUILD_EXTRA_FLAGS: "false"
-        run: roxygen2::roxygenise()
-        shell: Rscript {0}
-
+      # install = TRUE installs the package here, AFTER the NAMESPACE bootstrap
+      # and roxygenise -- so the vignette renders against a build that has
+      # a valid NAMESPACE and registered symbols.
       - name: Build site
-        run: pkgdown::build_site_github_pages(new_process = FALSE, install = FALSE)
-        shell: Rscript {0}
+        shell: bash
+        run: just site-full
 
       - name: Deploy to GitHub pages
         if: github.event_name != 'pull_request'

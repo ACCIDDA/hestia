@@ -18,7 +18,10 @@ source("data-raw/tests/helper-bake.R")
 golden <- list(
   sir_res = draws_means(fit_test_recipe(build_sir_res_spec())),
   siir_res = draws_means(fit_test_recipe(build_siir_res_spec())),
-  sir_cov_res = draws_means(fit_test_recipe(build_sir_cov_res_spec(), cov = TRUE))
+  sir_cov_res = draws_means(fit_test_recipe(
+    build_sir_cov_res_spec(),
+    cov = TRUE
+  ))
 )
 
 saveRDS(golden, data_raw_path("tests", "golden-means.rds"))

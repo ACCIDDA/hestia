@@ -7,5 +7,10 @@ PKG_CPPFLAGS = -I"../inst/include" -I"$(STANHEADERS_SRC)" -DBOOST_DISABLE_ASSERT
 PKG_CXXFLAGS = $(shell "$(R_HOME)/bin$(R_ARCH_BIN)/Rscript" -e "RcppParallel::CxxFlags()") $(shell "$(R_HOME)/bin$(R_ARCH_BIN)/Rscript" -e "StanHeaders:::CxxFlags()")
 PKG_LIBS = $(shell "$(R_HOME)/bin$(R_ARCH_BIN)/Rscript" -e "RcppParallel::RcppParallelLibs()") $(shell "$(R_HOME)/bin$(R_ARCH_BIN)/Rscript" -e "StanHeaders:::LdFlags()")
 
-CXX_STD = CXX17
+# Generated Stan model .o files exceed the default COFF section limit (~65k)
+# on Windows; -Wa,-mbig-obj raises it. Needed for pkgload::load_all() to
+# succeed (required by roxygen2::roxygenise() in CI). See:
+# https://discourse.mc-stan.org/t/pkgbuild-compile-dll-on-previously-working-rstantools-based-package-fails-with-file-too-big-error/21938/16
 PKG_CXXFLAGS += -Wa,-mbig-obj
+
+CXX_STD = CXX17

@@ -109,12 +109,19 @@ test_that("a named split is carried into the multiplier fit table", {
 })
 
 test_that("separate infection probabilities expose both infectious states", {
-  shared <- get_transmission_details(siir_infection_model(mult_ih_inf_probs = FALSE))
-  separate <- get_transmission_details(siir_infection_model(mult_ih_inf_probs = TRUE))
+  shared <- get_transmission_details(siir_infection_model(
+    mult_ih_inf_probs = FALSE
+  ))
+  separate <- get_transmission_details(siir_infection_model(
+    mult_ih_inf_probs = TRUE
+  ))
 
   expect_false(isTRUE(shared$mult_ih_inf_probs))
   expect_true(isTRUE(separate$mult_ih_inf_probs))
 
   # Both Is and Ia are infectious sources regardless of the probability sharing.
-  expect_setequal(separate$inf_states, which(separate$states %in% c("Is", "Ia")))
+  expect_setequal(
+    separate$inf_states,
+    which(separate$states %in% c("Is", "Ia"))
+  )
 })

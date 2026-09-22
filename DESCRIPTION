@@ -14,23 +14,25 @@ Description: Fit Bayesian compartmental infection models (such as
     using Stan via 'rstan'.
 License: MIT + file LICENSE
 Encoding: UTF-8
+Language: en-US
 Roxygen: list(markdown = TRUE, roclets = c("collate", "namespace", "rd",
     "roxyglobals::global_roclet"))
 RoxygenNote: 7.3.3
+Biarch: true
+Depends:
+    R (>= 4.1.0)
 Imports:
     checkmate,
     dplyr,
-    flexstanr,
+    flexstanr (>= 0.2.0),
     methods,
     posterior,
     Rcpp (>= 0.12.0),
     RcppParallel (>= 5.0.1),
+    rstan (>= 2.18.1),
     rstantools (>= 2.5.0),
     stats,
     tidyr
-Biarch: true
-Depends:
-    R (>= 4.1.0)
 LinkingTo: 
     BH (>= 1.66.0),
     Rcpp (>= 0.12.0),
@@ -39,18 +41,24 @@ LinkingTo:
     rstan (>= 2.18.1),
     StanHeaders (>= 2.18.0)
 SystemRequirements: GNU make
-LazyData: true
 Suggests:
     bayesplot,
     ggplot2,
     knitr,
+    lintr,
     patchwork,
+    pkgload,
     rmarkdown,
+    roxygen2,
     roxyglobals,
-    rstan,
+    spelling,
     testthat (>= 3.0.0),
     withr
 VignetteBuilder: knitr
+Config/testthat/edition: 3
+URL: https://accidda.github.io/hestia/, https://github.com/ACCIDDA/hestia
+BugReports: https://github.com/ACCIDDA/hestia/issues
+LazyData: true
+LazyDataCompression: xz
 Config/roxyglobals/filename: globals.R
 Config/roxyglobals/unique: FALSE
-Config/testthat/edition: 3
