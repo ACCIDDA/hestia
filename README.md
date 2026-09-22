@@ -16,7 +16,7 @@ infection-process and observation-process components and fit using Stan via
 ## Installation
 
 ```r
-remotes::install_github("ACCIDDA/hestia")
+remotes::install_github("ACCIDDA/hestia", build = TRUE)
 ```
 
 Requires R >= 4.1.0 and a C++ toolchain (for Stan model compilation).
