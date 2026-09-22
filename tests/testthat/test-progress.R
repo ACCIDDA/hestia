@@ -6,7 +6,7 @@ test_that("one row per destination compartment", {
       split = c("boo", "baa"),
       rate1 = NA
     ),
-    nrow = 3
+    expected_nrow = 3
   )
 })
 

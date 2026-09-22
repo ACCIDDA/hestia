@@ -1,0 +1,21 @@
+coverage:
+  status:
+    project:
+      default:
+        target: auto
+        threshold: 1%
+    patch:
+      default:
+        target: auto
+        threshold: 1%
+
+ignore:
+  - "data-raw"
+  - "docs"
+  - "vignettes"
+  - "inst"
+  - "tests"
+  - "src"
+  - "R/stanmodels.R"
+  - "R/globals.R"
+  - "R/flexstanr.R"

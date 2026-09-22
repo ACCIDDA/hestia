@@ -189,13 +189,13 @@ sim_sir <- function(
               prob = c(no_inf_prob, (1 - no_inf_prob), 0)
             )
           } else if (prior[part] == 2) {
-            new_states[part] = sample(
+            new_states[part] <- sample(
               x = c(1, 2, 3),
               size = 1,
               prob = c(0, 1 - gamma, gamma)
             )
           } else {
-            new_states[part] = sample(
+            new_states[part] <- sample(
               x = c(1, 2, 3),
               size = 1,
               prob = c(0, 0, 1)
@@ -404,19 +404,19 @@ sim_siir <- function(
               )
             )
           } else if (prior[part] == 2) {
-            new_states[part] = sample(
+            new_states[part] <- sample(
               x = c(1, 2, 3, 4),
               size = 1,
               prob = c(0, 1 - gamma[1], 0, gamma[1])
             )
           } else if (prior[part] == 3) {
-            new_states[part] = sample(
+            new_states[part] <- sample(
               x = c(1, 2, 3, 4),
               size = 1,
               prob = c(0, 0, 1 - gamma[2], gamma[2])
             )
           } else {
-            new_states[part] = sample(
+            new_states[part] <- sample(
               x = c(1, 2, 3, 4),
               size = 1,
               prob = c(0, 0, 0, 1)
@@ -600,19 +600,19 @@ sim_seir <- function(
               prob = c(no_inf_prob, (1 - no_inf_prob), 0, 0)
             )
           } else if (prior[part] == 2) {
-            new_states[part] = sample(
+            new_states[part] <- sample(
               x = c(1, 2, 3, 4),
               size = 1,
               prob = c(0, 1 - sigma, sigma, 0)
             )
           } else if (prior[part] == 3) {
-            new_states[part] = sample(
+            new_states[part] <- sample(
               x = c(1, 2, 3, 4),
               size = 1,
               prob = c(0, 0, 1 - gamma, gamma)
             )
           } else {
-            new_states[part] = sample(
+            new_states[part] <- sample(
               x = c(1, 2, 3, 4),
               size = 1,
               prob = c(0, 0, 0, 1)
@@ -821,19 +821,19 @@ sim_siir_compete <- function(
               )
             )
           } else if (prior[part] == 2) {
-            new_states[part] = sample(
+            new_states[part] <- sample(
               x = c(1, 2, 3, 4),
               size = 1,
               prob = c(0, 1 - gamma[1], 0, gamma[1])
             )
           } else if (prior[part] == 3) {
-            new_states[part] = sample(
+            new_states[part] <- sample(
               x = c(1, 2, 3, 4),
               size = 1,
               prob = c(0, 0, 1 - gamma[2], gamma[2])
             )
           } else {
-            new_states[part] = sample(
+            new_states[part] <- sample(
               x = c(1, 2, 3, 4),
               size = 1,
               prob = c(0, 0, 0, 1)

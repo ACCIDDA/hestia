@@ -16,7 +16,7 @@ test_that("One to one, no source specified, no split specified works", {
   # Should only have one row
   expect_shape(
     transmit_test,
-    nrow = length(to_ref[1])
+    expected_nrow = length(to_ref[1])
   )
 
   # Source should autofill from "to" argument
@@ -42,7 +42,7 @@ test_that("One to many, no source specified, character split works", {
   # Should only have number of rows equal to length of "to"
   expect_shape(
     transmit_test,
-    nrow = length(to_ref)
+    expected_nrow = length(to_ref)
   )
 
   # Source should autofill from "to" argument
@@ -81,7 +81,7 @@ test_that("One to many, no source specified, numeric split works", {
   # Should only have number of rows equal to length of "to"
   expect_shape(
     transmit_test,
-    nrow = length(to_ref)
+    expected_nrow = length(to_ref)
   )
 
   # Source should autofill from "to" argument
@@ -117,7 +117,7 @@ test_that("One to many, source specified, numeric split works", {
   # Should only have number of rows equal to length of "to"
   expect_shape(
     transmit_test,
-    nrow = length(to_ref)
+    expected_nrow = length(to_ref)
   )
 
   # Source should be equal to input vector for all rows
