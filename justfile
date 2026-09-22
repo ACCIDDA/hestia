@@ -33,9 +33,9 @@ check-rcpp:
         #!/usr/bin/env bash
         set -euo pipefail
         Rscript -e "if (require(Rcpp)) Rcpp::compileAttributes() else stop(\"missing 'Rcpp'\")"
-        if ! git diff --quiet src/RcppExports.cpp; then
+        if [ -n "$(git status --porcelain -- src/RcppExports.cpp)" ]; then
                 echo "Error: src/RcppExports.cpp is out of date. Run 'just docs' or 'Rcpp::compileAttributes()' and commit the changes." >&2
-                git diff src/RcppExports.cpp
+                git diff -- src/RcppExports.cpp 2>/dev/null || true
                 exit 1
         fi
 
