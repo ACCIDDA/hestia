@@ -55,12 +55,21 @@ sir_subset <- function(n_hh = 10) {
 }
 
 # Custom expectation for verifying data frame / matrix dimensions.
-expect_shape <- function(object, nrow = NULL, ncol = NULL) {
-  if (!is.null(nrow)) {
-    testthat::expect_equal(nrow(object), nrow)
+expect_shape <- function(
+  object,
+  expected_nrow = NULL,
+  expected_ncol = NULL,
+  nrow = expected_nrow,
+  ncol = expected_ncol
+) {
+  target_nrow <- if (!is.null(expected_nrow)) expected_nrow else nrow
+  target_ncol <- if (!is.null(expected_ncol)) expected_ncol else ncol
+
+  if (!is.null(target_nrow)) {
+    testthat::expect_equal(base::nrow(object), target_nrow)
   }
-  if (!is.null(ncol)) {
-    testthat::expect_equal(ncol(object), ncol)
+  if (!is.null(target_ncol)) {
+    testthat::expect_equal(base::ncol(object), target_ncol)
   }
   invisible(object)
 }

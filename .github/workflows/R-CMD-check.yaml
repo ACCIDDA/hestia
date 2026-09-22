@@ -27,6 +27,21 @@ jobs:
           extra-packages: any::roxygen2, any::roxyglobals, any::pkgload
           needs: check
 
+      - name: Guard source tarball size
+        shell: bash
+        run: |
+          R CMD build .
+          TARBALL=$(ls -1 hestia_*.tar.gz | head -n 1)
+          SIZE=$(wc -c < "${TARBALL}")
+          echo "Built ${TARBALL} (${SIZE} bytes)"
+          if [ "${SIZE}" -gt 10485760 ]; then
+            echo "::error::Source tarball exceeds 10MB (${SIZE} bytes)"
+            exit 1
+          elif [ "${SIZE}" -gt 5242880 ]; then
+            echo "::warning::Source tarball exceeds 5MB (${SIZE} bytes), CRAN requires < 5MB"
+          fi
+          rm -f "${TARBALL}"
+
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
         with:
