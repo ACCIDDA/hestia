@@ -1,4 +1,6 @@
 test_that("return one set of chains per parameter", {
+  skip_on_cran()
+
   # Subset to first ten households
   siir_sub <- sir[sir$hh_id <= 10, ]
 
@@ -30,6 +32,8 @@ test_that("return one set of chains per parameter", {
 })
 
 test_that("multiple infections probabilities supported", {
+  skip_on_cran()
+
   # Subset to first ten households
   siir_sub <- sir[sir$hh_id <= 10, ]
 
@@ -113,6 +117,8 @@ test_that("entry validation rejects bad run_model inputs before sampling", {
 
 # Integration test
 test_that("State probabilities match expectation for toy examples", {
+  skip_on_cran()
+
   # Some utility functions
   softmax <- function(x) {
     exp(x) / sum(exp(x))
