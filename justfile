@@ -34,7 +34,7 @@ lint: lintair lintr check-rcpp
 check-rcpp:
         #!/usr/bin/env bash
         set -euo pipefail
-        Rscript -e "if (require(Rcpp)) Rcpp::compileAttributes() else stop(\"missing 'Rcpp'\")"
+        Rscript -e "if (requireNamespace('rstantools', quietly = TRUE)) rstantools::rstan_config(); if (require(Rcpp)) Rcpp::compileAttributes() else stop(\"missing 'Rcpp'\")"
         if [ -n "$(git status --porcelain -- src/RcppExports.cpp)" ]; then
                 echo "Error: src/RcppExports.cpp is out of date. Run 'just docs' or 'Rcpp::compileAttributes()' and commit the changes." >&2
                 git diff -- src/RcppExports.cpp 2>/dev/null || true
