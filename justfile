@@ -19,6 +19,8 @@ bootstrap-namespace:
 [doc('Regenerate roxygen output: man/*.Rd, NAMESPACE, and R/globals.R (all untracked)')]
 docs: bootstrap-namespace
         #!/usr/bin/env Rscript
+        if (requireNamespace("rstantools", quietly = TRUE)) rstantools::rstan_config()
+        if (requireNamespace("Rcpp", quietly = TRUE)) Rcpp::compileAttributes()
         if (require(roxygen2)) roxygen2::roxygenise() else stop("missing 'roxygen2'")
 
 [doc('Format R code using air')]
