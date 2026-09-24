@@ -1,11 +1,10 @@
 test_that("src/RcppExports.cpp is synchronized with Stan models and Rcpp attributes", {
   skip_if_not_installed("Rcpp")
   skip_if_not_installed("rstantools")
-  skip_if_not_installed("rprojroot")
-
-  pkg_dir <- tryCatch(
-    rprojroot::find_package_root_file(),
-    error = function(e) "."
+  pkg_dir <- normalizePath(
+    testthat::test_path("../.."),
+    winslash = "/",
+    mustWork = FALSE
   )
   cpp_file <- file.path(pkg_dir, "src", "RcppExports.cpp")
   skip_if(
