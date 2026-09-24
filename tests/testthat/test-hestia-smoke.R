@@ -17,20 +17,21 @@ test_that("run_model fits an SIR model end-to-end and returns named draws", {
   obs_mod <- sir_observation_model()
   dat <- sir_subset(10)
 
-  # run_model's default init list is built for the default 4 chains, so we keep
-  # the default chain count and just shorten the run to stay cheap in CI.
+  # A single short chain keeps this cheap enough to run unconditionally (no
+  # skip_on_cran()) on CRAN's own check machines: run_model()'s init list is
+  # built dynamically from stan_opts$chains, so chains = 1 is fully supported.
   suppressWarnings(suppressMessages(
     draws <- run_model(
       inf_model = inf_mod,
       obs_model = obs_mod,
       data = dat,
       init_probs = c(1 - 2 * 1e-10, 1e-10, 1e-10),
-      stan_opts = stan_options(iter = 200)
+      stan_opts = stan_options(iter = 50, chains = 1)
     )
   ))
 
   expect_s3_class(draws, "draws_array")
-  expect_equal(posterior::nchains(draws), 4)
+  expect_equal(posterior::nchains(draws), 1)
 
   # rename_chains labels the fitted parameters: the two infection probabilities
   # and the recovery rate gamma. They are returned on the natural (model) scale
