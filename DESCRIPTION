@@ -51,6 +51,7 @@ Suggests:
     rmarkdown,
     roxygen2,
     roxyglobals,
+    rprojroot,
     spelling,
     testthat (>= 3.0.0),
     withr

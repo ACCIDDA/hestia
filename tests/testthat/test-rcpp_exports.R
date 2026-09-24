@@ -1,6 +1,7 @@
 test_that("src/RcppExports.cpp is synchronized with Stan models and Rcpp attributes", {
   skip_if_not_installed("Rcpp")
   skip_if_not_installed("rstantools")
+  skip_if_not_installed("rprojroot")
 
   pkg_dir <- tryCatch(
     rprojroot::find_package_root_file(),
