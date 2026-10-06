@@ -2,7 +2,11 @@
 
 0 errors | 0 warnings | 2 notes
 
-* This is a new submission.
+* This is an initial submission of the package, resubmitting addressing the following failures of the automated checks.
+    * Fix broken URLs pointing to the pkgdown site
+    * Remove unneeded dependency on rprojroot
+    * Add missing words to spellchecker
+    * Skip integration testing on CRAN to avoid running over testing time limits
 
 * checking installed package size ... NOTE
     installed size is ~92Mb
