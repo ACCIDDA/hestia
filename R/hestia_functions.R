@@ -926,7 +926,7 @@ make_stan_data <- function(
 #'   [stan_options()] (for example `stan_options(iter = 1000)`).
 #' @returns `draws_array` object with chains for each model parameter
 #'
-#' @examples
+#' @examplesIf interactive()
 #' # Subset sir package data to 10 households (for speedy example)
 #' sir_sub <- sir[sir$hh_id <= 10, ]
 #'
