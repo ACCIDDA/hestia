@@ -1,7 +1,7 @@
 # End-to-end smoke test. This fits a real (if tiny) Stan model on the bundled
 # `sir` data and checks that the pipeline returns sensible, well-named draws.
-# It deliberately uses a single short chain so it is cheap enough to run in CI
-# on every push (no skip_on_cran()).
+# The live fit runs in CI but is skipped on CRAN: even a single short chain
+# uses several CPU seconds per elapsed second with Stan's reduce_sum (#91).
 
 test_that("the package and its bundled data are available", {
   expect_true(requireNamespace("hestia", quietly = TRUE))
@@ -13,13 +13,14 @@ test_that("the package and its bundled data are available", {
 })
 
 test_that("run_model fits an SIR model end-to-end and returns named draws", {
+  skip_on_cran()
+
   inf_mod <- sir_infection_model()
   obs_mod <- sir_observation_model()
   dat <- sir_subset(10)
 
-  # A single short chain keeps this cheap enough to run unconditionally (no
-  # skip_on_cran()) on CRAN's own check machines: run_model()'s init list is
-  # built dynamically from stan_opts$chains, so chains = 1 is fully supported.
+  # The init list is built dynamically from stan_opts$chains, so chains = 1 is
+  # supported while keeping this CI fit short.
   suppressWarnings(suppressMessages(
     draws <- run_model(
       inf_model = inf_mod,
