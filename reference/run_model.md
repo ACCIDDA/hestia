@@ -104,6 +104,7 @@ run_model(
 ## Examples
 
 ``` r
+if (FALSE) { # interactive()
 # Subset sir package data to 10 households (for speedy example)
 sir_sub <- sir[sir$hh_id <= 10, ]
 
@@ -123,137 +124,6 @@ run_model(inf_model = inf_mod,
           obs_model = obs_mod,
           data = sir_sub,
           init_probs = c(1 - 2 * 1e-10, 1e-10, 1e-10))
-#> 
-#> SAMPLING FOR MODEL 'hmm' NOW (CHAIN 1).
-#> Chain 1: 
-#> Chain 1: Gradient evaluation took 0.011001 seconds
-#> Chain 1: 1000 transitions using 10 leapfrog steps per transition would take 110.01 seconds.
-#> Chain 1: Adjust your expectations accordingly!
-#> Chain 1: 
-#> Chain 1: 
-#> Chain 1: Iteration:    1 / 2000 [  0%]  (Warmup)
-#> Chain 1: Iteration:  200 / 2000 [ 10%]  (Warmup)
-#> Chain 1: Iteration:  400 / 2000 [ 20%]  (Warmup)
-#> Chain 1: Iteration:  600 / 2000 [ 30%]  (Warmup)
-#> Chain 1: Iteration:  800 / 2000 [ 40%]  (Warmup)
-#> Chain 1: Iteration: 1000 / 2000 [ 50%]  (Warmup)
-#> Chain 1: Iteration: 1001 / 2000 [ 50%]  (Sampling)
-#> Chain 1: Iteration: 1200 / 2000 [ 60%]  (Sampling)
-#> Chain 1: Iteration: 1400 / 2000 [ 70%]  (Sampling)
-#> Chain 1: Iteration: 1600 / 2000 [ 80%]  (Sampling)
-#> Chain 1: Iteration: 1800 / 2000 [ 90%]  (Sampling)
-#> Chain 1: Iteration: 2000 / 2000 [100%]  (Sampling)
-#> Chain 1: 
-#> Chain 1:  Elapsed Time: 51.954 seconds (Warm-up)
-#> Chain 1:                45.106 seconds (Sampling)
-#> Chain 1:                97.06 seconds (Total)
-#> Chain 1: 
-#> 
-#> SAMPLING FOR MODEL 'hmm' NOW (CHAIN 2).
-#> Chain 2: 
-#> Chain 2: Gradient evaluation took 0.008455 seconds
-#> Chain 2: 1000 transitions using 10 leapfrog steps per transition would take 84.55 seconds.
-#> Chain 2: Adjust your expectations accordingly!
-#> Chain 2: 
-#> Chain 2: 
-#> Chain 2: Iteration:    1 / 2000 [  0%]  (Warmup)
-#> Chain 2: Iteration:  200 / 2000 [ 10%]  (Warmup)
-#> Chain 2: Iteration:  400 / 2000 [ 20%]  (Warmup)
-#> Chain 2: Iteration:  600 / 2000 [ 30%]  (Warmup)
-#> Chain 2: Iteration:  800 / 2000 [ 40%]  (Warmup)
-#> Chain 2: Iteration: 1000 / 2000 [ 50%]  (Warmup)
-#> Chain 2: Iteration: 1001 / 2000 [ 50%]  (Sampling)
-#> Chain 2: Iteration: 1200 / 2000 [ 60%]  (Sampling)
-#> Chain 2: Iteration: 1400 / 2000 [ 70%]  (Sampling)
-#> Chain 2: Iteration: 1600 / 2000 [ 80%]  (Sampling)
-#> Chain 2: Iteration: 1800 / 2000 [ 90%]  (Sampling)
-#> Chain 2: Iteration: 2000 / 2000 [100%]  (Sampling)
-#> Chain 2: 
-#> Chain 2:  Elapsed Time: 48.478 seconds (Warm-up)
-#> Chain 2:                44.664 seconds (Sampling)
-#> Chain 2:                93.142 seconds (Total)
-#> Chain 2: 
-#> 
-#> SAMPLING FOR MODEL 'hmm' NOW (CHAIN 3).
-#> Chain 3: 
-#> Chain 3: Gradient evaluation took 0.00794 seconds
-#> Chain 3: 1000 transitions using 10 leapfrog steps per transition would take 79.4 seconds.
-#> Chain 3: Adjust your expectations accordingly!
-#> Chain 3: 
-#> Chain 3: 
-#> Chain 3: Iteration:    1 / 2000 [  0%]  (Warmup)
-#> Chain 3: Iteration:  200 / 2000 [ 10%]  (Warmup)
-#> Chain 3: Iteration:  400 / 2000 [ 20%]  (Warmup)
-#> Chain 3: Iteration:  600 / 2000 [ 30%]  (Warmup)
-#> Chain 3: Iteration:  800 / 2000 [ 40%]  (Warmup)
-#> Chain 3: Iteration: 1000 / 2000 [ 50%]  (Warmup)
-#> Chain 3: Iteration: 1001 / 2000 [ 50%]  (Sampling)
-#> Chain 3: Iteration: 1200 / 2000 [ 60%]  (Sampling)
-#> Chain 3: Iteration: 1400 / 2000 [ 70%]  (Sampling)
-#> Chain 3: Iteration: 1600 / 2000 [ 80%]  (Sampling)
-#> Chain 3: Iteration: 1800 / 2000 [ 90%]  (Sampling)
-#> Chain 3: Iteration: 2000 / 2000 [100%]  (Sampling)
-#> Chain 3: 
-#> Chain 3:  Elapsed Time: 49.639 seconds (Warm-up)
-#> Chain 3:                53.964 seconds (Sampling)
-#> Chain 3:                103.603 seconds (Total)
-#> Chain 3: 
-#> 
-#> SAMPLING FOR MODEL 'hmm' NOW (CHAIN 4).
-#> Chain 4: 
-#> Chain 4: Gradient evaluation took 0.008184 seconds
-#> Chain 4: 1000 transitions using 10 leapfrog steps per transition would take 81.84 seconds.
-#> Chain 4: Adjust your expectations accordingly!
-#> Chain 4: 
-#> Chain 4: 
-#> Chain 4: Iteration:    1 / 2000 [  0%]  (Warmup)
-#> Chain 4: Iteration:  200 / 2000 [ 10%]  (Warmup)
-#> Chain 4: Iteration:  400 / 2000 [ 20%]  (Warmup)
-#> Chain 4: Iteration:  600 / 2000 [ 30%]  (Warmup)
-#> Chain 4: Iteration:  800 / 2000 [ 40%]  (Warmup)
-#> Chain 4: Iteration: 1000 / 2000 [ 50%]  (Warmup)
-#> Chain 4: Iteration: 1001 / 2000 [ 50%]  (Sampling)
-#> Chain 4: Iteration: 1200 / 2000 [ 60%]  (Sampling)
-#> Chain 4: Iteration: 1400 / 2000 [ 70%]  (Sampling)
-#> Chain 4: Iteration: 1600 / 2000 [ 80%]  (Sampling)
-#> Chain 4: Iteration: 1800 / 2000 [ 90%]  (Sampling)
-#> Chain 4: Iteration: 2000 / 2000 [100%]  (Sampling)
-#> Chain 4: 
-#> Chain 4:  Elapsed Time: 53.885 seconds (Warm-up)
-#> Chain 4:                78.86 seconds (Sampling)
-#> Chain 4:                132.745 seconds (Total)
-#> Chain 4: 
-#> # A draws_array: 1000 iterations, 4 chains, and 3 variables
-#> , , variable = eh_prob
-#> 
-#>          chain
-#> iteration     1     2     3     4
-#>         1 0.018 0.013 0.026 0.017
-#>         2 0.018 0.016 0.020 0.019
-#>         3 0.023 0.022 0.025 0.019
-#>         4 0.015 0.013 0.023 0.017
-#>         5 0.019 0.022 0.028 0.017
-#> 
-#> , , variable = ih_prob
-#> 
-#>          chain
-#> iteration     1     2     3     4
-#>         1 0.019 0.070 0.038 0.047
-#>         2 0.019 0.067 0.034 0.075
-#>         3 0.076 0.031 0.067 0.028
-#>         4 0.038 0.037 0.043 0.111
-#>         5 0.049 0.067 0.026 0.111
-#> 
-#> , , variable = gamma
-#> 
-#>          chain
-#> iteration    1     2    3    4
-#>         1 0.15 0.162 0.15 0.19
-#>         2 0.15 0.098 0.16 0.13
-#>         3 0.14 0.109 0.12 0.21
-#>         4 0.15 0.177 0.12 0.20
-#>         5 0.11 0.177 0.13 0.20
-#> 
-#> # ... with 995 more iterations
 # }
+}
 ```
