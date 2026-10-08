@@ -7,6 +7,7 @@
     * Remove unneeded dependency on rprojroot
     * Add missing words to spellchecker
     * Skip integration testing on CRAN to avoid running over testing time limits
+    * Skip smoke test which was still exceed CPU testing limits
 
 * checking installed package size ... NOTE
     installed size is ~92Mb
