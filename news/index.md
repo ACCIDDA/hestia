@@ -2,6 +2,8 @@
 
 ## hestia 0.1.0
 
+CRAN release: 2026-10-20
+
 - Stan fitting and draw extraction now use `flexstanr`. Configure
   automatic, scheduler-aware within-chain threading with
   `stan_options(threading = TRUE)`.
