@@ -92,34 +92,14 @@ check_rate_dots <- function(dots) {
 
 #' Validate a single observation-process specification
 #'
-#' Each observation is a named vector with one entry per compartment. Entries
-#' are either detection probabilities in `[0, 1]` or parameter names (optionally
-#' prefixed with `1-`). Mixing the two coerces numbers to strings, so numeric
-#' strings are read as fixed values.
+#' Each observation is a named numeric vector of detection probabilities, one
+#' entry per compartment, with values in `[0, 1]`.
 #'
 #' @param obs a single observation specification.
 #' @param nm its name, used in error messages.
-#' @importFrom checkmate assert_numeric assert_character
+#' @importFrom checkmate assert_numeric
 #' @keywords internal
 check_observation <- function(obs, nm = "observation") {
-  if (is.character(obs)) {
-    checkmate::assert_character(
-      obs,
-      min.len = 1,
-      min.chars = 1,
-      any.missing = FALSE,
-      names = "named",
-      .var.name = nm
-    )
-    value <- suppressWarnings(as.numeric(obs))
-    if (any(value < 0 | value > 1, na.rm = TRUE)) {
-      stop("Fixed values in observation '", nm, "' must be in [0, 1].")
-    }
-    if (any(obs[is.na(value)] == "1-")) {
-      stop("Observation '", nm, "' has a '1-' with no parameter name.")
-    }
-    return(invisible(NULL))
-  }
   checkmate::assert_numeric(
     obs,
     min.len = 1,

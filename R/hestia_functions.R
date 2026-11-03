@@ -654,25 +654,18 @@ get_transmission_details <- function(inf_model) {
 #' @title Make Observation Process Model
 #'
 #' @description Specifies, for each observation type (test), the probability of
-#'   a positive result in each compartment. Probabilities can be fixed or
-#'   estimated, in the same way as parameters in \link{progress} and
-#'   \link{transmit}.
+#'   a positive result in each compartment. A test's characteristics are either
+#'   fixed, or its sensitivity and specificity are estimated with
+#'   \link{estimate_test}.
 #'
-#' @param ... A series of named vectors. Each vector corresponds to an
-#'   observation type. Each entry in the vector is named for the corresponding
-#'   compartment in the infection process model. The value is the probability of
-#'   observing a positive observation given the individual is in the
-#'   compartment. A number is a fixed value and a string is the name of a
-#'   parameter to estimate; compartments sharing a name share the parameter. A
-#'   `1-` prefix gives the complement, so `"1-sp_pcr"` is the false-positive
-#'   rate for specificity `sp_pcr`. Each test can have at most one specificity,
-#'   and every other estimated parameter in that test is constrained to exceed
-#'   its false-positive rate, which rules out the mirror-image solution.
-#'   Parameter names cannot be shared between tests.
-#' @param priors A named list giving Beta(a, b) prior hyperparameters,
-#'   `c(a, b)`, for each estimated parameter. `NULL` if all values are fixed.
-#' @returns A named list with one entry for each observation type, with the
-#'   priors stored in the `"priors"` attribute.
+#' @param ... A series of named observation types. Each is either a named
+#'   numeric vector or an \link{estimate_test} specification. In a numeric
+#'   vector, each entry is named for the corresponding compartment in the
+#'   infection process model and gives the fixed probability of a positive
+#'   observation given the individual is in that compartment.
+#' @returns A list with one entry for each observation type: a matrix of
+#'   negative and positive probabilities for a fixed test, or the
+#'   \link{estimate_test} specification for an estimated one.
 #'
 #' @examples
 #' # Observation process for an SIR model with two observations, PCR test
@@ -682,16 +675,14 @@ get_transmission_details <- function(inf_model) {
 #'   igg = c("S" = 0.01, "I" = 0.01, "R" = 0.8)
 #' )
 #'
-#' @examples
 #' # Estimate PCR sensitivity and specificity, keeping IgG fixed.
 #' make_observation_model(
-#'   pcr = c("S" = "1-sp_pcr", "I" = "se_pcr", "R" = "1-sp_pcr"),
-#'   igg = c("S" = 0.01, "I" = 0.01, "R" = 0.8),
-#'   priors = list(se_pcr = c(9, 1), sp_pcr = c(19, 1))
+#'   pcr = estimate_test(positive = "I", se = c(9, 1), sp = c(19, 1)),
+#'   igg = c("S" = 0.01, "I" = 0.01, "R" = 0.8)
 #' )
 #'
 #' @export
-make_observation_model <- function(..., priors = NULL) {
+make_observation_model <- function(...) {
   .dots <- list(...)
 
   # Entry-level input validation
@@ -702,85 +693,72 @@ make_observation_model <- function(..., priors = NULL) {
   if (is.null(obs_names) || any(obs_names == "")) {
     stop("Every observation specification must be named.")
   }
+
+  ops <- list()
   for (i in seq_along(.dots)) {
+    if (inherits(.dots[[i]], "hestia_estimated_test")) {
+      ops[[i]] <- .dots[[i]]
+      next
+    }
     check_observation(.dots[[i]], nm = obs_names[i])
+    op <- matrix(nrow = 2, ncol = length(.dots[[i]]))
+    op[1, ] <- 1 - .dots[[i]]
+    op[2, ] <- .dots[[i]]
+    rownames(op) <- c("neg_obs", "pos_obs")
+    colnames(op) <- names(.dots[[i]])
+    ops[[i]] <- op
   }
+  names(ops) <- names(.dots)
 
   if (length(unique(names(.dots))) < length(names(.dots))) {
     stop("Observation names must be unique")
   }
 
-  # Checks on parameter specification
-  obs <- parse_obs_model(.dots)
-  est <- unique(obs[!is.na(obs$param), c("test", "param", "complement")])
-  if (anyDuplicated(est$param) > 0) {
-    stop(
-      "Each observation parameter must belong to a single test and be used ",
-      "either directly or with a '1-' prefix, not both."
-    )
-  }
-  if (anyDuplicated(est$test[est$complement]) > 0) {
-    stop("Each test can have at most one specificity (a '1-' parameter).")
-  }
+  ops
+}
 
-  missing_priors <- setdiff(est$param, names(priors))
-  if (length(missing_priors) > 0) {
-    stop(
-      "Missing priors for observation parameter(s): ",
-      paste(missing_priors, collapse = ", "),
-      "."
-    )
-  }
-  unused_priors <- setdiff(names(priors), est$param)
-  if (length(unused_priors) > 0) {
-    stop(
-      "Priors supplied for unknown observation parameter(s): ",
-      paste(unused_priors, collapse = ", "),
-      "."
-    )
-  }
-  for (nm in names(priors)) {
-    p <- priors[[nm]]
-    if (!is.numeric(p) || length(p) != 2 || anyNA(p) || any(p <= 0)) {
-      stop("Prior for '", nm, "' must be two positive numbers, c(a, b).")
+#' @title Estimate Test Sensitivity and Specificity
+#'
+#' @description Specifies an observation type whose sensitivity and specificity
+#'   are estimated rather than fixed, for use in \link{make_observation_model}.
+#'   Compartments in `positive` give a positive result with probability equal to
+#'   the sensitivity, and all other compartments with probability one minus the
+#'   specificity. Sensitivity is constrained to exceed one minus specificity,
+#'   which rules out the mirror-image solution in which the test is read the
+#'   wrong way round.
+#'
+#' @param positive Character vector of compartments in which the target is
+#'   present, so the test should be positive.
+#' @param se Numeric vector `c(a, b)` giving the Beta(a, b) prior on sensitivity.
+#' @param sp Numeric vector `c(a, b)` giving the Beta(a, b) prior on
+#'   specificity.
+#' @returns A list of class `hestia_estimated_test`.
+#'
+#' @importFrom checkmate assert_character
+#' @examples
+#' estimate_test(positive = "I", se = c(9, 1), sp = c(19, 1))
+#'
+#' @export
+estimate_test <- function(positive, se, sp) {
+  checkmate::assert_character(
+    positive,
+    min.len = 1,
+    min.chars = 1,
+    any.missing = FALSE,
+    unique = TRUE
+  )
+  for (prior in list(se = se, sp = sp)) {
+    if (
+      !is.numeric(prior) || length(prior) != 2 || anyNA(prior) || any(prior <= 0)
+    ) {
+      stop("'se' and 'sp' must each be two positive numbers, c(a, b).")
     }
   }
 
-  attr(.dots, "priors") <- priors
-  .dots
-}
-
-#' @title Parse Observation Process Model
-#'
-#' @description Splits each observation entry into a fixed value or a parameter
-#'   name, flagging names given as a complement (`1-` prefix).
-#'
-#' @param obs_model named list of observation vectors, as passed to
-#'   \link{make_observation_model}
-#' @returns A data frame with one row per test and compartment and columns
-#'  - "test", the observation name
-#'  - "state", the compartment name
-#'  - "value", the fixed probability of a positive result (NA if estimated)
-#'  - "param", the parameter name without any `1-` prefix (NA if fixed)
-#'  - "complement", TRUE if the parameter was given with a `1-` prefix
-#'
-#' @keywords internal
-#' @noRd
-parse_obs_model <- function(obs_model) {
-  out <- lapply(names(obs_model), function(nm) {
-    x <- obs_model[[nm]]
-    value <- suppressWarnings(as.numeric(x))
-    param <- ifelse(is.na(value), x, NA_character_)
-    complement <- !is.na(param) & startsWith(param, "1-")
-    data.frame(
-      test = nm,
-      state = names(x),
-      value = value,
-      param = ifelse(complement, substring(param, 3), param),
-      complement = complement
-    )
-  })
-  do.call(rbind, out)
+  structure(
+    list(positive = positive, se = se, sp = sp),
+    class = "hestia_estimated_test"
+  )
 }
 
 
@@ -870,52 +848,52 @@ make_stan_data <- function(
     }
   }
 
-  # Observation process, matched to states by compartment name
+  # Observation process, matched to compartments by name. Estimated tests are
+  # left at zero here and filled in from sensitivity and specificity in Stan.
   states <- inf_details$states
-  for (nm in names(obs_model)) {
-    obs_states <- names(obs_model[[nm]])
-    if (anyDuplicated(obs_states) > 0 || !setequal(obs_states, states)) {
-      stop(
-        "Observation '",
-        nm,
-        "' must have exactly one entry for each compartment: ",
-        paste(states, collapse = ", "),
-        "."
-      )
+  obs_array <- array(0, dim = c(length(obs_model), 2, length(states)))
+  est_test <- which(vapply(
+    obs_model,
+    inherits,
+    logical(1),
+    "hestia_estimated_test"
+  ))
+  pos_state <- matrix(0, nrow = length(est_test), ncol = length(states))
+  for (i in seq_along(obs_model)) {
+    obs <- obs_model[[i]]
+    nm <- names(obs_model)[i]
+    if (inherits(obs, "hestia_estimated_test")) {
+      if (!all(obs$positive %in% states) || all(states %in% obs$positive)) {
+        stop(
+          "Positive compartments for '",
+          nm,
+          "' must be some, but not all, of: ",
+          paste(states, collapse = ", "),
+          "."
+        )
+      }
+      pos_state[match(i, est_test), ] <- states %in% obs$positive
+    } else {
+      if (anyDuplicated(colnames(obs)) > 0 || !setequal(colnames(obs), states)) {
+        stop(
+          "Observation '",
+          nm,
+          "' must have exactly one entry for each compartment: ",
+          paste(states, collapse = ", "),
+          "."
+        )
+      }
+      obs_array[i, , ] <- obs[, states]
     }
   }
-  obs <- parse_obs_model(obs_model)
-  spec_names <- unique(obs$param[obs$complement])
-  sens_names <- unique(obs$param[!is.na(obs$param) & !obs$complement])
 
-  # Lookup from each test and state: index 0 is a fixed value, i is sensitivity
-  # i and -i is the complement of specificity i
-  obs_rc <- cbind(match(obs$test, names(obs_model)), match(obs$state, states))
-  obs_fixed <- matrix(0, nrow = length(obs_model), ncol = length(states))
-  obs_fixed[obs_rc] <- ifelse(is.na(obs$value), 0, obs$value)
-  obs_index <- matrix(0, nrow = length(obs_model), ncol = length(states))
-  idx <- ifelse(
-    obs$complement,
-    -match(obs$param, spec_names),
-    match(obs$param, sens_names)
-  )
-  obs_index[obs_rc] <- ifelse(is.na(idx), 0, idx)
-
-  # Specificity from the same test as each sensitivity (0 if none)
-  sens_spec <- match(
-    obs$test[match(sens_names, obs$param)],
-    obs$test[match(spec_names, obs$param)],
-    nomatch = 0
-  )
-
-  # Beta prior hyperparameters, with parameter names as row names
-  priors <- attr(obs_model, "priors")
-  prior_matrix <- function(nms) {
+  # Beta prior hyperparameters for each estimated test, one row per test
+  est_prior <- function(x) {
     matrix(
-      as.numeric(unlist(priors[nms])),
+      as.numeric(unlist(lapply(obs_model[est_test], `[[`, x))),
       ncol = 2,
       byrow = TRUE,
-      dimnames = list(nms, c("a", "b"))
+      dimnames = list(names(est_test), c("a", "b"))
     )
   }
 
@@ -971,13 +949,12 @@ make_stan_data <- function(
     hh_end_ind = hh_sum$hh_end_ind,
     hh_tmin = hh_sum$hh_tmin,
     hh_tmax = hh_sum$hh_tmax,
-    n_spec = length(spec_names),
-    n_sens = length(sens_names),
-    obs_fixed = obs_fixed,
-    obs_index = obs_index,
-    sens_spec = array(sens_spec),
-    spec_prior = prior_matrix(spec_names),
-    sens_prior = prior_matrix(sens_names),
+    obs_fixed = obs_array,
+    n_est = length(est_test),
+    est_test = array(as.integer(est_test)),
+    pos_state = pos_state,
+    se_prior = est_prior("se"),
+    sp_prior = est_prior("sp"),
     init_probs = init_probs,
     epsilon = epsilon,
     n_ih_inf_prob = ifelse(
@@ -1200,9 +1177,8 @@ run_model <- function(
 #'
 #' @description Starts specificities and sensitivities at their prior means.
 #'   A sensitivity whose prior mean is not above its test's false-positive rate
-#'   starts halfway between that rate and 1, so every chain starts inside the
-#'   allowed region rather than at logit(0.5), which lies exactly halfway
-#'   between the real solution and its mirror image.
+#'   is raised to halfway between that rate and 1, so chains start inside the
+#'   allowed region.
 #'
 #' @param dat_stan list of Stan data generated by `make_stan_data()`
 #' @returns A list with numeric arrays "spec" and "sens".
@@ -1210,10 +1186,9 @@ run_model <- function(
 #' @keywords internal
 #' @noRd
 init_obs_params <- function(dat_stan) {
-  spec <- as.numeric(dat_stan$spec_prior[, 1] / rowSums(dat_stan$spec_prior))
-  sens <- as.numeric(dat_stan$sens_prior[, 1] / rowSums(dat_stan$sens_prior))
-  lower <- c(0, 1 - spec)[dat_stan$sens_spec + 1]
-  sens <- ifelse(sens > lower, sens, (1 + lower) / 2)
+  spec <- as.numeric(dat_stan$sp_prior[, 1] / rowSums(dat_stan$sp_prior))
+  sens <- as.numeric(dat_stan$se_prior[, 1] / rowSums(dat_stan$se_prior))
+  sens <- ifelse(sens > 1 - spec, sens, 1 - spec / 2)
   list(spec = array(spec), sens = array(sens))
 }
 
@@ -1254,10 +1229,10 @@ rename_chains <- function(inf_model, model_output, save_llik, save_states) {
     1,
     length(inf_details$inf_states)
   )
-  obs_names <- c(
-    rownames(model_output$stan_data$spec_prior),
-    rownames(model_output$stan_data$sens_prior)
-  )
+  # Names of tests with estimated sensitivity and specificity (NULL if none;
+  # sprintf, unlike paste0, returns nothing for NULL)
+  est_names <- rownames(model_output$stan_data$se_prior)
+  obs_names <- c(sprintf("sp_%s", est_names), sprintf("se_%s", est_names))
 
   # Extract chains. format = "draws" hands back a posterior draws_array with the
   # chain structure intact, whichever backend produced the fit, so this needs no

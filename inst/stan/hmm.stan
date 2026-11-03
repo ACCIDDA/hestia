@@ -58,18 +58,6 @@ functions {
     return(out);
 }
 
-  // Lower bound for each estimated sensitivity: the false-positive rate
-  // (1 - specificity) of its test, or 0 if that specificity is not estimated
-  vector sens_lower(vector spec, array[] int sens_spec) {
-    vector[size(sens_spec)] out = rep_vector(0, size(sens_spec));
-    for(i in 1:size(sens_spec)) {
-      if(sens_spec[i] > 0) {
-        out[i] = 1 - spec[sens_spec[i]];
-      }
-    }
-    return out;
-  }
-
   // Per-household forward algorithm returning the log forward-probability matrix
   // (logalpha) for household h.
   matrix hh_logalpha(int h,
@@ -409,14 +397,14 @@ data {
   array[n_hh] int hh_tmin; // minimum day for which there is a HH observation
   array[n_hh] int hh_tmax; // maximum day for which there is a HH observation
 
-  // Observation process: probability of a positive result for each test and state
-  int n_spec; // number of estimated specificities
-  int n_sens; // number of estimated sensitivities (and other positive probabilities)
-  array[n_obs_type, n_states] real obs_fixed; // fixed probability of a positive result, used where obs_index is 0
-  array[n_obs_type, n_states] int obs_index; // 0 if fixed, i for sens[i], -i for 1 - spec[i]
-  array[n_sens] int sens_spec; // specificity of the same test, 0 if not estimated
-  matrix[n_spec, 2] spec_prior; // Beta(a, b) prior for each specificity
-  matrix[n_sens, 2] sens_prior; // Beta(a, b) prior for each sensitivity
+  // Observation process: rows are negative/positive, columns are states.
+  // Tests with estimated sensitivity and specificity are filled in from them.
+  array[n_obs_type] matrix[n_unique_obs, n_states] obs_fixed; // fixed tests
+  int n_est; // number of tests with estimated sensitivity and specificity
+  array[n_est] int est_test; // index of each estimated test
+  matrix[n_est, n_states] pos_state; // 1 for states where the target is present
+  matrix[n_est, 2] se_prior; // Beta(a, b) prior on each sensitivity
+  matrix[n_est, 2] sp_prior; // Beta(a, b) prior on each specificity
 
   // Initial state probabilities
   vector[n_states] init_probs; // starting state probabilities
@@ -434,8 +422,8 @@ parameters {
   array[n_mult_params] real logit_mult_params;
   array[n_eh_inf_prob] real beta0_eh; // extra-household probability
   array[n_ih_inf_prob] real beta0_ih; // intra-household probability
-  vector<lower=0, upper=1>[n_spec] spec; // test specificities
-  vector<lower=sens_lower(spec, sens_spec), upper=1>[n_sens] sens; // test sensitivities, above the false-positive rate
+  vector<lower=0, upper=1>[n_est] spec; // test specificities
+  vector<lower=1 - spec, upper=1>[n_est] sens; // sensitivities, above the false-positive rate
 
 }
 
@@ -451,19 +439,10 @@ transformed parameters {
   ih_prob = inv_logit(beta0_ih);
   eh_prob = inv_logit(beta0_eh);
 
-  for(k in 1:n_obs_type) {
-    for(s in 1:n_states) {
-      real p;
-      if(obs_index[k, s] > 0) {
-        p = sens[obs_index[k, s]];
-      } else if(obs_index[k, s] < 0) {
-        p = 1 - spec[-obs_index[k, s]];
-      } else {
-        p = obs_fixed[k, s];
-      }
-      obs_prob[k, 1, s] = 1 - p;
-      obs_prob[k, 2, s] = p;
-    }
+  obs_prob = obs_fixed;
+  for(i in 1:n_est) {
+    obs_prob[est_test[i], 2] = pos_state[i] * sens[i] + (1 - pos_state[i]) * (1 - spec[i]);
+    obs_prob[est_test[i], 1] = 1 - obs_prob[est_test[i], 2];
   }
 }
 
@@ -471,8 +450,8 @@ model {
 
   beta0_eh ~ normal(-3,3);
   beta0_ih ~ normal(-3,3);
-  spec ~ beta(spec_prior[, 1], spec_prior[, 2]);
-  sens ~ beta(sens_prior[, 1], sens_prior[, 2]);
+  spec ~ beta(sp_prior[, 1], sp_prior[, 2]);
+  sens ~ beta(se_prior[, 1], se_prior[, 2]);
 
   // Parallelised forward algorithm (households are independent given params)
   array[n_hh] int hh_indices;

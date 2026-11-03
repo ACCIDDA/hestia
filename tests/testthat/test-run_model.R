@@ -160,9 +160,7 @@ test_that("State probabilities match expectation for toy examples", {
   gen_la <- function(dat_stan, ih_prob, eh_prob, params, mult_params) {
     with(dat_stan, {
       # Observation probabilities (all fixed in these tests)
-      obs_prob <- array(dim = c(n_obs_type, 2, n_states))
-      obs_prob[, 1, ] <- 1 - obs_fixed
-      obs_prob[, 2, ] <- obs_fixed
+      obs_prob <- obs_fixed
 
       logalpha <- list()
 
@@ -569,9 +567,8 @@ test_that("estimated sensitivity and specificity are returned by name", {
   skip_on_cran()
 
   obs_mod <- make_observation_model(
-    pcr = c("S" = "1-sp_pcr", "I" = "se_pcr", "R" = "1-sp_pcr"),
-    igg = c("S" = 0.01, "I" = 0.01, "R" = 0.8),
-    priors = list(se_pcr = c(9, 1), sp_pcr = c(19, 1))
+    pcr = estimate_test(positive = "I", se = c(9, 1), sp = c(19, 1)),
+    igg = c("S" = 0.01, "I" = 0.01, "R" = 0.8)
   )
 
   suppressWarnings(suppressMessages(

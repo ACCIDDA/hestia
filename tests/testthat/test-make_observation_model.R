@@ -44,63 +44,14 @@ test_that("entry validation rejects bad observation specifications", {
   )
 })
 
-test_that("named entries are estimated and need valid priors", {
-  pcr <- c("S" = "1-sp_pcr", "I" = "se_pcr", "R" = "1-sp_pcr")
-  priors <- list(se_pcr = c(9, 1), sp_pcr = c(19, 1))
+test_that("estimate_test validates its arguments", {
+  pcr <- estimate_test(positive = "I", se = c(9, 1), sp = c(19, 1))
+  expect_s3_class(pcr, "hestia_estimated_test")
+  expect_identical(make_observation_model(pcr = pcr)$pcr, pcr)
 
-  obs <- make_observation_model(pcr = pcr, priors = priors)
-  expect_equal(attr(obs, "priors"), priors)
-
-  # Missing, unused and invalid priors
-  expect_error(make_observation_model(pcr = pcr), "Missing priors")
-  expect_error(
-    make_observation_model(pcr = pcr, priors = c(priors, list(x = c(1, 1)))),
-    "unknown"
-  )
-  expect_error(
-    make_observation_model(
-      pcr = pcr,
-      priors = list(se_pcr = c(9, 0), sp_pcr = c(19, 1))
-    ),
-    "se_pcr"
-  )
-
-  # A name used both directly and as a complement
-  expect_error(
-    make_observation_model(
-      pcr = c("S" = "1-se_pcr", "I" = "se_pcr", "R" = 0.05),
-      priors = list(se_pcr = c(9, 1))
-    ),
-    "not both"
-  )
-
-  # A name shared between tests
-  expect_error(
-    make_observation_model(
-      pcr = c("S" = 0.05, "I" = "se", "R" = 0.05),
-      igg = c("S" = 0.01, "I" = 0.01, "R" = "se"),
-      priors = list(se = c(9, 1))
-    ),
-    "single test"
-  )
-
-  # More than one specificity in a test
-  expect_error(
-    make_observation_model(
-      pcr = c("S" = "1-sp1", "I" = "se", "R" = "1-sp2"),
-      priors = list(se = c(9, 1), sp1 = c(19, 1), sp2 = c(19, 1))
-    ),
-    "at most one specificity"
-  )
-
-  # Fixed values given as strings must still be probabilities
-  expect_error(
-    make_observation_model(
-      pcr = c("S" = "1-sp", "I" = "se", "R" = "1.5"),
-      priors = list(se = c(9, 1), sp = c(19, 1))
-    ),
-    "pcr"
-  )
+  expect_error(estimate_test(positive = character(0), se = c(9, 1), sp = c(19, 1)))
+  expect_error(estimate_test(positive = "I", se = c(9, 0), sp = c(19, 1)), "se")
+  expect_error(estimate_test(positive = "I", se = c(9, 1), sp = 19), "sp")
 })
 
 test_that("stan data matches compartments by name", {
@@ -124,7 +75,7 @@ test_that("stan data matches compartments by name", {
     init_probs
   )
   expect_equal(reordered$obs_fixed, ordered$obs_fixed)
-  expect_equal(ordered$obs_fixed[1, ], c(0.05, 0.95, 0.05))
+  expect_equal(ordered$obs_fixed[1, 2, ], c(0.05, 0.95, 0.05))
 
   # Compartment names must match the infection model
   expect_error(
@@ -138,35 +89,45 @@ test_that("stan data matches compartments by name", {
   )
 })
 
-test_that("stan data indexes estimated observation parameters", {
-  obs_model <- make_observation_model(
-    pcr = c("S" = "1-sp_pcr", "I" = "se_pcr", "R" = "res_pcr"),
-    igg = c("S" = 0.01, "I" = 0.01, "R" = "se_igg"),
-    priors = list(
-      se_pcr = c(9, 1),
-      sp_pcr = c(19, 1),
-      res_pcr = c(1, 1),
-      se_igg = c(8, 2)
-    )
-  )
+test_that("stan data sets up estimated sensitivity and specificity", {
+  inf_model <- sir_infection_model()
+  data <- sir_subset(2)
+  init_probs <- c(1 - 2 * 1e-10, 1e-10, 1e-10)
+
   dat_stan <- make_stan_data(
-    sir_infection_model(),
-    obs_model,
-    sir_subset(2),
-    c(1 - 2 * 1e-10, 1e-10, 1e-10)
+    inf_model,
+    make_observation_model(
+      pcr = estimate_test(positive = "I", se = c(9, 1), sp = c(19, 1)),
+      igg = c("S" = 0.01, "I" = 0.01, "R" = 0.8)
+    ),
+    data,
+    init_probs
   )
 
-  expect_equal(dat_stan$n_spec, 1)
-  expect_equal(dat_stan$n_sens, 3)
-  expect_equal(dat_stan$obs_index, rbind(c(-1, 1, 2), c(0, 0, 3)))
-  expect_equal(dat_stan$obs_fixed[2, ], c(0.01, 0.01, 0))
-  # PCR parameters sit above PCR's false-positive rate, IgG has no specificity
-  expect_equal(as.vector(dat_stan$sens_spec), c(1, 1, 0))
-  expect_equal(rownames(dat_stan$sens_prior), c("se_pcr", "res_pcr", "se_igg"))
-  expect_equal(unname(dat_stan$sens_prior[3, ]), c(8, 2))
+  expect_equal(dat_stan$n_est, 1)
+  expect_equal(as.vector(dat_stan$est_test), 1)
+  expect_equal(dat_stan$pos_state, matrix(c(0, 1, 0), nrow = 1))
+  expect_equal(unname(dat_stan$se_prior[1, ]), c(9, 1))
+  expect_equal(unname(dat_stan$sp_prior[1, ]), c(19, 1))
+  expect_equal(dat_stan$obs_fixed[2, 2, ], c(0.01, 0.01, 0.8))
 
-  # Inits start inside the sens > 1 - spec region
+  # Inits start at the prior means, inside the sens > 1 - spec region
   init <- init_obs_params(dat_stan)
   expect_equal(as.vector(init$spec), 0.95)
-  expect_equal(as.vector(init$sens), c(0.9, 0.5, 0.8))
+  expect_equal(as.vector(init$sens), 0.9)
+
+  # Positive compartments must be some, but not all, of the compartments
+  for (positive in list("X", c("S", "I", "R"))) {
+    expect_error(
+      make_stan_data(
+        inf_model,
+        make_observation_model(
+          pcr = estimate_test(positive = positive, se = c(9, 1), sp = c(19, 1))
+        ),
+        data,
+        init_probs
+      ),
+      "not all"
+    )
+  }
 })
