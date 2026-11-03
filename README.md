@@ -1,4 +1,4 @@
-# hestia
+# hestia <a href="https://accidda.github.io/hestia/"><img src="man/figures/logo.png" align="right" height="139" alt="hestia website" /></a>
 
 [![R-CMD-check](https://github.com/ACCIDDA/hestia/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/ACCIDDA/hestia/actions/workflows/R-CMD-check.yaml)
 [![lint](https://github.com/ACCIDDA/hestia/actions/workflows/lint.yaml/badge.svg)](https://github.com/ACCIDDA/hestia/actions/workflows/lint.yaml)
