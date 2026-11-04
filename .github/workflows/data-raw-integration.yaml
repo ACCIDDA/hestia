@@ -45,7 +45,7 @@ jobs:
       # The package is compiled once, by load_all() below; restore the cached
       # Stan objects before that step so a cache hit skips the recompile.
       - name: Cache Stan compilation objects
-        uses: actions/cache@v5
+        uses: actions/cache@v6
         with:
           path: src/
           key: ${{ runner.os }}-rrelease-stan-${{ hashFiles('inst/stan/**/*.stan', 'src/**/*.stan') }}
