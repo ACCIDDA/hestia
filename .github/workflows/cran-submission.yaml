@@ -18,7 +18,7 @@ jobs:
   news-version-sync:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - name: Warn if NEWS.md is missing the version heading
         run: |
@@ -37,7 +37,7 @@ jobs:
     needs: news-version-sync
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
 

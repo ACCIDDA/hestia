@@ -19,7 +19,7 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Setup hestia CI environment
         uses: ./.github/actions/setup-hestia
@@ -83,7 +83,7 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       # Restore the docs + man/ + NAMESPACE + R/globals.R produced by the
       # prep job, so this leg does not regenerate them.
