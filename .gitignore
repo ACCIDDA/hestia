@@ -20,6 +20,7 @@ docs/
 *_extensions
 *_quarto.yml
 JG/*
+*code-workspace
 
 # Vignette caching items
 Meta/

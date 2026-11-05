@@ -399,8 +399,16 @@ data {
   int k_eh; // number of covariates for extra-household
   matrix[sum(hh_size), k_eh] x_eh; // extra-household covariates
 
-  // Initial state and observation probabilities
-  array[n_obs_type] matrix[n_unique_obs, n_states] obs_prob; // observation process for SIR states
+  // Observation process: rows are negative/positive, columns are states.
+  // Tests with estimated sensitivity and specificity are filled in from them.
+  array[n_obs_type] matrix[n_unique_obs, n_states] obs_fixed; // fixed tests
+  int n_est; // number of tests with estimated sensitivity and specificity
+  array[n_est] int est_test; // index of each estimated test
+  matrix[n_est, n_states] pos_state; // 1 for states where the target is present
+  matrix[n_est, 2] se_prior; // Beta(a, b) prior on each sensitivity
+  matrix[n_est, 2] sp_prior; // Beta(a, b) prior on each specificity
+
+  // Initial state probabilities
   vector[n_states] init_probs; // starting state probabilities
 
   real epsilon; // small number to avoid log(0) issues
@@ -418,6 +426,8 @@ parameters {
   vector[k_ih] beta_ih; // intra-household covariates
   array[n_ih_inf_prob] real beta0_ih; // intra-household intercepts
   array[n_eh_inf_prob] real beta0_eh; // extra-household intercepts
+  vector<lower=0, upper=1>[n_est] spec; // test specificities
+  vector<lower=1 - spec, upper=1>[n_est] sens; // sensitivities, above the false-positive rate
 
 }
 
@@ -426,6 +436,7 @@ transformed parameters {
   matrix[sum(hh_size), n_eh_inf_prob] eh_prob;
   array[n_params] real params;
   array[n_mult_params] real mult_params;
+  array[n_obs_type] matrix[n_unique_obs, n_states] obs_prob; // observation process, rows are negative/positive
 
   params = inv_logit(logit_params);
   mult_params = inv_logit(logit_mult_params);
@@ -435,6 +446,12 @@ transformed parameters {
   for(i in 1:n_eh_inf_prob) {
     eh_prob[,i] = inv_logit(beta0_eh[i]+x_eh*beta_eh);
   }
+
+  obs_prob = obs_fixed;
+  for(i in 1:n_est) {
+    obs_prob[est_test[i], 2] = pos_state[i] * sens[i] + (1 - pos_state[i]) * (1 - spec[i]);
+    obs_prob[est_test[i], 1] = 1 - obs_prob[est_test[i], 2];
+  }
 }
 
 model {
@@ -443,6 +460,8 @@ model {
   beta0_ih ~ normal(-3,3);
   beta_eh ~ normal(0,3);
   beta_ih ~ normal(0,3);
+  spec ~ beta(sp_prior[, 1], sp_prior[, 2]);
+  sens ~ beta(se_prior[, 1], se_prior[, 2]);
 
   // Parallelised forward algorithm (households are independent given params)
   array[n_hh] int hh_indices;

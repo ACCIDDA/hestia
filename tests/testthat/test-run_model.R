@@ -159,6 +159,9 @@ test_that("State probabilities match expectation for toy examples", {
   # R function to generate logalpha
   gen_la <- function(dat_stan, ih_prob, eh_prob, params, mult_params) {
     with(dat_stan, {
+      # Observation probabilities (all fixed in these tests)
+      obs_prob <- obs_fixed
+
       logalpha <- list()
 
       for (h in 1:n_hh) {
@@ -558,4 +561,32 @@ test_that("State probabilities match expectation for toy examples", {
 
   # Test that values are equal
   expect_equal(logalpha_mat, test_la)
+})
+
+test_that("estimated sensitivity and specificity are returned by name", {
+  skip_on_cran()
+
+  obs_mod <- make_observation_model(
+    pcr = estimate_test(positive = "I", se = c(9, 1), sp = c(19, 1)),
+    igg = c("S" = 0.01, "I" = 0.01, "R" = 0.8)
+  )
+
+  suppressWarnings(suppressMessages(
+    model_out <- run_model(
+      inf_model = sir_infection_model(),
+      obs_model = obs_mod,
+      data = sir_subset(10),
+      init_probs = c(1 - 2 * 1e-10, 1e-10, 1e-10),
+      stan_opts = stan_options(iter = 10)
+    )
+  ))
+
+  expect_setequal(
+    posterior::variables(model_out),
+    c("eh_prob", "ih_prob", "gamma", "sp_pcr", "se_pcr")
+  )
+  # Sensitivity always exceeds the false-positive rate
+  se <- as.numeric(model_out[,, "se_pcr"])
+  sp <- as.numeric(model_out[,, "sp_pcr"])
+  expect_true(all(se > 1 - sp))
 })
