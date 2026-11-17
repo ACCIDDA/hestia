@@ -2,6 +2,8 @@
 
 ## All functions
 
+- [`estimate_test()`](https://accidda.github.io/hestia/reference/estimate_test.md)
+  : Estimate Test Sensitivity and Specificity
 - [`get_transmission_details()`](https://accidda.github.io/hestia/reference/get_transmission_details.md)
   : Create Transmission Probability Matrix
 - [`hestia-package`](https://accidda.github.io/hestia/reference/hestia-package.md)
